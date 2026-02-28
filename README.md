@@ -1,2 +1,2 @@
 # CYML
-test minecraft launcher project based on helios
+custom minecraft launcher project based on helios
