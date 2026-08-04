@@ -25,6 +25,9 @@ on:
       loaderVersion:
         description: '로더 버전 (예: 21.1.219)'
         required: true
+      assetRepo:
+        description: '이 서버 전용 자산 저장소 이름 (예: Ssachon — 서버마다 별도 저장소를 씀)'
+        required: true
 
 jobs:
   generate:
@@ -69,7 +72,7 @@ jobs:
         run: |
           echo "JAVA_EXECUTABLE=$JAVA_HOME/bin/java" >> .env
           echo "ROOT=${{ runner.temp }}/root" >> .env
-          echo "BASE_URL=${{ vars.ASSET_BASE_URL }}" >> .env
+          echo "BASE_URL=${{ vars.ASSET_BASE_URL }}/${{ inputs.assetRepo }}" >> .env
 
       - name: Generate server (Forge/NeoForge)
         working-directory: neonebula
@@ -90,9 +93,9 @@ jobs:
           GH_TOKEN: ${{ secrets.DISTRO_PAT }}
           OWNER: ${{ vars.OWNER }}
           DISTRO_REPO: ${{ vars.DISTRO_REPO }}
-          ASSET_REPO: ${{ vars.ASSET_REPO }}
+          ASSET_REPO: ${{ inputs.assetRepo }}
           BRANCH: ${{ vars.DISTRO_BRANCH || 'main' }}
-          BASE_URL: ${{ vars.ASSET_BASE_URL }}
+          BASE_URL: ${{ vars.ASSET_BASE_URL }}/${{ inputs.assetRepo }}
           SERVER_ID: ${{ inputs.serverId }}
           MC_VERSION: ${{ inputs.mcVersion }}
           ROOT_DIR: ${{ runner.temp }}/root

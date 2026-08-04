@@ -37,9 +37,13 @@
 |---|---|---|
 | `OWNER` | `hanol0927` | GitHub 계정 |
 | `DISTRO_REPO` | `ddumon` | distribution.json 저장소 |
-| `ASSET_REPO` | `hanol0927.github.io` | 모드/라이브러리 파일이 올라갈 저장소 |
-| `ASSET_BASE_URL` | `https://hanol0927.github.io` | 위 저장소가 서빙되는 주소 (끝에 슬래시 없이) |
+| `ASSET_BASE_URL` | `https://hanol0927.github.io` | GitHub Pages 도메인 (끝에 슬래시 없이) |
 | `DISTRO_BRANCH` | `main` | (선택) 기본값 main |
+
+**주의**: 자산 저장소는 서버마다 다릅니다(예: `Ssachon`, `Sigwal` — 각각 별도
+GitHub 저장소이자 GitHub Pages 프로젝트 사이트). 그래서 고정된 `ASSET_REPO`
+변수는 없고, `distro-builder`에서 트리거할 때마다 `assetRepo` 입력값으로
+넘어옵니다.
 
 ### 3. 저장소 시크릿(Secrets) 등록
 
@@ -47,11 +51,13 @@
 
 | 이름 | 값 |
 |---|---|
-| `DISTRO_PAT` | `DISTRO_REPO`와 `ASSET_REPO` 양쪽에 **Contents: Read and write** 권한을 준 fine-grained PAT |
+| `DISTRO_PAT` | `DISTRO_REPO`와, 이 워크플로우로 생성할 모든 서버의 자산 저장소(`Ssachon`, `Sigwal` 등)에 **Contents: Read and write** 권한을 준 fine-grained PAT |
 
-`tools/distro-builder/README.md`의 PAT 발급 방법을 그대로 따르되, 범위를 이 두
-저장소로 잡으면 됩니다. 브라우저에 붙여넣는 토큰과는 별개로 발급하는 걸
-권장합니다(이 토큰은 사람이 직접 보지 않고 Actions 시크릿에만 저장됨).
+`tools/distro-builder/README.md`의 PAT 발급 방법을 그대로 따르되, 범위에
+`DISTRO_REPO`와 자산 저장소들을 전부 넣으세요. 새 서버(=새 저장소)를 추가할
+때마다 이 토큰의 Repository access에도 그 저장소를 추가해야 합니다. 브라우저에
+붙여넣는 토큰과는 별개로 발급하는 걸 권장합니다(이 토큰은 사람이 직접 보지
+않고 Actions 시크릿에만 저장됨).
 
 ### 4. distro-builder 쪽 설정
 
@@ -64,14 +70,18 @@
 
 ## 동작 흐름
 
-1. `distro-builder`에서 서버 id / 마인크래프트 버전 / 로더 종류 / 로더 버전을
-   입력하고 "GitHub Actions로 생성 시작" 클릭.
-2. 이 저장소의 `generate-server.yml`이 `workflow_dispatch`로 트리거됨.
+1. `distro-builder`의 "3. 서버 정보"에서 서버 id / 자산 저장소(예: `Ssachon`) /
+   마인크래프트 버전을 채우고, 로더 선택에서 Forge·NeoForge 자동 생성을 고른
+   뒤 로더 종류/버전을 입력하고 "GitHub Actions로 생성 시작" 클릭.
+2. 이 저장소의 `generate-server.yml`이 `workflow_dispatch`로 트리거됨(입력값에
+   그 서버의 자산 저장소 이름도 함께 전달됨).
 3. NeoNebula를 체크아웃 → Java/Node 설치 → 빌드 → `init root` → `generate
    server` (Forge/NeoForge 설치 프로그램을 실제로 로컬 Java로 실행, 여기서
    시간이 좀 걸림) → `generate distro`로 이번 실행 한정 distribution.json 조립.
+   이때 NeoNebula의 `BASE_URL`은 `<ASSET_BASE_URL>/<그 서버의 자산 저장소>`로
+   설정되어, 생성되는 모듈들의 `artifact.url`이 처음부터 올바른 저장소를 가리킴.
 4. `merge-server.js`가 그 결과에서 이 서버 하나만 꺼내서:
-   - 참조하는 실제 파일들을 `ASSET_REPO`로 커밋
+   - 참조하는 실제 파일들을 그 서버 전용 자산 저장소로 커밋
    - `DISTRO_REPO`의 `distribution.json`에 이 서버만 안전하게 upsert(다른
      서버, `distro-builder`가 관리하는 whitelist/background/icon/onceFiles/
      모드 모듈은 절대 안 건드림 — 로더 관련 모듈만 교체)

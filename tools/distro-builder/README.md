@@ -21,13 +21,25 @@
 - 기존 서버 편집 중에는 로더 관련 모듈을 절대 재생성/덮어쓰지 않습니다 — 로더 갱신은 항상
   "새 서버 만들기" 흐름(자동 생성 또는 붙여넣기)으로만 이루어집니다.
 
+## 저장소 구조 (중요)
+
+`distribution.json`은 `ddumon` 하나의 저장소에 있지만, **모드/설정파일/배경화면/아이콘 같은
+실제 파일은 서버마다 별도의 GitHub 저장소**에 올라가고, 그 저장소가 GitHub Pages 프로젝트
+사이트로 `https://<계정>.github.io/<저장소명>/`에서 서빙되는 구조입니다(예:
+`https://hanol0927.github.io/Ssachon/...` → 저장소는 `hanol0927/Ssachon`). 단일 공용
+자산 저장소(예: `hanol0927.github.io`라는 이름의 저장소) 같은 건 없습니다 — 서버 정보
+입력할 때 "이 서버의 자산 GitHub 저장소" 칸에 그 서버 전용 저장소 이름을 매번 입력해야
+합니다. 기존 서버를 불러오면 저장된 아이콘/배경 URL에서 자동으로 추측해서 채워줍니다.
+
 ## 처음 설정하기
 
 ### 1. GitHub Personal Access Token 발급
 
 1. GitHub → Settings → Developer settings → **Fine-grained personal access tokens** → Generate new token
-2. **Repository access**: distribution.json 저장소(예: `ddumon`)와 자산 저장소(예:
-   `hanol0927.github.io`) 두 개만 선택 — 전체 저장소 권한을 주지 마세요.
+2. **Repository access**: `distribution.json` 저장소(`ddumon`)와, 다룰 서버들의 자산
+   저장소(예: `Ssachon`, `Sigwal` — 서버마다 다름, 위 "저장소 구조" 참고)를 전부 선택 —
+   전체 저장소 권한은 주지 마세요. 새 서버(=새 저장소)를 다루게 될 때마다 여기 추가해야
+   합니다.
 3. **Permissions** → Repository permissions → **Contents: Read and write**를 체크합니다.
    Forge·NeoForge 자동 생성(GitHub Actions) 기능을 쓰려면, 위 저장소 선택에
    `tools/distro-ci` 설정 시 만든 워크플로우 저장소도 추가하고, **Actions: Read and
@@ -38,14 +50,14 @@
 
 ### 2. 이 도구 호스팅
 
-정적 파일이므로 아무 정적 호스팅에 올려도 되지만, 이미 쓰고 있는 GitHub Pages 저장소를
+정적 파일이므로 아무 정적 호스팅에 올려도 되지만, 이미 GitHub Pages를 쓰고 계시니 그걸
 그대로 활용하는 걸 권장합니다.
 
-- **옵션 A (권장)**: `tools/distro-builder/` 폴더 전체를 자산 저장소(예: `hanol0927.github.io`)의
-  하위 경로(예: `/distro-builder/`)에 복사해 커밋합니다. 이미 Pages가 켜져 있으므로 추가 설정
-  없이 `https://hanol0927.github.io/distro-builder/`로 바로 접속됩니다.
-- **옵션 B**: 이 launcher 저장소 자체에서 GitHub Pages를 켭니다 (Settings → Pages → Deploy from
-  branch). `tools/distro-builder/index.html`이 공개 URL로 서빙됩니다.
+- **옵션 A (권장)**: 이 launcher 저장소(`CYML`) 자체에서 GitHub Pages를 켭니다 (Settings →
+  Pages → Deploy from branch). `tools/distro-builder/index.html`이
+  `https://hanol0927.github.io/CYML/tools/distro-builder/`로 서빙됩니다.
+- **옵션 B**: 서버별 자산 저장소 중 아무 하나(예: `Ssachon`)의 하위 경로에 이 폴더를 복사해
+  커밋해도 됩니다.
 - **옵션 C (로컬 테스트용)**: 로컬에서 `npx serve tools/distro-builder` 등으로 정적 서버를 띄워
   브라우저로 열어도 동일하게 동작합니다 (GitHub API는 인터넷에서 직접 호출하므로 로컬 실행도
   문제 없습니다).
@@ -53,8 +65,10 @@
 ### 3. 도구 접속 후 최초 설정
 
 1. 페이지를 열면 "1. GitHub 연결 설정" 패널이 보입니다.
-2. 토큰을 붙여넣고, 필요하면 저장소 이름/브랜치/자산 URL을 실제 값에 맞게 수정합니다
-   (기본값은 `hanol0927/ddumon` + `hanol0927.github.io`로 미리 채워져 있습니다).
+2. 토큰을 붙여넣고, 필요하면 계정/distribution.json 저장소/브랜치/GitHub Pages 도메인을
+   실제 값에 맞게 수정합니다(기본값은 `hanol0927` 계정 + `ddumon` 저장소로 미리 채워져
+   있습니다). 서버별 자산 저장소는 여기서 설정하는 게 아니라 "3. 서버 정보"에서 서버마다
+   따로 입력합니다.
 3. "설정 저장"을 누르면 저장소 설정은 `localStorage`에, 토큰은 선택에 따라
    `localStorage`(브라우저 재시작 후에도 유지) 또는 `sessionStorage`(탭을 닫으면 삭제)에
    저장됩니다.
@@ -73,7 +87,8 @@
 
 1. "2. 서버 선택"에서 기존 서버를 고르면 폼이 자동으로 채워지고, "새 서버 만들기"를 고르면
    빈 폼으로 시작합니다.
-2. 서버 정보, 화이트리스트(비우면 전체 허용), 배경화면(선택), 모드/설정 파일을 채웁니다.
+2. 서버 정보(자산 저장소 이름 포함), 화이트리스트(비우면 전체 허용), 배경화면(선택),
+   모드/설정 파일을 채웁니다.
 3. Java 요구 버전은 마인크래프트 버전을 입력하면 자동으로 채워집니다. 특수한 경우에만
    "수동으로 지정"을 체크하세요.
 4. 기존 서버를 수정 중이라면 "9. 기존 모듈" 목록에서 삭제하고 싶은 모드/설정 파일만 체크하세요.

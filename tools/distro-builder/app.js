@@ -5,7 +5,6 @@
 const DEFAULTS = {
     owner: 'hanol0927',
     distroRepo: 'ddumon',
-    assetRepo: 'hanol0927.github.io',
     branch: 'main',
     ciRepo: 'distro-ci',
     ciWorkflowFile: 'generate-server.yml'
@@ -109,7 +108,6 @@ function currentSettings() {
     return {
         owner: $('ghOwner').value.trim() || DEFAULTS.owner,
         distroRepo: $('ghDistroRepo').value.trim() || DEFAULTS.distroRepo,
-        assetRepo: $('ghAssetRepo').value.trim() || DEFAULTS.assetRepo,
         branch: $('ghBranch').value.trim() || DEFAULTS.branch,
         assetBaseUrl: $('assetBaseUrl').value.trim().replace(/\/$/, ''),
         ciRepo: $('ciRepo').value.trim() || DEFAULTS.ciRepo,
@@ -121,7 +119,6 @@ function initSettingsUI() {
     const saved = loadSettings()
     $('ghOwner').value = saved.owner || DEFAULTS.owner
     $('ghDistroRepo').value = saved.distroRepo || DEFAULTS.distroRepo
-    $('ghAssetRepo').value = saved.assetRepo || DEFAULTS.assetRepo
     $('ghBranch').value = saved.branch || DEFAULTS.branch
     $('assetBaseUrl').value = saved.assetBaseUrl || `https://${saved.owner || DEFAULTS.owner}.github.io`
     $('ciRepo').value = saved.ciRepo || DEFAULTS.ciRepo
@@ -215,8 +212,9 @@ async function startForgeLoaderGeneration() {
     const mcVersion = $('serverMcVersion').value.trim()
     const loaderType = $('forgeLoaderType').value
     const loaderVersion = $('forgeLoaderVersion').value.trim()
-    if (!serverId || !mcVersion || !loaderVersion) {
-        alert('서버 id, 마인크래프트 버전, 로더 버전을 모두 입력하세요.')
+    const assetRepo = $('serverAssetRepo').value.trim()
+    if (!serverId || !mcVersion || !loaderVersion || !assetRepo) {
+        alert('서버 id, 자산 저장소, 마인크래프트 버전, 로더 버전을 모두 입력하세요.')
         return
     }
 
@@ -229,7 +227,7 @@ async function startForgeLoaderGeneration() {
         const sinceMs = Date.now() - 5000 // 브라우저/서버 시계 오차 대비 약간 여유
         loaderGenLog(`워크플로우 실행 요청 중.. (${ciRepo}/${ciWorkflowFile})`)
         await GitHubAPI.dispatchWorkflow(token, owner, ciRepo, ciWorkflowFile, branch, {
-            serverId, mcVersion, loaderType, loaderVersion
+            serverId, mcVersion, loaderType, loaderVersion, assetRepo
         })
 
         loaderGenLog('실행 확인 중..')
@@ -274,7 +272,7 @@ async function startForgeLoaderGeneration() {
 function resetFormForNewServer() {
     state.editingServerId = null
     state.existingModules = []
-    ;['serverId', 'serverName', 'serverDescription', 'serverAddress', 'serverMcVersion'].forEach(id => { $(id).value = '' })
+    ;['serverId', 'serverName', 'serverDescription', 'serverAssetRepo', 'serverAddress', 'serverMcVersion'].forEach(id => { $(id).value = '' })
     $('serverId').disabled = false
     $('serverAutoconnect').checked = false
     $('serverMainServer').checked = false
@@ -292,6 +290,23 @@ function resetFormForNewServer() {
     updateJavaPreview()
 }
 
+/**
+ * 서버마다 자산이 별도 GitHub 저장소(예: hanol0927/Ssachon)에 프로젝트 Pages로
+ * 호스팅되는 구조라서("https://hanol0927.github.io/Ssachon/...") 이미 올라간
+ * URL이 있으면 도메인 바로 다음 경로 조각을 저장소 이름으로 추측한다.
+ * 못 찾으면 null — 관리자가 직접 입력해야 한다.
+ */
+function guessAssetRepoFromUrl(url) {
+    if (!url) return null
+    try {
+        const u = new URL(url)
+        const firstSegment = u.pathname.split('/').filter(Boolean)[0]
+        return firstSegment || null
+    } catch (err) {
+        return null
+    }
+}
+
 function loadServerIntoForm(serverId) {
     const serv = (state.distribution.servers || []).find(s => s.id === serverId)
     if (serv == null) {
@@ -306,6 +321,7 @@ function loadServerIntoForm(serverId) {
     $('serverId').disabled = true
     $('serverName').value = serv.name || ''
     $('serverDescription').value = serv.description || ''
+    $('serverAssetRepo').value = guessAssetRepoFromUrl(serv.icon) || guessAssetRepoFromUrl(serv.background) || ''
     $('serverAddress').value = serv.address || ''
     $('serverMcVersion').value = serv.minecraftVersion || ''
     $('serverAutoconnect').checked = !!serv.autoconnect
@@ -651,12 +667,20 @@ async function deploy() {
         alert('먼저 GitHub 토큰을 입력하고 저장하세요.')
         return
     }
-    const { owner, distroRepo, assetRepo, branch, assetBaseUrl } = currentSettings()
+    const { owner, distroRepo, branch, assetBaseUrl } = currentSettings()
     const serverId = $('serverId').value.trim()
     if (!serverId) {
         alert('서버 id를 입력하세요.')
         return
     }
+    const serverAssetRepo = $('serverAssetRepo').value.trim()
+    if (!serverAssetRepo) {
+        alert('이 서버의 자산 GitHub 저장소를 입력하세요 (예: Ssachon). 서버마다 별도 저장소를 씁니다.')
+        return
+    }
+    // 서버별 자산 저장소가 GitHub Pages 프로젝트 사이트로 <도메인>/<저장소명>/에서
+    // 서빙되는 구조를 그대로 따른다 (예: https://hanol0927.github.io/Ssachon/...).
+    const assetRepoBaseUrl = `${assetBaseUrl}/${serverAssetRepo}`
 
     $('deployBtn').disabled = true
     $('deployLog').innerHTML = ''
@@ -668,7 +692,7 @@ async function deploy() {
         const modModules = []
         const configModules = []
         const newOnceFiles = [] // { path, url, size, MD5 } - modules[] 밖의 커스텀 필드
-        const serverFolder = `${serverId}/servers/${serverId}`
+        const serverFolder = `servers/${serverId}`
 
         // 새 서버를 만들 때만 로더 모듈을 조립한다. 기존 서버 편집 중에는 이미 있는
         // 로더 모듈(remainingExisting을 통해 유지됨)을 절대 재생성/덮어쓰지 않는다.
@@ -682,7 +706,7 @@ async function deploy() {
                 if (!fabricLoaderVersion) {
                     throw new Error('Fabric 로더 버전을 선택하세요.')
                 }
-                const built = await buildFabricModules(mcVersion, fabricLoaderVersion, serverFolder, assetBaseUrl)
+                const built = await buildFabricModules(mcVersion, fabricLoaderVersion, serverFolder, assetRepoBaseUrl)
                 loaderModules = built.modules
                 assetFiles.push(...built.assetFiles)
             } else if (loaderType === 'forge-paste') {
@@ -709,7 +733,7 @@ async function deploy() {
                 name: mod.name,
                 type: mod.type,
                 required: { value: mod.required, def: mod.required },
-                artifact: { size, MD5: hash, url: `${assetBaseUrl}/${path}` }
+                artifact: { size, MD5: hash, url: `${assetRepoBaseUrl}/${path}` }
             })
         }
 
@@ -723,12 +747,12 @@ async function deploy() {
                     id: cfg.file.name,
                     name: cfg.file.name,
                     type: 'File',
-                    artifact: { size, MD5: hash, url: `${assetBaseUrl}/${path}`, path: cfg.path }
+                    artifact: { size, MD5: hash, url: `${assetRepoBaseUrl}/${path}`, path: cfg.path }
                 })
             } else {
                 // 최초 1회만: modules[]가 아니라 onceFiles[]에 넣어서 FullRepair가
                 // 존재 자체를 모르게 한다 (landing.js의 ensureOnceFiles가 처리).
-                newOnceFiles.push({ path: cfg.path, url: `${assetBaseUrl}/${path}`, size, MD5: hash })
+                newOnceFiles.push({ path: cfg.path, url: `${assetRepoBaseUrl}/${path}`, size, MD5: hash })
             }
         }
 
@@ -739,7 +763,7 @@ async function deploy() {
             const ext = state.backgroundFile.name.split('.').pop() || 'png'
             const path = `${serverFolder}/background.${ext}`
             assetFiles.push({ path, base64Content: base64 })
-            backgroundUrl = `${assetBaseUrl}/${path}`
+            backgroundUrl = `${assetRepoBaseUrl}/${path}`
         }
 
         let iconUrl = $('iconCurrentUrl').value.trim() || undefined
@@ -749,16 +773,16 @@ async function deploy() {
             const ext = state.iconFile.name.split('.').pop() || 'png'
             const path = `${serverFolder}/icon.${ext}`
             assetFiles.push({ path, base64Content: base64 })
-            iconUrl = `${assetBaseUrl}/${path}`
+            iconUrl = `${assetRepoBaseUrl}/${path}`
         }
 
         // 자산 커밋을 distribution.json 갱신보다 먼저 수행한다.
         // (실패 안전성: 자산이 존재하지 않는 채로 distribution.json이 먼저 배포되어
         //  실사용자의 런처가 깨지는 상황을 피하기 위함)
         if (assetFiles.length > 0) {
-            log(`자산 저장소(${assetRepo})에 파일 ${assetFiles.length}개 커밋 중..`)
+            log(`자산 저장소(${serverAssetRepo})에 파일 ${assetFiles.length}개 커밋 중..`)
             await GitHubAPI.commitFilesBatch(
-                token, owner, assetRepo, branch, assetFiles,
+                token, owner, serverAssetRepo, branch, assetFiles,
                 `distro-builder: update assets for ${serverId}`,
                 (done, total) => log(`  blob 업로드 ${done}/${total}`)
             )

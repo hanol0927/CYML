@@ -127,18 +127,11 @@
             <input type="text" id="ghBranch">
         </div>
     </div>
-    <div class="row">
-        <div>
-            <label for="ghDistroRepo">distribution.json 저장소</label>
-            <input type="text" id="ghDistroRepo">
-        </div>
-        <div>
-            <label for="ghAssetRepo">자산(모드/설정/배경) 저장소</label>
-            <input type="text" id="ghAssetRepo">
-        </div>
-    </div>
-    <label for="assetBaseUrl">자산 공개 URL 베이스 (자산 저장소가 GitHub Pages로 서빙되는 주소)</label>
+    <label for="ghDistroRepo">distribution.json 저장소</label>
+    <input type="text" id="ghDistroRepo">
+    <label for="assetBaseUrl">자산 공개 URL 베이스 (GitHub Pages 도메인, 서버별 저장소 이름은 아래 "3. 서버 정보"에서 따로 지정)</label>
     <input type="text" id="assetBaseUrl">
+    <p class="hint">모드/설정파일/배경화면/아이콘은 서버마다 별도 GitHub 저장소(예: <code>hanol0927/Ssachon</code>)에 올라가고, 각 저장소가 GitHub Pages 프로젝트 사이트로 <code>&lt;도메인&gt;/&lt;저장소명&gt;/</code>에서 서빙되는 구조를 그대로 따릅니다. 토큰에 그 저장소들 각각에 대한 Contents 권한이 있어야 합니다.</p>
     <div class="row">
         <div>
             <label for="ciRepo">Forge·NeoForge 자동 생성 워크플로우 저장소</label>
@@ -184,6 +177,9 @@
     </div>
     <label for="serverDescription">설명</label>
     <input type="text" id="serverDescription">
+    <label for="serverAssetRepo">이 서버의 자산 GitHub 저장소 (모드/설정/배경/아이콘이 올라갈 저장소, 예: Ssachon)</label>
+    <input type="text" id="serverAssetRepo" placeholder="예: Ssachon">
+    <p class="hint">기존 서버를 불러오면 아이콘/배경 URL에서 자동으로 채워봅니다. 새 서버라면 GitHub에 미리 만들어둔 저장소 이름을 입력하세요 (없으면 새로 만드세요 — 이 도구가 저장소를 자동으로 만들어주진 않습니다).</p>
     <label for="serverAddress">서버 주소 (host:port)</label>
     <input type="text" id="serverAddress">
     <label for="iconCurrentUrl">아이콘</label>
