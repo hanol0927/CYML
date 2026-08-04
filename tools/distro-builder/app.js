@@ -281,6 +281,7 @@ function resetFormForNewServer() {
     $('whitelistTextarea').value = ''
     $('backgroundCurrentUrl').value = ''
     $('backgroundPreview').style.display = 'none'
+    state.backgroundFile = null
     $('iconCurrentUrl').value = ''
     $('iconPreview').style.display = 'none'
     state.iconFile = null
@@ -310,6 +311,7 @@ function loadServerIntoForm(serverId) {
     $('serverAutoconnect').checked = !!serv.autoconnect
     $('serverMainServer').checked = !!serv.mainServer
     $('whitelistTextarea').value = (serv.whitelist || []).join('\n')
+    state.backgroundFile = null
     $('backgroundCurrentUrl').value = serv.background || ''
     if (serv.background) {
         $('backgroundPreview').src = serv.background
@@ -425,6 +427,22 @@ function setupDropzone(zoneId, inputId, onFiles) {
         onFiles(Array.from(input.files))
         input.value = ''
     })
+}
+
+function addBackgroundFile(files) {
+    const file = files[0]
+    if (file == null) return
+    state.backgroundFile = file
+    $('backgroundPreview').src = URL.createObjectURL(file)
+    $('backgroundPreview').style.display = ''
+}
+
+function addIconFile(files) {
+    const file = files[0]
+    if (file == null) return
+    state.iconFile = file
+    $('iconPreview').src = URL.createObjectURL(file)
+    $('iconPreview').style.display = ''
 }
 
 function addModFiles(files) {
@@ -854,24 +872,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setupDropzone('modsDropzone', 'modsFileInput', addModFiles)
     setupDropzone('configsDropzone', 'configsFileInput', addConfigFiles)
-
-    $('backgroundFileInput').addEventListener('change', e => {
-        const file = e.target.files[0]
-        if (file == null) return
-        state.backgroundFile = file
-        $('backgroundPreview').src = URL.createObjectURL(file)
-        $('backgroundPreview').style.display = ''
-        e.target.value = ''
-    })
-
-    $('iconFileInput').addEventListener('change', e => {
-        const file = e.target.files[0]
-        if (file == null) return
-        state.iconFile = file
-        $('iconPreview').src = URL.createObjectURL(file)
-        $('iconPreview').style.display = ''
-        e.target.value = ''
-    })
+    setupDropzone('backgroundDropzone', 'backgroundFileInput', addBackgroundFile)
+    setupDropzone('iconDropzone', 'iconFileInput', addIconFile)
 
     $('deployBtn').addEventListener('click', deploy)
     $('generateLoaderBtn').addEventListener('click', startForgeLoaderGeneration)

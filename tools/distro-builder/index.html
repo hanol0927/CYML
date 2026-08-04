@@ -188,7 +188,8 @@
     <input type="text" id="serverAddress">
     <label for="iconCurrentUrl">아이콘</label>
     <input type="text" id="iconCurrentUrl" placeholder="현재 아이콘 URL (없으면 비어있음)" readonly>
-    <input type="file" id="iconFileInput" accept="image/*" style="margin-top:8px;">
+    <div id="iconDropzone" class="dropzone" style="margin-top:8px;">클릭하거나 이미지 파일을 여기로 드래그하세요</div>
+    <input type="file" id="iconFileInput" accept="image/*" style="display:none;">
     <img id="iconPreview" alt="preview" style="max-width:96px;max-height:96px;display:none;margin-top:8px;border-radius:6px;">
     <label for="serverMcVersion">마인크래프트 버전</label>
     <input type="text" id="serverMcVersion" placeholder="예: 1.21.1 또는 26.1.2">
@@ -275,7 +276,8 @@
     <h2>6. 배경화면</h2>
     <p class="hint">이 서버가 선택됐을 때 런처 배경으로 쓸 이미지. 재배포 없이 다음 재시작/재접속 시 반영됩니다.</p>
     <input type="text" id="backgroundCurrentUrl" placeholder="현재 배경 URL (없으면 비어있음)" readonly>
-    <input type="file" id="backgroundFileInput" accept="image/*" style="margin-top:8px;">
+    <div id="backgroundDropzone" class="dropzone" style="margin-top:8px;">클릭하거나 이미지 파일을 여기로 드래그하세요</div>
+    <input type="file" id="backgroundFileInput" accept="image/*" style="display:none;">
     <img id="backgroundPreview" alt="preview">
 </section>
 
