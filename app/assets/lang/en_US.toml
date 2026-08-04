@@ -262,6 +262,7 @@ okButton = "Okay"
 
 [js.settings.serverListing]
 mainServer = "Main Server"
+notWhitelisted = "Not Whitelisted"
 
 [js.settings.java]
 selectedJava = "Selected: Java {version} ({vendor})"

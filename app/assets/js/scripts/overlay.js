@@ -182,12 +182,9 @@ document.getElementById('serverSelectConfirm').addEventListener('click', async (
             return
         }
     }
-    // None are selected? Not possible right? Meh, handle it.
-    if(listings.length > 0){
-        const serv = (await DistroAPI.getDistribution()).getServerById(listings[i].getAttribute('servid'))
-        updateSelectedServer(serv)
-        toggleOverlay(false)
-    }
+    // 화이트리스트에 걸려 선택 가능한(disabled 아닌) 서버가 없는 경우 등.
+    // 선택을 바꾸지 않고 그대로 닫는다.
+    toggleOverlay(false)
 })
 
 document.getElementById('accountSelectConfirm').addEventListener('click', async () => {
@@ -232,6 +229,10 @@ document.getElementById('accountSelectCancel').addEventListener('click', () => {
 function setServerListingHandlers(){
     const listings = Array.from(document.getElementsByClassName('serverListing'))
     listings.map((val) => {
+        if(val.hasAttribute('disabled')){
+            val.onclick = null
+            return
+        }
         val.onclick = e => {
             if(val.hasAttribute('selected')){
                 return
@@ -270,10 +271,12 @@ function setAccountListingHandlers(){
 async function populateServerListings(){
     const distro = await DistroAPI.getDistribution()
     const giaSel = ConfigManager.getSelectedServer()
+    const authUser = ConfigManager.getSelectedAccount()
     const servers = distro.servers
     let htmlString = ''
     for(const serv of servers){
-        htmlString += `<button class="serverListing" servid="${serv.rawServer.id}" ${serv.rawServer.id === giaSel ? 'selected' : ''}>
+        const eligible = isAccountWhitelisted(serv, authUser)
+        htmlString += `<button class="serverListing" servid="${serv.rawServer.id}" ${serv.rawServer.id === giaSel && eligible ? 'selected' : ''} ${eligible ? '' : 'disabled'}>
             <img class="serverListingImg" src="${serv.rawServer.icon}"/>
             <div class="serverListingDetails">
                 <span class="serverListingName">${serv.rawServer.name}</span>
@@ -291,6 +294,7 @@ async function populateServerListings(){
                         </svg>
                         <span class="serverListingStarTooltip">${Lang.queryJS('settings.serverListing.mainServer')}</span>
                     </div>` : ''}
+                    ${eligible ? '' : `<div class="serverListingLockedBadge">${Lang.queryJS('settings.serverListing.notWhitelisted')}</div>`}
                 </div>
             </div>
         </button>`

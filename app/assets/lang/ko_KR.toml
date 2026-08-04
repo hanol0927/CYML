@@ -261,6 +261,7 @@ okButton = "확인"
 
 [js.settings.serverListing]
 mainServer = "메인 서버"
+notWhitelisted = "화이트리스트 아님"
 
 [js.settings.java]
 selectedJava = "선택: Java {version} ({vendor})"

@@ -3724,6 +3724,25 @@ input:checked + .toggleSwitchSlider:before {
     outline: none;
     opacity: 1.0;
 }
+.serverListing[disabled] {
+    cursor: not-allowed;
+    opacity: 0.35;
+    filter: grayscale(0.8);
+}
+.serverListing[disabled]:hover,
+.serverListing[disabled]:focus {
+    opacity: 0.35;
+}
+
+/* Badge shown on server listings the current account is not whitelisted for. */
+.serverListingLockedBadge {
+    font-size: 10px;
+    line-height: 12px;
+    padding: 0px 4px;
+    margin-left: 5px;
+    border-radius: 2px;
+    background: rgba(180, 30, 30, 0.8);
+}
 
 .accountListing {
     color: white;
