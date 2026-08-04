@@ -3,7 +3,8 @@
  */
 // Requirements
 const { URL }                 = require('url')
-const path                    = require('path')
+// path는 uibinder.js가 이미 전역으로 선언함 (둘 다 같은 페이지에 <script>로 로드되어
+// 전역 스코프를 공유함) — 여기서 다시 선언하면 'Identifier already declared'로 깨짐.
 const fs                      = require('fs-extra')
 const {
     MojangRestAPI,
