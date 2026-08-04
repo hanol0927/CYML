@@ -12,6 +12,15 @@ const semver                            = require('semver')
 const { pathToFileURL }                 = require('url')
 const { AZURE_CLIENT_ID, MSFT_OPCODE, MSFT_REPLY_TYPE, MSFT_ERROR, SHELL_OPCODE } = require('./app/assets/js/ipcconstants')
 const LangLoader                        = require('./app/assets/js/langloader')
+const got = require('got')
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason)
+})
+
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error)
+})
 
 // Setup Lang
 LangLoader.setupLanguage()
@@ -145,13 +154,17 @@ ipcMain.on(MSFT_OPCODE.OPEN_LOGIN, (ipcEvent, ...arguments_) => {
 
     msftAuthWindow.webContents.on('did-navigate', (_, uri) => {
         if (uri.startsWith(REDIRECT_URI_PREFIX)) {
-            let queries = uri.substring(REDIRECT_URI_PREFIX.length).split('#', 1).toString().split('&')
+            // let queries = uri.substring(REDIRECT_URI_PREFIX.length).split('#', 1).toString().split('&')
             let queryMap = {}
 
-            queries.forEach(query => {
-                const [name, value] = query.split('=')
-                queryMap[name] = decodeURI(value)
-            })
+            // queries.forEach(query => {
+            //     const [name, value] = query.split('=')
+            //     queryMap[name] = decodeURI(value)
+            // })
+
+            new URL(uri).searchParams.forEach((v, k) => {
+                queryMap[k] = v;
+            });
 
             ipcEvent.reply(MSFT_OPCODE.REPLY_LOGIN, MSFT_REPLY_TYPE.SUCCESS, queryMap, msftAuthViewSuccess)
 
@@ -241,7 +254,7 @@ function createWindow() {
     remoteMain.enable(win.webContents)
 
     const data = {
-        bkid: Math.floor((Math.random() * fs.readdirSync(path.join(__dirname, 'app', 'assets', 'images', 'backgrounds')).length)),
+        bkid: 0,
         lang: (str, placeHolders) => LangLoader.queryEJS(str, placeHolders)
     }
     Object.entries(data).forEach(([key, val]) => ejse.data(key, val))
@@ -341,8 +354,11 @@ function getPlatformIcon(filename){
     return path.join(__dirname, 'app', 'assets', 'images', `${filename}.${ext}`)
 }
 
-app.on('ready', createWindow)
-app.on('ready', createMenu)
+app.on('ready', async () => {
+    await downloadExtraFiles()
+    createWindow()
+    createMenu()
+})
 
 app.on('window-all-closed', () => {
     // On macOS it is common for applications and their menu bar
@@ -359,3 +375,71 @@ app.on('activate', () => {
         createWindow()
     }
 })
+
+async function downloadFile(url, targetPath) {
+    try {
+        console.log(`[다운로드 시작] ${url}`)
+        const downloadStream = got.stream(url, {
+            followRedirect: true,  // 리다이렉션 따라가기
+            timeout: {
+                request: 30000  // 30초 타임아웃
+            }
+        })
+        const fileWriterStream = fs.createWriteStream(targetPath)
+
+        return new Promise((resolve, reject) => {
+            downloadStream.on('error', (err) => {
+                console.error(`[다운로드 실패] ${url}:`, err.message)
+                reject(err)
+            })
+            
+            fileWriterStream.on('error', (err) => {
+                console.error(`[파일 쓰기 실패] ${targetPath}`)
+                reject(err)
+            })
+            
+            fileWriterStream.on('finish', () => {
+                console.log(`[완료] ${path.basename(targetPath)}`)
+                resolve()
+            })
+            
+            downloadStream.pipe(fileWriterStream)
+        })
+    } catch (err) {
+        console.error(`[예외] ${url}:`, err.message)
+        throw err
+    }
+}
+
+async function downloadExtraFiles() {
+    const baseDir = path.join(app.getPath('appData'), '.cymlauncher', 'instances')
+        
+    const filesToDownload = [
+        {
+            url: 'https://hanol0927.github.io/ddumon/servers/ddumon-26.1.2/files/options.txt',
+            target: path.join(baseDir, 'ddumon-26.1.2', 'options.txt')
+        },
+        {
+            url: 'https://hanol0927.github.io/ddumon/servers/ddumon-26.1.2/files/config/iris.properties',
+            target: path.join(baseDir, 'ddumon-26.1.2', 'config' ,'iris.properties')
+        },
+        {
+            url: 'https://hanol0927.github.io/ddumon/servers/ddumon-26.1.2/files/config/sodium-options.json',
+            target: path.join(baseDir, 'ddumon-26.1.2', 'config' ,'sodium-options.json')
+        },
+        {
+            url: 'https://hanol0927.github.io/ddumon/servers/ddumon-26.1.2/files/config/sodium-extra-options.json',
+            target: path.join(baseDir, 'ddumon-26.1.2', 'config' ,'sodium-extra-options.json')
+        }
+    ]
+
+    for (const file of filesToDownload) {
+        const dir = path.dirname(file.target)
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+        if (!fs.existsSync(file.target)) {
+            await downloadFile(file.url, file.target)
+        }
+    }
+
+    console.log("쉐이더, 옵션 파일 다운로드 완료.")
+}

@@ -158,6 +158,9 @@ pleaseWait = "Please wait.."
 failureTitle = "Error During Launch"
 failureText = "See console (CTRL + Shift + i) for more details."
 okay = "Okay"
+notWhitelisted = "Not Whitelisted"
+notWhitelistedTitle = "Account Not Whitelisted"
+notWhitelistedMessage = "This account is not on the whitelist for this server. Please contact the server administrator."
 
 [js.landing.selectedAccount]
 noAccountSelected = "No Account Selected"

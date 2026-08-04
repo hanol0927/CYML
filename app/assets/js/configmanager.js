@@ -7,9 +7,10 @@ const logger = LoggerUtil.getLogger('ConfigManager')
 
 const sysRoot = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Application Support' : process.env.HOME)
 
-const dataPath = path.join(sysRoot, '.mrslauncher')
+const dataPath = path.join(sysRoot, '.cymlauncher')
 
 const launcherDir = require('@electron/remote').app.getPath('userData')
+const SERVER_BACKGROUNDS = {}
 
 /**
  * Retrieve the absolute path of the launcher directory.
@@ -99,7 +100,8 @@ const DEFAULT_CONFIG = {
     selectedAccount: null,
     authenticationDatabase: {},
     modConfigurations: [],
-    javaConfig: {}
+    javaConfig: {},
+    serverBackgrounds: {}
 }
 
 let config = null
@@ -110,6 +112,7 @@ let config = null
  * Save the current configuration to a file.
  */
 exports.save = function(){
+    config.serverBackgrounds = SERVER_BACKGROUNDS
     fs.writeFileSync(configPath, JSON.stringify(config, null, 4), 'UTF-8')
 }
 
@@ -148,6 +151,11 @@ exports.load = function(){
         }
         if(doValidate){
             config = validateKeySet(DEFAULT_CONFIG, config)
+
+             if(config.serverBackgrounds) {
+                Object.assign(SERVER_BACKGROUNDS, config.serverBackgrounds)
+            }
+
             exports.save()
         }
     }
@@ -291,6 +299,12 @@ exports.getSelectedServer = function(def = false){
  */
 exports.setSelectedServer = function(serverID){
     config.selectedServer = serverID
+    if(typeof window !== 'undefined') {
+        const event = new CustomEvent('serverChanged', { 
+            detail: { serverId: serverID } 
+        })
+        window.dispatchEvent(event)
+    }
 }
 
 /**
@@ -790,4 +804,33 @@ exports.getAllowPrerelease = function(def = false){
  */
 exports.setAllowPrerelease = function(allowPrerelease){
     config.settings.launcher.allowPrerelease = allowPrerelease
+}
+
+/**
+ * Get the background image URL for a specific server.
+ * 
+ * @param {string} serverId The server id.
+ * @returns {string|null} The background URL or null if not set.
+ */
+exports.getServerBackground = function(serverId){
+    return SERVER_BACKGROUNDS[serverId] || null
+}
+
+/**
+ * Set the background image URL for a specific server.
+ * 
+ * @param {string} serverId The server id.
+ * @param {string} backgroundUrl The background image URL.
+ */
+exports.setServerBackground = function(serverId, backgroundUrl){
+    SERVER_BACKGROUNDS[serverId] = backgroundUrl
+}
+
+/**
+ * Get all server backgrounds.
+ * 
+ * @returns {Object} Object containing all server backgrounds.
+ */
+exports.getAllServerBackgrounds = function(){
+    return SERVER_BACKGROUNDS
 }

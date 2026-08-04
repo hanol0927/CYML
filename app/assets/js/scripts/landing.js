@@ -10,7 +10,8 @@ const {
 const {
     RestResponseStatus,
     isDisplayableError,
-    validateLocalFile
+    validateLocalFile,
+    mcVersionAtLeast
 }                             = require('helios-core/common')
 const {
     FullRepair,
@@ -41,6 +42,100 @@ const server_selection_button = document.getElementById('server_selection_button
 const user_text               = document.getElementById('user_text')
 
 const loggerLanding = LoggerUtil.getLogger('Landing')
+
+// distribution.json에 javaOptions가 없을 때 쓰는 기본값.
+// 새 마크 버전이 새 Java를 요구하면 여기에 항목을 추가.
+// tools/distro-builder의 동일 테이블과 값 맞출 것.
+const JAVA_VERSION_TABLE = [
+    { minMcVersion: '26.0',   supported: '>=25.x', suggestedMajor: 25 },
+    { minMcVersion: '1.20.5', supported: '>=21.x', suggestedMajor: 21 },
+    { minMcVersion: '1.17',   supported: '>=17.x', suggestedMajor: 17 },
+    { minMcVersion: '0',      supported: '8.x',    suggestedMajor: 8 }
+]
+
+/**
+ * distribution.json이 javaOptions를 명시했다면 그대로 존중하고,
+ * 명시하지 않았다면 마크 버전 기준으로 정확한 Java 메이저 버전을 추론한다.
+ * (helios-core의 기본 매핑은 1.20.5 이상을 전부 '>=21.x'로 뭉뚱그려서,
+ * 이미 Java 21이 설치돼 있으면 26.x가 요구하는 Java 25를 새로 받지 않는 문제가 있었음)
+ *
+ * @param {Object} server DistroAPI가 반환하는 서버 객체
+ * @returns {Object} effectiveJavaOptions
+ */
+function resolveEffectiveJavaOptions(server) {
+    if (server.rawServer.javaOptions != null) {
+        return server.effectiveJavaOptions
+    }
+    const entry = JAVA_VERSION_TABLE.find(e => mcVersionAtLeast(e.minMcVersion, server.rawServer.minecraftVersion))
+    return {
+        ...server.effectiveJavaOptions,
+        supported: entry.supported,
+        suggestedMajor: entry.suggestedMajor
+    }
+}
+
+const SERVER_BACKGROUND_MAP = {
+    'Sigwal-1.20.1': 2,    // 0.png
+    'Iris-1.21.10': 1,      // 1.png
+    'ddumon-26.1.2': 0,
+    'Cupkemon-1.16.5': 3,
+    'Nuketmon-1.16.5': 4,
+    'Rush-1.21.10': 5,
+    'ChaQ-1.20.1': 6,
+    'Ssachon-1.21.1': 7,
+    'chaennawizard-1.16.5': 8,
+    'haru-1.21.4': 9,
+    'chaenna-1.21.1': 10
+    // 여기에 서버 추가
+}
+
+/**
+ * 서버 ID로 배경 번호 가져오기
+ * @param {string} serverId 서버 ID
+ * @returns {number} 배경 번호 (기본값: 0)
+ */
+function getBackgroundNumber(serverId) {
+    const bgNum = SERVER_BACKGROUND_MAP[serverId]
+    return bgNum !== undefined ? bgNum : 0
+}
+
+/**
+ * 서버별 배경화면 변경 함수.
+ * distribution.json의 rawServer.background(원격 URL)가 있으면 그걸 우선 사용하고,
+ * 없으면 기존 로컬 번들 이미지(SERVER_BACKGROUND_MAP)로 폴백한다.
+ * 원격 URL을 쓰면 런처를 재배포하지 않아도 재시작/재접속 시 새 배경이 반영된다.
+ * @param {Object} serv DistroAPI가 반환하는 서버 객체
+ */
+function changeServerBackground(serv) {
+    if (!serv) {
+        loggerLanding.info('No server selected, keeping default background')
+        return
+    }
+
+    const remoteBackground = serv.rawServer.background
+    const backgroundPath = remoteBackground != null
+        ? remoteBackground
+        : `assets/images/backgrounds/${getBackgroundNumber(serv.rawServer.id)}.png`
+
+    loggerLanding.info(`Changing background: ${serv.rawServer.id} -> ${backgroundPath}`)
+
+    // 이미지 프리로드 (부드러운 전환을 위해)
+    const img = new Image()
+    img.onload = function() {
+        // 배경 변경 with smooth transition
+        document.body.style.backgroundImage = `url('${backgroundPath}')`
+        document.body.style.backgroundSize = 'cover'
+        document.body.style.backgroundPosition = 'center center'
+        document.body.style.backgroundAttachment = 'fixed'
+        loggerLanding.info('Background changed successfully to:', backgroundPath)
+    }
+    img.onerror = function() {
+        loggerLanding.warn(`Failed to load background: ${backgroundPath}, using default`)
+        // 실패하면 기본 배경으로
+        document.body.style.backgroundImage = `url('assets/images/backgrounds/0.png')`
+    }
+    img.src = backgroundPath
+}
 
 /* Launch Progress Wrapper Functions */
 
@@ -98,27 +193,71 @@ function setLaunchEnabled(val){
     document.getElementById('launch_button').disabled = !val
 }
 
+/**
+ * 선택된 계정이 서버의 화이트리스트에 등록되어 있는지 확인한다.
+ * distribution.json에 whitelist 필드가 없거나 비어있으면 전체 허용(하위호환).
+ * 런처 UI 게이트일 뿐이며, 마인크래프트 서버 자체의 접속 제어는 아니다.
+ *
+ * @param {Object} serv DistroAPI가 반환하는 서버 객체
+ * @param {Object} authUser ConfigManager.getSelectedAccount()의 반환값
+ * @returns {boolean}
+ */
+function isAccountWhitelisted(serv, authUser){
+    const whitelist = serv != null ? serv.rawServer.whitelist : null
+    if(!Array.isArray(whitelist) || whitelist.length === 0){
+        return true
+    }
+    if(authUser == null || authUser.displayName == null){
+        return false
+    }
+    return whitelist.some(n => n.toLowerCase() === authUser.displayName.toLowerCase())
+}
+
+/**
+ * 현재 선택된 서버/계정 조합을 바탕으로 실행 버튼의 활성 여부와 문구를 갱신한다.
+ * 서버 선택이 바뀔 때, 계정이 바뀔 때 모두 호출되어야 한다.
+ *
+ * @param {Object} serv DistroAPI가 반환하는 서버 객체 (null 가능)
+ * @param {Object} authUser ConfigManager.getSelectedAccount()의 반환값
+ */
+function refreshLaunchEligibility(serv, authUser){
+    const launchButton = document.getElementById('launch_button')
+    if(serv == null){
+        setLaunchEnabled(false)
+        launchButton.innerHTML = Lang.queryEJS('landing.launchButton')
+        return
+    }
+    if(isAccountWhitelisted(serv, authUser)){
+        setLaunchEnabled(true)
+        launchButton.innerHTML = Lang.queryEJS('landing.launchButton')
+    } else {
+        setLaunchEnabled(false)
+        launchButton.innerHTML = Lang.queryJS('landing.launch.notWhitelisted')
+    }
+}
+
 // Bind launch button
 document.getElementById('launch_button').addEventListener('click', async e => {
     loggerLanding.info('Launching game..')
     try {
         const server = (await DistroAPI.getDistribution()).getServerById(ConfigManager.getSelectedServer())
         const jExe = ConfigManager.getJavaExecutable(ConfigManager.getSelectedServer())
+        const effectiveJavaOptions = resolveEffectiveJavaOptions(server)
         if(jExe == null){
-            await asyncSystemScan(server.effectiveJavaOptions)
+            await asyncSystemScan(effectiveJavaOptions)
         } else {
 
             setLaunchDetails(Lang.queryJS('landing.launch.pleaseWait'))
             toggleLaunchArea(true)
             setLaunchPercentage(0, 100)
 
-            const details = await validateSelectedJvm(ensureJavaDirIsRoot(jExe), server.effectiveJavaOptions.supported)
+            const details = await validateSelectedJvm(ensureJavaDirIsRoot(jExe), effectiveJavaOptions.supported)
             if(details != null){
                 loggerLanding.info('Jvm Details', details)
                 await dlAsync()
 
             } else {
-                await asyncSystemScan(server.effectiveJavaOptions)
+                await asyncSystemScan(effectiveJavaOptions)
             }
         }
     } catch(err) {
@@ -153,6 +292,11 @@ function updateSelectedAccount(authUser){
         }
     }
     user_text.innerHTML = username
+
+    // 계정이 바뀌면 화이트리스트 자격도 다시 평가한다.
+    DistroAPI.getDistribution().then(distro => {
+        refreshLaunchEligibility(distro.getServerById(ConfigManager.getSelectedServer()), authUser)
+    })
 }
 updateSelectedAccount(ConfigManager.getSelectedAccount())
 
@@ -161,13 +305,21 @@ function updateSelectedServer(serv){
     if(getCurrentView() === VIEWS.settings){
         fullSettingsSave()
     }
-    ConfigManager.setSelectedServer(serv != null ? serv.rawServer.id : null)
+
+    const serverId = serv != null ? serv.rawServer.id : null
+
+    ConfigManager.setSelectedServer(serverId)
     ConfigManager.save()
     server_selection_button.innerHTML = '&#8226; ' + (serv != null ? serv.rawServer.name : Lang.queryJS('landing.noSelection'))
     if(getCurrentView() === VIEWS.settings){
         animateSettingsTabRefresh()
     }
-    setLaunchEnabled(serv != null)
+    refreshLaunchEligibility(serv, ConfigManager.getSelectedAccount())
+
+    // ⭐ 배경화면 변경
+    if (serv) {
+        changeServerBackground(serv)
+    }
 }
 // Real text is set in uibinder.js on distributionIndexDone.
 server_selection_button.innerHTML = '&#8226; ' + Lang.queryJS('landing.selectedServer.loading')
@@ -470,6 +622,11 @@ async function dlAsync(login = true) {
     if(login) {
         if(ConfigManager.getSelectedAccount() == null){
             loggerLanding.error('You must be logged into an account.')
+            return
+        }
+        if(!isAccountWhitelisted(serv, ConfigManager.getSelectedAccount())){
+            loggerLanding.error('Selected account is not whitelisted for this server.')
+            showLaunchFailure(Lang.queryJS('landing.launch.notWhitelistedTitle'), Lang.queryJS('landing.launch.notWhitelistedMessage'))
             return
         }
     }

@@ -53,7 +53,7 @@ class ProcessBuilder {
         this.usingFabricLoader = this.server.modules.some(mdl => mdl.rawModule.type === Type.Fabric)
         logger.info('Using fabric loader:', this.usingFabricLoader)
         const modObj = this.resolveModConfiguration(ConfigManager.getModConfiguration(this.server.rawServer.id).mods, this.server.modules)
-        
+        this.copyModsToFolder(modObj.fMods)
         // Mod list below 1.13
         // Fabric only supports 1.14+
         if(!mcVersionAtLeast('1.13', this.server.rawServer.minecraftVersion)){
@@ -66,10 +66,10 @@ class ProcessBuilder {
         const uberModArr = modObj.fMods.concat(modObj.lMods)
         let args = this.constructJVMArguments(uberModArr, tempNativePath)
 
-        if(mcVersionAtLeast('1.13', this.server.rawServer.minecraftVersion)){
+        //if(mcVersionAtLeast('1.13', this.server.rawServer.minecraftVersion)){
             //args = args.concat(this.constructModArguments(modObj.fMods))
-            args = args.concat(this.constructModList(modObj.fMods))
-        }
+        //    args = args.concat(this.constructModList(modObj.fMods))
+        //}
 
         // Hide access token
         const loggableArgs = [...args]
@@ -298,6 +298,49 @@ class ProcessBuilder {
         
     // }
 
+
+    /**
+     * 모드를 mods 폴더로 직접 복사
+     * 
+     * @param {Array.<Object>} mods 복사할 모드 배열
+     */
+    copyModsToFolder(mods) {
+    const modsFolder = path.join(this.gameDir, 'mods')
+    
+    if (!fs.existsSync(modsFolder)) {
+        fs.mkdirSync(modsFolder, { recursive: true })
+        logger.info('Created mods folder:', modsFolder)
+    }
+    
+    logger.info('Copying mods to folder...')
+    
+    for (const mod of mods) {
+        try {
+            const sourcePath = mod.getPath()
+            const fileName = path.basename(sourcePath)
+            const destPath = path.join(modsFolder, fileName)
+            
+            if (fs.existsSync(destPath)) {
+                const sourceStats = fs.statSync(sourcePath)
+                const destStats = fs.statSync(destPath)
+                
+                if (sourceStats.size === destStats.size) {
+                    logger.info('Mod already exists, skipping:', fileName)
+                    continue
+                }
+            }
+            
+            fs.copyFileSync(sourcePath, destPath)
+            logger.info('Copied mod to mods folder:', fileName)
+            
+        } catch (err) {
+            logger.error('Failed to copy mod:', err)
+        }
+    }
+    
+    logger.info('Mods copied successfully')
+    }
+
     /**
      * Construct the mod argument list for forge 1.13 and Fabric
      * 
@@ -372,7 +415,7 @@ class ProcessBuilder {
 
         // Java Arguments
         if(process.platform === 'darwin'){
-            args.push('-Xdock:name=MRSLauncher')
+            args.push('-Xdock:name=CYML')
             args.push('-Xdock:icon=' + path.join(__dirname, '..', 'images', 'minecraft.icns'))
         }
         args.push('-Xmx' + ConfigManager.getMaxRAM(this.server.rawServer.id))
@@ -423,7 +466,7 @@ class ProcessBuilder {
 
         // Java Arguments
         if(process.platform === 'darwin'){
-            args.push('-Xdock:name=MRSLauncher')
+            args.push('-Xdock:name=CYML')
             args.push('-Xdock:icon=' + path.join(__dirname, '..', 'images', 'minecraft.icns'))
         }
         args.push('-Xmx' + ConfigManager.getMaxRAM(this.server.rawServer.id))
@@ -525,7 +568,7 @@ class ProcessBuilder {
                             val = args[i].replace(argDiscovery, tempNativePath)
                             break
                         case 'launcher_name':
-                            val = args[i].replace(argDiscovery, 'MRS-Launcher')
+                            val = args[i].replace(argDiscovery, 'CYML')
                             break
                         case 'launcher_version':
                             val = args[i].replace(argDiscovery, this.launcherVersion)
@@ -840,7 +883,8 @@ class ProcessBuilder {
         for(let mdl of mdls){
             const type = mdl.rawModule.type
             if(type === Type.ForgeHosted || type === Type.Fabric || type === Type.Library){
-                libs[mdl.getVersionlessMavenIdentifier()] = mdl.getPath()
+                if (mdl.rawModule.classpath !== false)
+                    libs[mdl.getVersionlessMavenIdentifier()] = mdl.getPath()
                 if(mdl.subModules.length > 0){
                     const res = this._resolveModuleLibraries(mdl)
                     libs = {...libs, ...res}

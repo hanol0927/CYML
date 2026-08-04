@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>distribution.json 관리 도구</title>
+<style>
+    :root {
+        color-scheme: light dark;
+        --bg: #1e1f24;
+        --panel: #2a2c33;
+        --border: #3d3f47;
+        --text: #e6e6e6;
+        --muted: #9a9ca3;
+        --accent: #5b8def;
+        --danger: #e05a5a;
+    }
+    * { box-sizing: border-box; }
+    body {
+        font-family: -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        margin: 0;
+        padding: 24px;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    h1 { font-size: 20px; margin-bottom: 4px; }
+    h2 { font-size: 15px; margin: 0 0 12px; color: var(--accent); }
+    p.hint, .hint { color: var(--muted); font-size: 13px; margin: 4px 0; }
+    section.panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 16px 20px;
+        margin-bottom: 16px;
+    }
+    label { display: block; font-size: 13px; margin: 10px 0 4px; }
+    input[type=text], input[type=password], input[type=number], textarea, select {
+        width: 100%;
+        padding: 7px 9px;
+        border-radius: 5px;
+        border: 1px solid var(--border);
+        background: #14151a;
+        color: var(--text);
+        font-size: 13px;
+    }
+    textarea { min-height: 70px; font-family: monospace; }
+    .row { display: flex; gap: 12px; }
+    .row > div { flex: 1; }
+    .checkboxRow { display: flex; align-items: center; gap: 6px; margin: 10px 0; }
+    .checkboxRow label { margin: 0; }
+    .checkboxRow input { width: auto; }
+    button {
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button.secondary { background: #454750; }
+    button.removeBtn { background: var(--danger); padding: 4px 8px; font-size: 12px; }
+    .dropzone {
+        border: 2px dashed var(--border);
+        border-radius: 6px;
+        padding: 20px;
+        text-align: center;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 13px;
+    }
+    .dropzone.dragover { border-color: var(--accent); color: var(--text); }
+    .fileRow, .moduleRow {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+    }
+    .fileRow .fileName, .moduleRow .moduleName { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .fileRow .fileSize { color: var(--muted); width: 70px; }
+    .fileRow select, .fileRow input[type=text] { width: 140px; }
+    .moduleRow .moduleType { color: var(--muted); width: 90px; }
+    #deployLog {
+        background: #101114;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 10px;
+        font-family: monospace;
+        font-size: 12px;
+        max-height: 220px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+    }
+    #backgroundPreview { max-width: 200px; max-height: 100px; display: none; margin-top: 8px; border-radius: 4px; }
+    .warning { color: #e0b45a; font-size: 12px; }
+    a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<h1>distribution.json 관리 도구</h1>
+<p class="hint">
+    서버 정보 / 모드 / 설정파일 / 배경화면 / 화이트리스트를 입력하고 배포하면
+    GitHub 저장소에 자동으로 커밋됩니다. 처음 쓴다면 <a href="README.md">README</a>를 먼저 읽어주세요.
+    이 도구는 정적 페이지이며 백엔드 서버가 없습니다 — 여러분의 GitHub 토큰은 이 브라우저에만 저장됩니다.
+</p>
+
+<section class="panel">
+    <h2>1. GitHub 연결 설정</h2>
+    <label for="ghToken">Personal Access Token (Contents 읽기/쓰기 권한, 아래 두 저장소로 범위 제한 권장)</label>
+    <input type="password" id="ghToken" placeholder="github_pat_...">
+    <div class="checkboxRow">
+        <input type="checkbox" id="ghTokenPersist">
+        <label for="ghTokenPersist">브라우저를 닫아도 토큰 기억하기 (localStorage). 체크 해제 시 탭을 닫으면 사라짐.</label>
+    </div>
+    <div class="row">
+        <div>
+            <label for="ghOwner">GitHub 계정/조직</label>
+            <input type="text" id="ghOwner">
+        </div>
+        <div>
+            <label for="ghBranch">브랜치</label>
+            <input type="text" id="ghBranch">
+        </div>
+    </div>
+    <div class="row">
+        <div>
+            <label for="ghDistroRepo">distribution.json 저장소</label>
+            <input type="text" id="ghDistroRepo">
+        </div>
+        <div>
+            <label for="ghAssetRepo">자산(모드/설정/배경) 저장소</label>
+            <input type="text" id="ghAssetRepo">
+        </div>
+    </div>
+    <label for="assetBaseUrl">자산 공개 URL 베이스 (자산 저장소가 GitHub Pages로 서빙되는 주소)</label>
+    <input type="text" id="assetBaseUrl">
+    <p style="margin-top:10px;">
+        <button id="saveSettingsBtn">설정 저장</button>
+        <span id="settingsStatus" class="hint"></span>
+    </p>
+</section>
+
+<section class="panel">
+    <h2>2. 서버 선택</h2>
+    <div class="row">
+        <div>
+            <select id="existingServerSelect">
+                <option value="">-- 새 서버 만들기 --</option>
+            </select>
+        </div>
+        <div style="flex: 0 0 auto;">
+            <button id="loadServerBtn" class="secondary">distribution.json 새로고침</button>
+        </div>
+    </div>
+    <p id="serverLoadStatus" class="hint"></p>
+</section>
+
+<section class="panel">
+    <h2>3. 서버 정보</h2>
+    <div class="row">
+        <div>
+            <label for="serverId">서버 id (고유 식별자, 예: Ssachon-1.21.1)</label>
+            <input type="text" id="serverId">
+        </div>
+        <div>
+            <label for="serverName">서버 이름 (화면에 표시)</label>
+            <input type="text" id="serverName">
+        </div>
+    </div>
+    <label for="serverDescription">설명</label>
+    <input type="text" id="serverDescription">
+    <div class="row">
+        <div>
+            <label for="serverIcon">아이콘 URL</label>
+            <input type="text" id="serverIcon">
+        </div>
+        <div>
+            <label for="serverAddress">서버 주소 (host:port)</label>
+            <input type="text" id="serverAddress">
+        </div>
+    </div>
+    <label for="serverMcVersion">마인크래프트 버전</label>
+    <input type="text" id="serverMcVersion" placeholder="예: 1.21.1 또는 26.1.2">
+    <div class="checkboxRow">
+        <input type="checkbox" id="serverAutoconnect">
+        <label for="serverAutoconnect">자동 접속 허용</label>
+    </div>
+    <div class="checkboxRow">
+        <input type="checkbox" id="serverMainServer">
+        <label for="serverMainServer">기본 선택 서버로 지정 (전체 중 하나만 체크)</label>
+    </div>
+</section>
+
+<section class="panel">
+    <h2>4. Java 요구 버전</h2>
+    <p class="hint">마인크래프트 버전으로 자동 계산됩니다 (런처 쪽 기본 매핑과 동일한 규칙). 필요할 때만 수동으로 덮어쓰세요.</p>
+    <div class="checkboxRow">
+        <input type="checkbox" id="javaOptionsManual">
+        <label for="javaOptionsManual">수동으로 지정</label>
+    </div>
+    <div class="row">
+        <div>
+            <label for="javaSupported">supported (semver 범위)</label>
+            <input type="text" id="javaSupported" disabled>
+        </div>
+        <div>
+            <label for="javaSuggestedMajor">suggestedMajor</label>
+            <input type="number" id="javaSuggestedMajor" disabled>
+        </div>
+    </div>
+</section>
+
+<section class="panel">
+    <h2>5. 화이트리스트 (런처 UI에서만 적용, 마인크래프트 서버 접속 자체는 막지 않음)</h2>
+    <p class="hint">한 줄에 닉네임 하나씩. 비워두면 전체 허용.</p>
+    <textarea id="whitelistTextarea" placeholder="닉네임1&#10;닉네임2"></textarea>
+</section>
+
+<section class="panel">
+    <h2>6. 배경화면</h2>
+    <p class="hint">이 서버가 선택됐을 때 런처 배경으로 쓸 이미지. 재배포 없이 다음 재시작/재접속 시 반영됩니다.</p>
+    <input type="text" id="backgroundCurrentUrl" placeholder="현재 배경 URL (없으면 비어있음)" readonly>
+    <input type="file" id="backgroundFileInput" accept="image/*" style="margin-top:8px;">
+    <img id="backgroundPreview" alt="preview">
+</section>
+
+<section class="panel">
+    <h2>7. 모드 파일</h2>
+    <div id="modsDropzone" class="dropzone">클릭하거나 mod jar 파일을 여기로 드래그하세요</div>
+    <input type="file" id="modsFileInput" multiple accept=".jar" style="display:none;">
+    <p id="modsWarning" class="warning"></p>
+    <div id="modsList"></div>
+</section>
+
+<section class="panel">
+    <h2>8. 설정 파일 (config)</h2>
+    <div id="configsDropzone" class="dropzone">클릭하거나 설정 파일을 여기로 드래그하세요</div>
+    <input type="file" id="configsFileInput" multiple style="display:none;">
+    <p class="hint">저장 경로는 config/ 아래 상대 경로 기준이며, 각 파일마다 직접 수정할 수 있습니다.</p>
+    <div id="configsList"></div>
+</section>
+
+<section class="panel">
+    <h2>9. 기존 모듈 (수정 중인 서버에만 표시)</h2>
+    <p class="hint warning">⚠️ 모드로더/라이브러리(NeoForge 등) 핵심 모듈은 여기서 지우지 마세요. 직접 추가한 모드/설정 파일 정리용입니다.</p>
+    <div id="existingModulesList"><p class="hint">새 서버입니다.</p></div>
+</section>
+
+<section class="panel">
+    <h2>10. 배포</h2>
+    <button id="deployBtn">GitHub에 배포</button>
+    <div id="deployLog" style="margin-top:12px;"></div>
+</section>
+
+<script src="md5.js"></script>
+<script src="github-api.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -67,17 +67,18 @@ async function showMainUI(data){
     await prepareSettings(true)
     updateSelectedServer(data.getServerById(ConfigManager.getSelectedServer()))
     refreshServerStatus()
-    setTimeout(() => {
+    setTimeout(async () => {
         document.getElementById('frameBar').style.backgroundColor = 'rgba(0, 0, 0, 0.5)'
-        document.body.style.backgroundImage = `url('assets/images/backgrounds/${document.body.getAttribute('bkid')}.png')`
+        //document.body.style.backgroundImage = `url('assets/images/backgrounds/${document.body.getAttribute('bkid')}.png')`
         $('#main').show()
 
         const isLoggedIn = Object.keys(ConfigManager.getAuthAccounts()).length > 0
 
         // If this is enabled in a development environment we'll get ratelimited.
         // The relaunch frequency is usually far too high.
+        let accountValid = true
         if(!isDev && isLoggedIn){
-            validateSelectedAccount()
+            accountValid = await validateSelectedAccount()
         }
 
         if(ConfigManager.isFirstLaunch()){
@@ -87,6 +88,11 @@ async function showMainUI(data){
             if(isLoggedIn){
                 currentView = VIEWS.landing
                 $(VIEWS.landing).fadeIn(1000)
+                if(accountValid){
+                    setTimeout(async () => {
+                        await toggleServerSelection(true)
+                    }, 500)
+                }
             } else {
                 loginOptionsCancelEnabled(false)
                 loginOptionsViewOnLoginSuccess = VIEWS.landing

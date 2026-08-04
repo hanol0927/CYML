@@ -1,13 +1,13 @@
 {
-  "name": "mrslauncher",
-  "version": "3.0.8",
-  "productName": "MRS Launcher",
-  "description": "Modded Minecraft Launcher",
-  "author": "Daniel Scalzi (https://github.com/dscalzi/), peunsu (https://github.com/peunsu)",
+  "name": "cymlauncher",
+  "version": "1.1.11",
+  "productName": "CYML",
+  "description": "Custom Minecraft Launcher based on Helios",
+  "author": "Han_Ol",
   "license": "UNLICENSED",
-  "homepage": "https://github.com/peunsu/MRSLauncher",
+  "homepage": "",
   "bugs": {
-    "url": "https://github.com/peunsu/MRSLauncher/issues"
+    "url": ""
   },
   "private": true,
   "main": "index.js",
@@ -46,6 +46,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/peunsu/MRSLauncher.git"
+    "url": ""
   }
 }

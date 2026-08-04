@@ -1,1584 +1,2246 @@
 {
-    "version": "1.0.0",
-    "discord": {
-        "clientId": "385581240906022916",
-        "smallImageText": "WesterosCraft",
-        "smallImageKey": "seal-circle"
-    },
-    "java": {
-        "oracle": "http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html"
-    },
-    "rss": "https://forum.westeroscraft.com/forum/news.2/index.rss",
-    "servers": [
+  "version": "1.0.0",
+  "rss": "https://github.com/hanol0927/CYML/releases.atom",
+  "discord": {
+    "clientId": "<FILL IN OR REMOVE DISCORD OBJECT>",
+    "smallImageText": "<FILL IN OR REMOVE DISCORD OBJECT>",
+    "smallImageKey": "<FILL IN OR REMOVE DISCORD OBJECT>"
+  },
+  "servers": [
+    {
+      "id": "Ssachon-1.21.1",
+      "name": "싸촌",
+      "description": "싸촌네 1.21.1",
+      "icon": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/Icon.png",
+      "version": "1.0.0",
+      "address": "",
+      "minecraftVersion": "1.21.1",
+      "discord": {
+        "shortId": "<FILL IN OR REMOVE DISCORD OBJECT>",
+        "largeImageText": "<FILL IN OR REMOVE DISCORD OBJECT>",
+        "largeImageKey": "<FILL IN OR REMOVE DISCORD OBJECT>"
+      },
+      "mainServer": true,
+      "autoconnect": false,
+      "modules": [
         {
-            "id": "WesterosCraft-1.11.2",
-            "name": "WesterosCraft Production Server",
-            "description": "Main WesterosCraft server. Connect to enter the Realm.",
-            "icon": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/server-prod.png",
-            "version": "3.9.4",
-            "address": "mc.westeroscraft.com",
-            "minecraftVersion": "1.11.2",
-            "discord": {
-                "shortId": "Production",
-                "largeImageText": "WesterosCraft Production Server",
-                "largeImageKey": "server-prod"
+          "id": "net.neoforged:neoforge:21.1.219:universal",
+          "name": "Minecraft NeoForge (universal jar)",
+          "type": "ForgeHosted",
+          "classpath": false,
+          "artifact": {
+            "size": 3524551,
+            "MD5": "f7a703bed50fb3cf2e6926a38ec85aa4",
+            "url": "https://hanol0927.github.io/Ssachon/repo/lib/net/neoforged/neoforge/21.1.219/neoforge-21.1.219-universal.jar"
+          },
+          "subModules": [
+            {
+              "id": "21.1.219",
+              "name": "Minecraft NeoForge (version.json)",
+              "type": "VersionManifest",
+              "artifact": {
+                "size": 21148,
+                "MD5": "fb75bfae4b8f177f071f742edd0c1299",
+                "url": "https://hanol0927.github.io/Ssachon/repo/versions/neoforge-21.1.219/neoforge-21.1.219.json"
+              }
             },
-            "mainServer": true,
-            "autoconnect": true,
-            "modules": [
-                {
-                    "id": "net.minecraftforge:forge:1.11.2-13.20.1.2429",
-                    "name": "Minecraft Forge",
-                    "type": "ForgeHosted",
-                    "artifact": {
-                        "size": 4450992,
-                        "MD5": "3fcc9b0104f0261397d3cc897e55a1c5",
-                        "url": "http://files.minecraftforge.net/maven/net/minecraftforge/forge/1.11.2-13.20.1.2429/forge-1.11.2-13.20.1.2429-universal.jar"
-                    },
-                    "subModules": [
-                        {
-                            "id": "net.minecraft:launchwrapper:1.12",
-                            "name": "Mojang (LaunchWrapper)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 32999,
-                                "MD5": "934b2d91c7c5be4a49577c9e6b40e8da",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/launchwrapper-1.12.jar"
-                            }
-                        },
-                        {
-                            "id": "org.ow2.asm:asm-all:5.0.3",
-                            "name": "Mojang (ASM)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 241639,
-                                "MD5": "c5cc4613bbdfba3ccf5f0ab85390d0b8",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/asm-all-5.0.3.jar"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang:scala-library:2.11.1@jar.pack.xz",
-                            "name": "Minecraft Forge (scala-library)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 1474672,
-                                "MD5": "379c15c4f724421c6d5d7aecedaf87a6",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/scala-library-2.11.1.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang:scala-compiler:2.11.1@jar.pack.xz",
-                            "name": "Minecraft Forge (scala-compiler)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 3076920,
-                                "MD5": "7d89e952f2d5c74577310cd2c28e3f20",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/scala-compiler-2.11.1.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang:scala-actors-migration_2.11:1.1.0@jar.pack.xz",
-                            "name": "Minecraft Forge (scala-actors-migration)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 21324,
-                                "MD5": "04e3428b2600ace33c7ae2bf1f6c0a4c",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/scala-actors-migration_2.11-1.1.0.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang.plugins:scala-continuations-library_2.11:1.0.2@jar.pack.xz",
-                            "name": "Minecraft Forge (scala-continuations-library)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 7956,
-                                "MD5": "ed9b1d27aba8ac4090a3749c4dfc895a",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/scala-continuations-library_2.11-1.0.2.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang.plugins:scala-continuations-plugin_2.11.1:1.0.2@jar.pack.xz",
-                            "name": "Minecraft Forge (scala-continuations-plugin)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 46140,
-                                "MD5": "a8232db22a72a981de6b1399eb86dff7",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/scala-continuations-plugin_2.11.1-1.0.2.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang:scala-parser-combinators_2.11:1.0.1@jar.pack.xz",
-                            "name": "Minecraft Forge (scala-parser-combinators)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 85568,
-                                "MD5": "2e50a7df17680daadacca69f07f8a16d",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/scala-parser-combinators_2.11-1.0.1.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang:scala-reflect:2.11.1@jar.pack.xz",
-                            "name": "Minecraft Forge (scala-reflect)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 1070312,
-                                "MD5": "84e5dc81c10e2bd74c579c9d0332fdd9",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/scala-reflect-2.11.1.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang:scala-swing_2.11:1.0.1",
-                            "name": "Minecraft Forge (scala-swing)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 736795,
-                                "MD5": "1d360289e697022a3f57abaad344b28f",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/scala-swing_2.11-1.0.1.jar"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang:scala-xml_2.11:1.0.2@jar.pack.xz",
-                            "name": "Minecraft Forge (scala-xml)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 217812,
-                                "MD5": "cc891b094a4c32dedc56bfefe9b072ff",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/scala-xml_2.11-1.0.2.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "com.typesafe.akka:akka-actor_2.11:2.3.3@jar.pack.xz",
-                            "name": "Minecraft Forge (akka-actor)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 746612,
-                                "MD5": "25cb22c3078e9fb3f7a861c912924862",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/akka-actor_2.11-2.3.3.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "com.typesafe:config:1.2.1@jar.pack.xz",
-                            "name": "Minecraft Forge (typesafe-config)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 56636,
-                                "MD5": "10ec4ccabc4e68aac9cf87165ead5d7d",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/config-1.2.1.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "lzma:lzma:0.0.1",
-                            "name": "Mojang (LZMA)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 5762,
-                                "MD5": "a3e3c3186e41c4a1a3027ba2bb23cdc6",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/lzma-0.0.1.jar"
-                            }
-                        },
-                        {
-                            "id": "net.sf.trove4j:trove4j:3.0.3",
-                            "name": "Trove4J",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 2523218,
-                                "MD5": "8fc4d4e0129244f9fd39650c5f30feb2",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/trove4j-3.0.3.jar"
-                            }
-                        },
-                        {
-                            "id": "java3d:vecmath:1.5.2",
-                            "name": "Vecmath",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 318956,
-                                "MD5": "e5d2b7f46c4800a32f62ce75676a5710",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/vecmath-1.5.2.jar"
-                            }
-                        },
-                        {
-                            "id": "net.sf.jopt-simple:jopt-simple:4.6",
-                            "name": "Jopt-simple",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 62477,
-                                "MD5": "13560a58a79b46b82057686543e8d727",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/jopt-simple-4.6.jar"
-                            }
-                        },
-                        {
-                            "id": "net.minecraftforge:MercuriusUpdater:1.11.2",
-                            "name": "MercuriusUpdater",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 15146,
-                                "MD5": "7556d06064ebbfa3b334a15092d725d0",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/MercuriusUpdater-1.11.2.jar"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "id": "com.westeroscraft:westerosblocks:3.2.0-beta-1-190",
-                    "name": "WesterosBlocks",
-                    "type": "ForgeMod",
-                    "artifact": {
-                        "size": 17376788,
-                         "MD5": "370f4f1804c93f498f31af8dac509605",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/prod-1.11.2/mods/WesterosBlocks.jar"
-                    }
-                },
-                {
-                    "id": "com.westeroscraft:westeroscraftrp:2019-01-21",
-                    "name": "WesterosCraft Resource Pack",
-                    "type": "File",
-                    "artifact": {
-                        "size": 46999843,
-                        "MD5": "309eb9e5296e9f55cfecb7d4058245a4",
-                        "path": "resourcepacks/WesterosCraft.zip",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/prod-1.11.2/resourcepacks/WesterosCraft.zip"
-                    }
-                },
-                {
-                    "id": "net.optifine:optifine:1.11.2_HD_U_C7",
-                    "name": "Optifine",
-                    "type": "ForgeMod",
-                    "artifact": {
-                        "size": 2254712,
-                        "MD5": "0dd7761e908f9b245bb0dc0fac5649f5",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/prod-1.11.2/mods/OptiFine.jar"
-                    }
-                },
-                {
-                    "id": "mezz:jei:1.11.2-4.5.0.290",
-                    "name": "JustEnoughItems",
-                    "type": "ForgeMod",
-                    "artifact": {
-                        "size": 538740,
-                        "MD5": "f4d931f6db6210621a86fa1e7eae8016",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/prod-1.11.2/mods/jei.jar"
-                    }
-                },
-                {
-                    "id": "org.blockartistry:dynsurround:1.11.2-3.4.9.3",
-                    "name": "DynamicSurroundings",
-                    "type": "ForgeMod",
-                    "required": {
-                        "value": false
-                    },
-                    "artifact": {
-                        "size": 22291385,
-                        "MD5": "65403c66d8b3655b372f58047941d206",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/prod-1.11.2/mods/DynamicSurroundings.jar"
-                    },
-                    "subModules": [
-                        {
-                            "id": "dsurround.cfg",
-                            "name": "DynamicSurroundings General Configuration File",
-                            "type": "File",
-                            "artifact": {
-                                "size": 20258,
-                                "path": "/config/dsurround/dsurround.cfg",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/prod-1.11.2/config/dsurround/dsurround.cfg"
-                            }
-                        },
-                        {
-                            "id": "westeros.json",
-                            "name": "DynamicSurroundings WesterosCraft Configuration File",
-                            "type": "File",
-                            "artifact": {
-                                "size": 608,
-                                "MD5": "44eab112ff24d0bd29974c270de868ba",
-                                "path": "/config/dsurround/westeros.json",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/prod-1.11.2/config/dsurround/westeros.json"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "id": "octarine-noise:betterfoliage:1.11.2-2.1.10",
-                    "name": "BetterFoliage",
-                    "type": "ForgeMod",
-                    "required": {
-                        "value": false
-                    },
-                    "artifact": {
-                        "size": 4675903,
-                        "MD5": "522fdf73b6e4343cb6243872fb7b4b6c",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/prod-1.11.2/mods/BetterFoliage.jar"
-                    },
-                    "subModules": [
-                        {
-                            "id": "betterfoliage.cfg",
-                            "name": "BetterFoliage Configuration File",
-                            "type": "File",
-                            "artifact": {
-                                "size": 7878,
-                                "MD5": "6dd38f873c4129af05a2d6c500cbe954",
-                                "path": "/config/betterfoliage.cfg",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/prod-1.11.2/config/betterfoliage.cfg"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "id": "techbrew:journeymap:1.11.2-5.4.7",
-                    "name": "JourneyMap",
-                    "type": "ForgeMod",
-                    "required": {
-                        "value": false
-                    },
-                    "artifact": {
-                        "size": 1735525,
-                        "MD5": "1c3380502eb7b9a495581b2402d144df",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/prod-1.11.2/mods/journeymap.jar"
-                    }
-                },
-                {
-                    "id": "com.github.hexomod:worldeditcuife2:2.1.1-mf-1.11.2-13.20.0.2228",
-                    "name": "WorldEditCUI",
-                    "type": "ForgeMod",
-                    "required": {
-                        "value": false
-                    },
-                    "artifact": {
-                        "size": 461691,
-                        "MD5": "439f82b69f3464969163c188818c677b",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/prod-1.11.2/mods/worldeditcuife.jar"
-                    }
-                },
-                {
-                    "id": "mcp.mobius:waila:1.7.1_1.11.2",
-                    "name": "Waila",
-                    "type": "ForgeMod",
-                    "required": {
-                        "value": false
-                    },
-                    "artifact": {
-                        "size": 542744,
-                        "MD5": "26258a3557bf333e8f4ce8b1e9481031",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/prod-1.11.2/mods/Waila.jar"
-                    }
-                },
-                {
-                    "id": "com.mumfrey:liteloader:1.11.2",
-                    "name": "Liteloader",
-                    "type": "LiteLoader",
-                    "required": {
-                        "value": false,
-                        "def": false
-                    },
-                    "artifact": {
-                        "size": 1685422,
-                        "MD5": "3a98b5ed95810bf164e71c1a53be568d",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/liteloader.jar"
-                    },
-                    "subModules": [
-                        {
-                            "id": "com.mumfrey:macrokeybindmod:0.14.4-1.11.2@litemod",
-                            "name": "Macro/Keybind Mod",
-                            "type": "LiteMod",
-                            "required": {
-                                "value": false,
-                                "def": false
-                            },
-                            "artifact": {
-                                "size": 1670811,
-                                "MD5": "16080785577b391d426c62c8d3138558",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/prod-1.11.2/mods/macrokeybindmod.litemod"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "id": "com.sonicether:seus:11.0",
-                    "name": "Sonic Ether's Unbelievable Shaders",
-                    "type": "File",
-                    "artifact": {
-                        "size": 175159,
-                        "MD5": "bfa8c31d1da8131b59917bb2460205b1",
-                        "path": "shaderpacks/SEUS v11.0.zip",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/prod-1.11.2/shaderpacks/SEUS.zip"
-                    }
-                },
-                {
-                    "id": "options.txt",
-                    "name": "Default Client Options",
-                    "type": "File",
-                    "artifact": {
-                        "size": 1973,
-                        "path": "options.txt",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/options-1.11.2.txt" 
-                    }
-                },
-                {
-                    "id": "servers.dat",
-                    "name": "Saved Client Servers",
-                    "type": "File",
-                    "artifact": {
-                        "size": 84,
-                        "MD5": "71d99e229d7d2b8d2a6423e46832a4b8",
-                        "path": "servers.dat",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/prod-1.11.2/servers.dat" 
-                    }
-                }
-            ]
+            {
+              "id": "net.neoforged:neoforge:21.1.219:client",
+              "name": "Minecraft NeoForge (client jar)",
+              "type": "Library",
+              "classpath": false,
+              "artifact": {
+                "size": 5670483,
+                "MD5": "a21d486caacfcb3dd66ce869b9bc74f6",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/net/neoforged/neoforge/21.1.219/neoforge-21.1.219-client.jar"
+              },
+              "subModules": []
+            },
+            {
+              "id": "net.minecraft:client:1.21.1-20240808.144430:extra",
+              "name": "Minecraft NeoForge (client extra)",
+              "type": "Library",
+              "classpath": false,
+              "artifact": {
+                "size": 12372293,
+                "MD5": "973b9700852b66bb7b74df75b0113db2",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/net/minecraft/client/1.21.1-20240808.144430/client-1.21.1-20240808.144430-extra.jar"
+              },
+              "subModules": []
+            },
+            {
+              "id": "net.minecraft:client:1.21.1-20240808.144430:slim",
+              "name": "Minecraft NeoForge (client slim)",
+              "type": "Library",
+              "classpath": false,
+              "artifact": {
+                "size": 14464635,
+                "MD5": "21a31126d805df21389e0b2ff8cb7411",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/net/minecraft/client/1.21.1-20240808.144430/client-1.21.1-20240808.144430-slim.jar"
+              },
+              "subModules": []
+            },
+            {
+              "id": "net.minecraft:client:1.21.1-20240808.144430:srg",
+              "name": "Minecraft NeoForge (client srg)",
+              "type": "Library",
+              "classpath": false,
+              "artifact": {
+                "size": 18725656,
+                "MD5": "24d790d385dff0146020f1875b969e52",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/net/minecraft/client/1.21.1-20240808.144430/client-1.21.1-20240808.144430-srg.jar"
+              },
+              "subModules": []
+            },
+            {
+              "id": "net.neoforged.fancymodloader:earlydisplay:4.0.42",
+              "name": "Minecraft NeoForge (earlydisplay)",
+              "type": "Library",
+              "artifact": {
+                "size": 261718,
+                "MD5": "6df1105e4016ee9992ca93cd0103e218",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/net/neoforged/fancymodloader/earlydisplay/4.0.42/earlydisplay-4.0.42.jar"
+              }
+            },
+            {
+              "id": "net.neoforged.fancymodloader:loader:4.0.42",
+              "name": "Minecraft NeoForge (loader)",
+              "type": "Library",
+              "artifact": {
+                "size": 504899,
+                "MD5": "1722666ba373811ef9b7022c0c4a5a73",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/net/neoforged/fancymodloader/loader/4.0.42/loader-4.0.42.jar"
+              }
+            },
+            {
+              "id": "net.neoforged.accesstransformers:at-modlauncher:10.0.1",
+              "name": "Minecraft NeoForge (at-modlauncher)",
+              "type": "Library",
+              "artifact": {
+                "size": 2347,
+                "MD5": "f65434f122b97b1ac8fe56ff54873b5f",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/net/neoforged/accesstransformers/at-modlauncher/10.0.1/at-modlauncher-10.0.1.jar"
+              }
+            },
+            {
+              "id": "net.neoforged:accesstransformers:10.0.1",
+              "name": "Minecraft NeoForge (accesstransformers)",
+              "type": "Library",
+              "artifact": {
+                "size": 67234,
+                "MD5": "3a01a09a2b0900381dce48e118882849",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/net/neoforged/accesstransformers/10.0.1/accesstransformers-10.0.1.jar"
+              }
+            },
+            {
+              "id": "net.neoforged:bus:8.0.5",
+              "name": "Minecraft NeoForge (bus)",
+              "type": "Library",
+              "artifact": {
+                "size": 30340,
+                "MD5": "95eee080d9de7cb764adcb8fa2ecf3fb",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/net/neoforged/bus/8.0.5/bus-8.0.5.jar"
+              }
+            },
+            {
+              "id": "net.neoforged:coremods:7.0.3",
+              "name": "Minecraft NeoForge (coremods)",
+              "type": "Library",
+              "artifact": {
+                "size": 22659,
+                "MD5": "4527abf6b7116dae1c2178f7beab0ba2",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/net/neoforged/coremods/7.0.3/coremods-7.0.3.jar"
+              }
+            },
+            {
+              "id": "cpw.mods:modlauncher:11.0.5",
+              "name": "Minecraft NeoForge (modlauncher)",
+              "type": "Library",
+              "artifact": {
+                "size": 116486,
+                "MD5": "70fa994f64b2620d20dc325bab758d1b",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/cpw/mods/modlauncher/11.0.5/modlauncher-11.0.5.jar"
+              }
+            },
+            {
+              "id": "net.neoforged:mergetool:2.0.0:api",
+              "name": "Minecraft NeoForge (mergetool)",
+              "type": "Library",
+              "artifact": {
+                "size": 2550,
+                "MD5": "818b398f65b8dc5af802b721fd1d0b56",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/net/neoforged/mergetool/2.0.0/mergetool-2.0.0-api.jar"
+              }
+            },
+            {
+              "id": "com.electronwill.night-config:toml:3.8.3",
+              "name": "Minecraft NeoForge (toml)",
+              "type": "Library",
+              "artifact": {
+                "size": 39516,
+                "MD5": "71c9f7b86422f206c0d78c1a0600fd3a",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/com/electronwill/night-config/toml/3.8.3/toml-3.8.3.jar"
+              }
+            },
+            {
+              "id": "com.electronwill.night-config:core:3.8.3",
+              "name": "Minecraft NeoForge (core)",
+              "type": "Library",
+              "artifact": {
+                "size": 382911,
+                "MD5": "a69db71d5c9c274ff08f175d7c12cb1a",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/com/electronwill/night-config/core/3.8.3/core-3.8.3.jar"
+              }
+            },
+            {
+              "id": "net.neoforged:JarJarSelector:0.4.1",
+              "name": "Minecraft NeoForge (JarJarSelector)",
+              "type": "Library",
+              "artifact": {
+                "size": 17168,
+                "MD5": "20d1fe8972655189f69845554ee1a4d1",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/net/neoforged/JarJarSelector/0.4.1/JarJarSelector-0.4.1.jar"
+              }
+            },
+            {
+              "id": "net.neoforged:JarJarMetadata:0.4.1",
+              "name": "Minecraft NeoForge (JarJarMetadata)",
+              "type": "Library",
+              "artifact": {
+                "size": 15648,
+                "MD5": "c2f30969dd8b1dc8e3f78c731bd2c5c8",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/net/neoforged/JarJarMetadata/0.4.1/JarJarMetadata-0.4.1.jar"
+              }
+            },
+            {
+              "id": "org.apache.maven:maven-artifact:3.8.5",
+              "name": "Minecraft NeoForge (maven-artifact)",
+              "type": "Library",
+              "artifact": {
+                "size": 58077,
+                "MD5": "ce473b0d9fbfd10fe147f03fe8707d67",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/org/apache/maven/maven-artifact/3.8.5/maven-artifact-3.8.5.jar"
+              }
+            },
+            {
+              "id": "net.jodah:typetools:0.6.3",
+              "name": "Minecraft NeoForge (typetools)",
+              "type": "Library",
+              "artifact": {
+                "size": 18281,
+                "MD5": "d4a375bf382f726cf1a650ccb38a736c",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/net/jodah/typetools/0.6.3/typetools-0.6.3.jar"
+              }
+            },
+            {
+              "id": "net.minecrell:terminalconsoleappender:1.3.0",
+              "name": "Minecraft NeoForge (terminalconsoleappender)",
+              "type": "Library",
+              "artifact": {
+                "size": 16949,
+                "MD5": "179d3abaf9736dbd8fbd4fa98e1c6ea1",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/net/minecrell/terminalconsoleappender/1.3.0/terminalconsoleappender-1.3.0.jar"
+              }
+            },
+            {
+              "id": "net.fabricmc:sponge-mixin:0.15.2+mixin.0.8.7",
+              "name": "Minecraft NeoForge (sponge-mixin)",
+              "type": "Library",
+              "artifact": {
+                "size": 1494751,
+                "MD5": "4808c070bf19415a5cb4a0cb5e569b12",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/net/fabricmc/sponge-mixin/0.15.2+mixin.0.8.7/sponge-mixin-0.15.2+mixin.0.8.7.jar"
+              }
+            },
+            {
+              "id": "org.openjdk.nashorn:nashorn-core:15.4",
+              "name": "Minecraft NeoForge (nashorn-core)",
+              "type": "Library",
+              "artifact": {
+                "size": 2167292,
+                "MD5": "a9b3360e6a486cf62c1952c7816b7d97",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/org/openjdk/nashorn/nashorn-core/15.4/nashorn-core-15.4.jar"
+              }
+            },
+            {
+              "id": "org.apache.commons:commons-lang3:3.14.0",
+              "name": "Minecraft NeoForge (commons-lang3)",
+              "type": "Library",
+              "artifact": {
+                "size": 657952,
+                "MD5": "4e5c3f5e6b0b965ef241d7d72ac8971f",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/org/apache/commons/commons-lang3/3.14.0/commons-lang3-3.14.0.jar"
+              }
+            },
+            {
+              "id": "cpw.mods:bootstraplauncher:2.0.2",
+              "name": "Minecraft NeoForge (bootstraplauncher)",
+              "type": "Library",
+              "artifact": {
+                "size": 11116,
+                "MD5": "169bd8c006e69d83267466e311d4049d",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/cpw/mods/bootstraplauncher/2.0.2/bootstraplauncher-2.0.2.jar"
+              }
+            },
+            {
+              "id": "cpw.mods:securejarhandler:3.0.8",
+              "name": "Minecraft NeoForge (securejarhandler)",
+              "type": "Library",
+              "artifact": {
+                "size": 103765,
+                "MD5": "eb0d5290a2681c2dbeb8088b82e0fbf9",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/cpw/mods/securejarhandler/3.0.8/securejarhandler-3.0.8.jar"
+              }
+            },
+            {
+              "id": "org.ow2.asm:asm-commons:9.8",
+              "name": "Minecraft NeoForge (asm-commons)",
+              "type": "Library",
+              "artifact": {
+                "size": 73498,
+                "MD5": "c8c3d9ccf240144e74d94ff658b024c9",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/org/ow2/asm/asm-commons/9.8/asm-commons-9.8.jar"
+              }
+            },
+            {
+              "id": "org.ow2.asm:asm-util:9.8",
+              "name": "Minecraft NeoForge (asm-util)",
+              "type": "Library",
+              "artifact": {
+                "size": 94559,
+                "MD5": "62498ef324bdab15f407d703f7d78d19",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/org/ow2/asm/asm-util/9.8/asm-util-9.8.jar"
+              }
+            },
+            {
+              "id": "org.ow2.asm:asm-analysis:9.8",
+              "name": "Minecraft NeoForge (asm-analysis)",
+              "type": "Library",
+              "artifact": {
+                "size": 35151,
+                "MD5": "3d63508405f5610fc2ea673ff5471553",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/org/ow2/asm/asm-analysis/9.8/asm-analysis-9.8.jar"
+              }
+            },
+            {
+              "id": "org.ow2.asm:asm-tree:9.8",
+              "name": "Minecraft NeoForge (asm-tree)",
+              "type": "Library",
+              "artifact": {
+                "size": 51934,
+                "MD5": "4ab1aaec43c77a2d9b56e6d6d496f705",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/org/ow2/asm/asm-tree/9.8/asm-tree-9.8.jar"
+              }
+            },
+            {
+              "id": "org.ow2.asm:asm:9.8",
+              "name": "Minecraft NeoForge (asm)",
+              "type": "Library",
+              "artifact": {
+                "size": 126113,
+                "MD5": "f5adf3bfc54fb3d2cd8e3a1f275084bc",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/org/ow2/asm/asm/9.8/asm-9.8.jar"
+              }
+            },
+            {
+              "id": "net.neoforged:JarJarFileSystems:0.4.1",
+              "name": "Minecraft NeoForge (JarJarFileSystems)",
+              "type": "Library",
+              "artifact": {
+                "size": 31807,
+                "MD5": "8d75021e5aeb04652b4b9ae3df500b9e",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/net/neoforged/JarJarFileSystems/0.4.1/JarJarFileSystems-0.4.1.jar"
+              }
+            },
+            {
+              "id": "net.sf.jopt-simple:jopt-simple:5.0.4",
+              "name": "Minecraft NeoForge (jopt-simple)",
+              "type": "Library",
+              "artifact": {
+                "size": 78146,
+                "MD5": "eb0d9dffe9b0eddead68fe678be76c49",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/net/sf/jopt-simple/jopt-simple/5.0.4/jopt-simple-5.0.4.jar"
+              }
+            },
+            {
+              "id": "org.slf4j:slf4j-api:2.0.9",
+              "name": "Minecraft NeoForge (slf4j-api)",
+              "type": "Library",
+              "artifact": {
+                "size": 64579,
+                "MD5": "45630e54b0f0ac2b3c80462515ad8fda",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/org/slf4j/slf4j-api/2.0.9/slf4j-api-2.0.9.jar"
+              }
+            },
+            {
+              "id": "org.antlr:antlr4-runtime:4.13.1",
+              "name": "Minecraft NeoForge (antlr4-runtime)",
+              "type": "Library",
+              "artifact": {
+                "size": 326305,
+                "MD5": "dd465ddb2a8dbf69eb6c94e69a0d5f0f",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/org/antlr/antlr4-runtime/4.13.1/antlr4-runtime-4.13.1.jar"
+              }
+            },
+            {
+              "id": "com.mojang:logging:1.2.7",
+              "name": "Minecraft NeoForge (logging)",
+              "type": "Library",
+              "artifact": {
+                "size": 15343,
+                "MD5": "d01ea99740509a58222a426cc36f5456",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/com/mojang/logging/1.2.7/logging-1.2.7.jar"
+              }
+            },
+            {
+              "id": "org.apache.logging.log4j:log4j-slf4j2-impl:2.22.1",
+              "name": "Minecraft NeoForge (log4j-slf4j2-impl)",
+              "type": "Library",
+              "artifact": {
+                "size": 27364,
+                "MD5": "82cc94f378ffb853efe084ee9bf4c463",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/org/apache/logging/log4j/log4j-slf4j2-impl/2.22.1/log4j-slf4j2-impl-2.22.1.jar"
+              }
+            },
+            {
+              "id": "org.apache.logging.log4j:log4j-core:2.22.1",
+              "name": "Minecraft NeoForge (log4j-core)",
+              "type": "Library",
+              "artifact": {
+                "size": 1900022,
+                "MD5": "b5987ee449d4be4244e2e214683c45af",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/org/apache/logging/log4j/log4j-core/2.22.1/log4j-core-2.22.1.jar"
+              }
+            },
+            {
+              "id": "org.apache.logging.log4j:log4j-api:2.22.1",
+              "name": "Minecraft NeoForge (log4j-api)",
+              "type": "Library",
+              "artifact": {
+                "size": 335001,
+                "MD5": "27db0eb89ae965179480df00d8d1cf03",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/org/apache/logging/log4j/log4j-api/2.22.1/log4j-api-2.22.1.jar"
+              }
+            },
+            {
+              "id": "org.jline:jline-reader:3.20.0",
+              "name": "Minecraft NeoForge (jline-reader)",
+              "type": "Library",
+              "artifact": {
+                "size": 171052,
+                "MD5": "9ece57ca56a1688d1d09fe2c48e7a292",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/org/jline/jline-reader/3.20.0/jline-reader-3.20.0.jar"
+              }
+            },
+            {
+              "id": "org.jline:jline-terminal:3.20.0",
+              "name": "Minecraft NeoForge (jline-terminal)",
+              "type": "Library",
+              "artifact": {
+                "size": 228481,
+                "MD5": "e45dace437743e6b5e75c81eb455fd3e",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/org/jline/jline-terminal/3.20.0/jline-terminal-3.20.0.jar"
+              }
+            },
+            {
+              "id": "commons-io:commons-io:2.15.1",
+              "name": "Minecraft NeoForge (commons-io)",
+              "type": "Library",
+              "artifact": {
+                "size": 501218,
+                "MD5": "84351f7991a0e6722f00e96a4ccc376f",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/commons-io/commons-io/2.15.1/commons-io-2.15.1.jar"
+              }
+            },
+            {
+              "id": "net.minecraftforge:srgutils:0.4.15",
+              "name": "Minecraft NeoForge (srgutils)",
+              "type": "Library",
+              "artifact": {
+                "size": 69393,
+                "MD5": "79812fd073afe1c046bc1ea46ad28095",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/net/minecraftforge/srgutils/0.4.15/srgutils-0.4.15.jar"
+              }
+            },
+            {
+              "id": "com.google.guava:guava:32.1.2-jre",
+              "name": "Minecraft NeoForge (guava)",
+              "type": "Library",
+              "artifact": {
+                "size": 3041591,
+                "MD5": "5fe031b3b35ed56182478811a931d617",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/com/google/guava/guava/32.1.2-jre/guava-32.1.2-jre.jar"
+              }
+            },
+            {
+              "id": "com.google.guava:failureaccess:1.0.1",
+              "name": "Minecraft NeoForge (failureaccess)",
+              "type": "Library",
+              "artifact": {
+                "size": 4617,
+                "MD5": "091883993ef5bfa91da01dcc8fc52236",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/com/google/guava/failureaccess/1.0.1/failureaccess-1.0.1.jar"
+              }
+            },
+            {
+              "id": "com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava",
+              "name": "Minecraft NeoForge (listenablefuture)",
+              "type": "Library",
+              "artifact": {
+                "size": 2199,
+                "MD5": "d094c22570d65e132c19cea5d352e381",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/com/google/guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar"
+              }
+            },
+            {
+              "id": "com.google.code.findbugs:jsr305:3.0.2",
+              "name": "Minecraft NeoForge (jsr305)",
+              "type": "Library",
+              "artifact": {
+                "size": 19936,
+                "MD5": "dd83accb899363c32b07d7a1b2e4ce40",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar"
+              }
+            },
+            {
+              "id": "org.checkerframework:checker-qual:3.33.0",
+              "name": "Minecraft NeoForge (checker-qual)",
+              "type": "Library",
+              "artifact": {
+                "size": 223979,
+                "MD5": "fc9418b779d9d57dcd52197006cbdb9b",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/org/checkerframework/checker-qual/3.33.0/checker-qual-3.33.0.jar"
+              }
+            },
+            {
+              "id": "com.google.errorprone:error_prone_annotations:2.18.0",
+              "name": "Minecraft NeoForge (error_prone_annotations)",
+              "type": "Library",
+              "artifact": {
+                "size": 16017,
+                "MD5": "64145d0e7fee5a69ed7b84cf402de998",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/com/google/errorprone/error_prone_annotations/2.18.0/error_prone_annotations-2.18.0.jar"
+              }
+            },
+            {
+              "id": "com.google.j2objc:j2objc-annotations:2.8",
+              "name": "Minecraft NeoForge (j2objc-annotations)",
+              "type": "Library",
+              "artifact": {
+                "size": 9301,
+                "MD5": "c50af69b704dc91050efb98e0dff66d1",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/com/google/j2objc/j2objc-annotations/2.8/j2objc-annotations-2.8.jar"
+              }
+            },
+            {
+              "id": "com.google.code.gson:gson:2.10.1",
+              "name": "Minecraft NeoForge (gson)",
+              "type": "Library",
+              "artifact": {
+                "size": 283367,
+                "MD5": "df6097815738cb31fc56391553210843",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar"
+              }
+            },
+            {
+              "id": "org.codehaus.plexus:plexus-utils:3.3.0",
+              "name": "Minecraft NeoForge (plexus-utils)",
+              "type": "Library",
+              "artifact": {
+                "size": 263253,
+                "MD5": "3ae76ff0195ada460d495efe1fb50d17",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/org/codehaus/plexus/plexus-utils/3.3.0/plexus-utils-3.3.0.jar"
+              }
+            },
+            {
+              "id": "com.machinezoo.noexception:noexception:1.7.1",
+              "name": "Minecraft NeoForge (noexception)",
+              "type": "Library",
+              "artifact": {
+                "size": 250861,
+                "MD5": "fcc3e4df4990088c964f687b62f7c448",
+                "url": "https://hanol0927.github.io/Ssachon/repo/lib/com/machinezoo/noexception/noexception/1.7.1/noexception-1.7.1.jar"
+              }
+            }
+          ]
         },
         {
-            "id": "WesterosCraftTest-1.11.2",
-            "name": "WesterosCraft Test Server",
-            "description": "Main testing server. Experimental changes are live here.",
-            "icon": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/server-test.png",
-            "version": "3.9.4",
-            "address": "mc.westeroscraft.com:4444",
-            "minecraftVersion": "1.11.2",
-            "discord": {
-                "shortId": "Test Server",
-                "largeImageText": "WesterosCraft Test Server",
-                "largeImageKey": "server-test"
-            },
-            "mainServer": false,
-            "autoconnect": true,
-            "modules": [
-                {
-                    "id": "net.minecraftforge:forge:1.11.2-13.20.1.2476",
-                    "name": "Minecraft Forge",
-                    "type": "ForgeHosted",
-                    "artifact": {
-                        "size": 4455536,
-                        "MD5": "7cef816cc01d53a04a180f0214d2982a",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/forge-1.11.2-13.20.1.2476-universal.jar"
-                    },
-                    "subModules": [
-                        {
-                            "id": "net.minecraft:launchwrapper:1.12",
-                            "name": "Mojang (LaunchWrapper)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 32999,
-                                "MD5": "934b2d91c7c5be4a49577c9e6b40e8da",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/launchwrapper-1.12.jar"
-                            }
-                        },
-                        {
-                            "id": "org.ow2.asm:asm-all:5.0.3",
-                            "name": "Mojang (ASM)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 241639,
-                                "MD5": "c5cc4613bbdfba3ccf5f0ab85390d0b8",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/asm-all-5.0.3.jar"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang:scala-library:2.11.1@jar.pack.xz",
-                            "name": "Minecraft Forge (scala-library)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 1474672,
-                                "MD5": "379c15c4f724421c6d5d7aecedaf87a6",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/scala-library-2.11.1.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang:scala-compiler:2.11.1@jar.pack.xz",
-                            "name": "Minecraft Forge (scala-compiler)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 3076920,
-                                "MD5": "7d89e952f2d5c74577310cd2c28e3f20",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/scala-compiler-2.11.1.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang:scala-actors-migration_2.11:1.1.0@jar.pack.xz",
-                            "name": "Minecraft Forge (scala-actors-migration)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 21324,
-                                "MD5": "04e3428b2600ace33c7ae2bf1f6c0a4c",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/scala-actors-migration_2.11-1.1.0.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang.plugins:scala-continuations-library_2.11:1.0.2@jar.pack.xz",
-                            "name": "Minecraft Forge (scala-continuations-library)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 7956,
-                                "MD5": "ed9b1d27aba8ac4090a3749c4dfc895a",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/scala-continuations-library_2.11-1.0.2.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang.plugins:scala-continuations-plugin_2.11.1:1.0.2@jar.pack.xz",
-                            "name": "Minecraft Forge (scala-continuations-plugin)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 46140,
-                                "MD5": "a8232db22a72a981de6b1399eb86dff7",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/scala-continuations-plugin_2.11.1-1.0.2.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang:scala-parser-combinators_2.11:1.0.1@jar.pack.xz",
-                            "name": "Minecraft Forge (scala-parser-combinators)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 85568,
-                                "MD5": "2e50a7df17680daadacca69f07f8a16d",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/scala-parser-combinators_2.11-1.0.1.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang:scala-reflect:2.11.1@jar.pack.xz",
-                            "name": "Minecraft Forge (scala-reflect)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 1070312,
-                                "MD5": "84e5dc81c10e2bd74c579c9d0332fdd9",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/scala-reflect-2.11.1.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang:scala-swing_2.11:1.0.1",
-                            "name": "Minecraft Forge (scala-swing)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 736795,
-                                "MD5": "1d360289e697022a3f57abaad344b28f",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/scala-swing_2.11-1.0.1.jar"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang:scala-xml_2.11:1.0.2@jar.pack.xz",
-                            "name": "Minecraft Forge (scala-xml)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 217812,
-                                "MD5": "cc891b094a4c32dedc56bfefe9b072ff",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/scala-xml_2.11-1.0.2.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "com.typesafe.akka:akka-actor_2.11:2.3.3@jar.pack.xz",
-                            "name": "Minecraft Forge (akka-actor)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 746612,
-                                "MD5": "25cb22c3078e9fb3f7a861c912924862",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/akka-actor_2.11-2.3.3.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "com.typesafe:config:1.2.1@jar.pack.xz",
-                            "name": "Minecraft Forge (typesafe-config)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 56636,
-                                "MD5": "10ec4ccabc4e68aac9cf87165ead5d7d",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/config-1.2.1.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "lzma:lzma:0.0.1",
-                            "name": "Mojang (LZMA)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 5762,
-                                "MD5": "a3e3c3186e41c4a1a3027ba2bb23cdc6",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/lzma-0.0.1.jar"
-                            }
-                        },
-                        {
-                            "id": "net.sf.trove4j:trove4j:3.0.3",
-                            "name": "Trove4J",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 2523218,
-                                "MD5": "8fc4d4e0129244f9fd39650c5f30feb2",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/trove4j-3.0.3.jar"
-                            }
-                        },
-                        {
-                            "id": "java3d:vecmath:1.5.2",
-                            "name": "Vecmath",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 318956,
-                                "MD5": "e5d2b7f46c4800a32f62ce75676a5710",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/vecmath-1.5.2.jar"
-                            }
-                        },
-                        {
-                            "id": "net.sf.jopt-simple:jopt-simple:4.6",
-                            "name": "Jopt-simple",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 62477,
-                                "MD5": "13560a58a79b46b82057686543e8d727",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/jopt-simple-4.6.jar"
-                            }
-                        },
-                        {
-                            "id": "net.minecraftforge:MercuriusUpdater:1.11.2",
-                            "name": "MercuriusUpdater",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 15146,
-                                "MD5": "7556d06064ebbfa3b334a15092d725d0",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/MercuriusUpdater-1.11.2.jar"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "id": "com.westeroscraft:westerosblocks:3.2.0-beta-1-190",
-                    "name": "WesterosBlocks",
-                    "type": "ForgeMod",
-                    "artifact": {
-                        "size": 17376788,
-                         "MD5": "370f4f1804c93f498f31af8dac509605",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.11.2/mods/WesterosBlocks.jar"
-                    }
-                },
-                {
-                    "id": "com.westeroscraft:westeroscraftrp:2019-01-21",
-                    "name": "WesterosCraft Resource Pack",
-                    "type": "File",
-                    "artifact": {
-                        "size": 46999843,
-                        "MD5": "309eb9e5296e9f55cfecb7d4058245a4",
-                        "path": "resourcepacks/WesterosCraft.zip",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.11.2/resourcepacks/WesterosCraft.zip"
-                    }
-                },
-                {
-                    "id": "net.optifine:optifine:1.11.2_HD_U_C7",
-                    "name": "Optifine",
-                    "type": "ForgeMod",
-                    "artifact": {
-                        "size": 2254712,
-                        "MD5": "0dd7761e908f9b245bb0dc0fac5649f5",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.11.2/mods/OptiFine.jar"
-                    }
-                },
-                {
-                    "id": "mezz:jei:1.11.2-4.5.1.296",
-                    "name": "JustEnoughItems",
-                    "type": "ForgeMod",
-                    "artifact": {
-                        "size": 542399,
-                        "MD5": "584b3099d34c9a1b8649385b90831b34",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.11.2/mods/jei.jar"
-                    }
-                },
-                {
-                    "id": "org.blockartistry:dynsurround:1.11.2-3.4.9.3",
-                    "name": "DynamicSurroundings",
-                    "type": "ForgeMod",
-                    "required": {
-                        "value": false
-                    },
-                    "artifact": {
-                        "size": 22291385,
-                        "MD5": "65403c66d8b3655b372f58047941d206",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.11.2/mods/DynamicSurroundings.jar"
-                    },
-                    "subModules": [
-                        {
-                            "id": "dsurround.cfg",
-                            "name": "DynamicSurroundings General Configuration File",
-                            "type": "File",
-                            "artifact": {
-                                "size": 20849,
-                                "path": "/config/dsurround/dsurround.cfg",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.11.2/config/dsurround/dsurround.cfg"
-                            }
-                        },
-                        {
-                            "id": "westeros.json",
-                            "name": "DynamicSurroundings WesterosCraft Configuration File",
-                            "type": "File",
-                            "artifact": {
-                                "size": 608,
-                                "MD5": "44eab112ff24d0bd29974c270de868ba",
-                                "path": "/config/dsurround/westeros.json",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.11.2/config/dsurround/westeros.json"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "id": "octarine-noise:betterfoliage:1.11.2-2.1.10",
-                    "name": "BetterFoliage",
-                    "type": "ForgeMod",
-                    "required": {
-                        "value": false
-                    },
-                    "artifact": {
-                        "size": 4675903,
-                        "MD5": "522fdf73b6e4343cb6243872fb7b4b6c",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.11.2/mods/BetterFoliage.jar"
-                    },
-                    "subModules": [
-                        {
-                            "id": "betterfoliage.cfg",
-                            "name": "BetterFoliage Configuration File",
-                            "type": "File",
-                            "artifact": {
-                                "size": 7878,
-                                "MD5": "6dd38f873c4129af05a2d6c500cbe954",
-                                "path": "/config/betterfoliage.cfg",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.11.2/config/betterfoliage.cfg"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "id": "techbrew:journeymap:1.11.2-5.5.2",
-                    "name": "JourneyMap",
-                    "type": "ForgeMod",
-                    "required": {
-                        "value": false
-                    },
-                    "artifact": {
-                        "size": 1799560,
-                        "MD5": "4315e9939bf64bfa963c8674cb13e838",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.11.2/mods/journeymap.jar"
-                    }
-                },
-                {
-                    "id": "com.github.hexomod:worldeditcuife2:2.1.2-mf-1.11.2-13.20.0.2228",
-                    "name": "WorldEditCUI",
-                    "type": "ForgeMod",
-                    "required": {
-                        "value": false
-                    },
-                    "artifact": {
-                        "size": 461696,
-                        "MD5": "53f6eef360af5329d9e52b5351657908",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.11.2/mods/worldeditcuife.jar"
-                    }
-                },
-                {
-                    "id": "mcp.mobius:waila:1.7.1_1.11.2",
-                    "name": "Waila",
-                    "type": "ForgeMod",
-                    "required": {
-                        "value": false
-                    },
-                    "artifact": {
-                        "size": 542744,
-                        "MD5": "26258a3557bf333e8f4ce8b1e9481031",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.11.2/mods/Waila.jar"
-                    }
-                },
-                {
-                    "id": "com.mumfrey:liteloader:1.11.2",
-                    "name": "Liteloader",
-                    "type": "LiteLoader",
-                    "required": {
-                        "value": false,
-                        "def": false
-                    },
-                    "artifact": {
-                        "size": 1685422,
-                        "MD5": "3a98b5ed95810bf164e71c1a53be568d",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.11.2/liteloader.jar"
-                    },
-                    "subModules": [
-                        {
-                            "id": "com.mumfrey:macrokeybindmod:0.14.4-1.11.2@litemod",
-                            "name": "Macro/Keybind Mod",
-                            "type": "LiteMod",
-                            "required": {
-                                "value": false,
-                                "def": false
-                            },
-                            "artifact": {
-                                "size": 1670811,
-                                "MD5": "16080785577b391d426c62c8d3138558",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.11.2/mods/macrokeybindmod.litemod"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "id": "com.sonicether:seus:11.0",
-                    "name": "Sonic Ether's Unbelievable Shaders",
-                    "type": "File",
-                    "artifact": {
-                        "size": 175159,
-                        "MD5": "bfa8c31d1da8131b59917bb2460205b1",
-                        "path": "shaderpacks/SEUS v11.0.zip",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.11.2/shaderpacks/SEUS.zip"
-                    }
-                },
-                {
-                    "id": "options.txt",
-                    "name": "Default Client Options",
-                    "type": "File",
-                    "artifact": {
-                        "size": 1973,
-                        "path": "options.txt",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/options-1.11.2.txt" 
-                    }
-                },
-                {
-                    "id": "servers.dat",
-                    "name": "Saved Client Servers",
-                    "type": "File",
-                    "artifact": {
-                        "size": 87,
-                        "MD5": "594de6063df993b5fde31c7290226ee4",
-                        "path": "servers.dat",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.11.2/servers.dat" 
-                    }
-                }
-            ]
+          "id": "generated.forgemod:advancementplaques:1.6.8@jar",
+          "name": "Advancement Plaques",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 195730,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/AdvancementPlaques-1.21.1-neoforge-1.6.8.jar",
+            "MD5": "ad6dc60871b30f6d69f25c0ec7d79871"
+          }
         },
         {
-            "id": "WesterosCraftTest-1.12.2",
-            "name": "WesterosCraft 1.12.2 Test Server",
-            "description": "Tests for our version change to 1.12.2 are live here.",
-            "icon": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/server-test.png",
-            "version": "4.2.1",
-            "address": "mc.westeroscraft.com:4445",
-            "minecraftVersion": "1.12.2",
-            "discord": {
-                "shortId": "1.12.2 Test Server",
-                "largeImageText": "WesterosCraft 1.12.2 Test Server",
-                "largeImageKey": "server-test"
-            },
-            "mainServer": false,
-            "autoconnect": true,
-            "modules": [
-                {
-                    "id": "net.minecraftforge:forge:1.12.2-14.23.5.2797",
-                    "name": "Minecraft Forge",
-                    "type": "ForgeHosted",
-                    "artifact": {
-                        "size": 4937218,
-                        "MD5": "5320593704af58b3906e7106d27e41c8",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.12.2/forge-1.12.2-14.23.5.2797-universal.jar"
-                    },
-                    "subModules": [
-                        {
-                            "id": "net.minecraft:launchwrapper:1.12",
-                            "name": "Mojang (LaunchWrapper)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 32999,
-                                "MD5": "934b2d91c7c5be4a49577c9e6b40e8da",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.12.2/launchwrapper-1.12.jar"
-                            }
-                        },
-                        {
-                            "id": "org.ow2.asm:asm-all:5.2",
-                            "name": "Mojang (ASM)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 247787,
-                                "MD5": "f5ad16c7f0338b541978b0430d51dc83",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.12.2/asm-all-5.2.jar"
-                            }
-                        },
-                        {
-                            "id": "jline:jline:2.13",
-                            "name": "Mojang (jline)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 248566,
-                                "MD5": "f251ba666cccb260ff7215b2cbeee8d4",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.12.2/jline-2.13.jar"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang:scala-library:2.11.1@jar.pack.xz",
-                            "name": "Minecraft Forge (scala-library)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 1474672,
-                                "MD5": "379c15c4f724421c6d5d7aecedaf87a6",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.12.2/scala-library-2.11.1.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang:scala-compiler:2.11.1@jar.pack.xz",
-                            "name": "Minecraft Forge (scala-compiler)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 3076920,
-                                "MD5": "7d89e952f2d5c74577310cd2c28e3f20",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.12.2/scala-compiler-2.11.1.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang:scala-actors-migration_2.11:1.1.0@jar.pack.xz",
-                            "name": "Minecraft Forge (scala-actors-migration)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 21324,
-                                "MD5": "04e3428b2600ace33c7ae2bf1f6c0a4c",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.12.2/scala-actors-migration_2.11-1.1.0.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang.plugins:scala-continuations-library_2.11:1.0.2@jar.pack.xz",
-                            "name": "Minecraft Forge (scala-continuations-library)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 7956,
-                                "MD5": "ed9b1d27aba8ac4090a3749c4dfc895a",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.12.2/scala-continuations-library_2.11-1.0.2.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang.plugins:scala-continuations-plugin_2.11.1:1.0.2@jar.pack.xz",
-                            "name": "Minecraft Forge (scala-continuations-plugin)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 46140,
-                                "MD5": "a8232db22a72a981de6b1399eb86dff7",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.12.2/scala-continuations-plugin_2.11.1-1.0.2.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang:scala-parser-combinators_2.11:1.0.1@jar.pack.xz",
-                            "name": "Minecraft Forge (scala-parser-combinators)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 85568,
-                                "MD5": "2e50a7df17680daadacca69f07f8a16d",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.12.2/scala-parser-combinators_2.11-1.0.1.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang:scala-reflect:2.11.1@jar.pack.xz",
-                            "name": "Minecraft Forge (scala-reflect)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 1070312,
-                                "MD5": "84e5dc81c10e2bd74c579c9d0332fdd9",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.12.2/scala-reflect-2.11.1.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang:scala-swing_2.11:1.0.1",
-                            "name": "Minecraft Forge (scala-swing)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 736795,
-                                "MD5": "1d360289e697022a3f57abaad344b28f",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.12.2/scala-swing_2.11-1.0.1.jar"
-                            }
-                        },
-                        {
-                            "id": "org.scala-lang:scala-xml_2.11:1.0.2@jar.pack.xz",
-                            "name": "Minecraft Forge (scala-xml)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 217812,
-                                "MD5": "cc891b094a4c32dedc56bfefe9b072ff",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.12.2/scala-xml_2.11-1.0.2.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "com.typesafe.akka:akka-actor_2.11:2.3.3@jar.pack.xz",
-                            "name": "Minecraft Forge (akka-actor)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 746612,
-                                "MD5": "25cb22c3078e9fb3f7a861c912924862",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.12.2/akka-actor_2.11-2.3.3.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "com.typesafe:config:1.2.1@jar.pack.xz",
-                            "name": "Minecraft Forge (typesafe-config)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 56636,
-                                "MD5": "10ec4ccabc4e68aac9cf87165ead5d7d",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.12.2/config-1.2.1.jar.pack.xz"
-                            }
-                        },
-                        {
-                            "id": "lzma:lzma:0.0.1",
-                            "name": "Mojang (LZMA)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 5762,
-                                "MD5": "a3e3c3186e41c4a1a3027ba2bb23cdc6",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.12.2/lzma-0.0.1.jar"
-                            }
-                        },
-                        {
-                            "id": "net.sf.trove4j:trove4j:3.0.3",
-                            "name": "Trove4J",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 2523218,
-                                "MD5": "8fc4d4e0129244f9fd39650c5f30feb2",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.12.2/trove4j-3.0.3.jar"
-                            }
-                        },
-                        {
-                            "id": "java3d:vecmath:1.5.2",
-                            "name": "Vecmath",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 318956,
-                                "MD5": "e5d2b7f46c4800a32f62ce75676a5710",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.12.2/vecmath-1.5.2.jar"
-                            }
-                        },
-                        {
-                            "id": "net.sf.jopt-simple:jopt-simple:5.0.3",
-                            "name": "Jopt-simple",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 78175,
-                                "MD5": "0a5ec84e23df9d7cfb4063bc55f2744c",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.12.2/jopt-simple-5.0.3.jar"
-                            }
-                        },
-                        {
-                            "id": "org.apache.maven:maven-artifact:3.5.3",
-                            "name": "maven-artifact",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 54961,
-                                "MD5": "7741ebf29690ee7d9dde9cf4376347fc",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.12.2/maven-artifact-3.5.3.jar"
-                            }
-                        },
-                        {
-                            "id": "net.minecraftforge:MercuriusUpdater:1.12.2",
-                            "name": "MercuriusUpdater",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 15098,
-                                "MD5": "6eb9e61097bee3103a2fdc42746b76a4",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.12.2/MercuriusUpdater-1.12.2.jar"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "id": "com.westeroscraft:westerosblocks:4.0.0-beta-1-66",
-                    "name": "WesterosBlocks",
-                    "type": "ForgeMod",
-                    "artifact": {
-                        "size": 17286330,
-                         "MD5": "e5c38ef42e9cc4b957122207dcf95f4f",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.12.2/mods/WesterosBlocks.jar"
-                    }
-                },
-                {
-                    "id": "com.westeroscraft:westeroscraftrp:2019-01-21",
-                    "name": "WesterosCraft Resource Pack",
-                    "type": "File",
-                    "artifact": {
-                        "size": 47002312,
-                        "MD5": "86b169611ca0e51fdc47384d8423c402",
-                        "path": "resourcepacks/WesterosCraft.zip",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.12.2/resourcepacks/WesterosCraft.zip"
-                    }
-                },
-                {
-                    "id": "net.optifine:optifine:1.12.2_HD_U_E3",
-                    "name": "Optifine",
-                    "type": "ForgeMod",
-                    "artifact": {
-                        "size": 2444057,
-                        "MD5": "7ec95c57ac1a224d6eb93bd370e4ac37",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.12.2/mods/OptiFine.jar"
-                    }
-                },
-                {
-                    "id": "mezz:jei:1.12.2-4.14.3.242",
-                    "name": "JustEnoughItems",
-                    "type": "ForgeMod",
-                    "artifact": {
-                        "size": 620682,
-                        "MD5": "ae6d0e6e873ef6c20f41097dc7fee8c6",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.12.2/mods/jei.jar"
-                    }
-                },
-                {
-                    "id": "org.blockartistry:dynsurround:1.12.2-3.4.10.5",
-                    "name": "DynamicSurroundings",
-                    "type": "ForgeMod",
-                    "required": {
-                        "value": false
-                    },
-                    "artifact": {
-                        "size": 22507134,
-                        "MD5": "3d75602c66b7ccfc23c342e8d5e07469",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.12.2/mods/DynamicSurroundings.jar"
-                    },
-                    "subModules": [
-                        {
-                            "id": "dsurround.cfg",
-                            "name": "DynamicSurroundings General Configuration File",
-                            "type": "File",
-                            "artifact": {
-                                "size": 22179,
-                                "path": "/config/dsurround/dsurround.cfg",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.12.2/config/dsurround/dsurround.cfg"
-                            }
-                        },
-                        {
-                            "id": "westeros.json",
-                            "name": "DynamicSurroundings WesterosCraft Configuration File",
-                            "type": "File",
-                            "artifact": {
-                                "size": 608,
-                                "MD5": "44eab112ff24d0bd29974c270de868ba",
-                                "path": "/config/dsurround/westeros.json",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.12.2/config/dsurround/westeros.json"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "id": "octarine-noise:betterfoliage:1.12-2.2.0",
-                    "name": "BetterFoliage",
-                    "type": "ForgeMod",
-                    "required": {
-                        "value": false
-                    },
-                    "artifact": {
-                        "size": 926081,
-                        "MD5": "e05a720c5900b9bac4e01179abe8eef6",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.12.2/mods/BetterFoliage.jar"
-                    },
-                    "subModules": [
-                        {
-                            "id": "betterfoliage.cfg",
-                            "name": "BetterFoliage Configuration File",
-                            "type": "File",
-                            "artifact": {
-                                "size": 7878,
-                                "MD5": "6dd38f873c4129af05a2d6c500cbe954",
-                                "path": "/config/betterfoliage.cfg",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.12.2/config/betterfoliage.cfg"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "id": "forgelin:forgelin:1.8.2",
-                    "name": "Forgelin",
-                    "type": "ForgeMod",
-                    "artifact": {
-                        "size": 5124663,
-                        "MD5": "59035365f7af35f599d1c4baade64d8b",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.12.2/mods/Forgelin.jar"
-                    }
-                },
-                {
-                    "id": "techbrew:journeymap:1.12.2-5.5.3",
-                    "name": "JourneyMap",
-                    "type": "ForgeMod",
-                    "required": {
-                        "value": false
-                    },
-                    "artifact": {
-                        "size": 1831161,
-                        "MD5": "d3b5a672d2393f9fe63903598d50c769",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.12.2/mods/journeymap.jar"
-                    }
-                },
-                {
-                    "id": "com.github.hexomod:worldeditcuife2:2.2.0-mf-1.12.2-14.23.5.2768",
-                    "name": "WorldEditCUI",
-                    "type": "ForgeMod",
-                    "required": {
-                        "value": false
-                    },
-                    "artifact": {
-                        "size": 459294,
-                        "MD5": "2b8c1c3bc48c2d80b71daa658f656edb",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.12.2/mods/worldeditcuife.jar"
-                    }
-                },
-                {
-                    "id": "com.mumfrey:liteloader:1.12.2",
-                    "name": "Liteloader",
-                    "type": "LiteLoader",
-                    "required": {
-                        "value": false,
-                        "def": false
-                    },
-                    "artifact": {
-                        "size": 1680383,
-                        "MD5": "1420785ecbfed5aff4a586c5c9dd97eb",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/1.12.2/liteloader.jar"
-                    },
-                    "subModules": [
-                        {
-                            "id": "com.mumfrey:macrokeybindmod:0.15.4-1.12.1@litemod",
-                            "name": "Macro/Keybind Mod",
-                            "type": "LiteMod",
-                            "required": {
-                                "value": false,
-                                "def": false
-                            },
-                            "artifact": {
-                                "size": 1726452,
-                                "MD5": "9ba3ed960bbb676743a3b6c2e1efc484",
-                                "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.12.2/mods/macrokeybindmod.litemod"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "id": "com.sonicether:seus-renewed:1.0.0",
-                    "name": "Sonic Ether's Unbelievable Shaders Renewed",
-                    "type": "File",
-                    "artifact": {
-                        "size": 7062491,
-                        "MD5": "e68cc9f8ffc8fad66583b9b2cc05356f",
-                        "path": "shaderpacks/SEUS-Renewed.zip",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.12.2/shaderpacks/SEUS-Renewed.zip"
-                    }
-                },
-                {
-                    "id": "options.txt",
-                    "name": "Default Client Options",
-                    "type": "File",
-                    "artifact": {
-                        "size": 1973,
-                        "path": "options.txt",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/options-1.12.2.txt" 
-                    }
-                },
-                {
-                    "id": "servers.dat",
-                    "name": "Saved Client Servers",
-                    "type": "File",
-                    "artifact": {
-                        "size": 87,
-                        "MD5": "64dc1db90935997f07dfac422206f1de",
-                        "path": "servers.dat",
-                        "url": "http://mc.westeroscraft.com/WesterosCraftLauncher/test-1.12.2/servers.dat" 
-                    }
-                }
-            ]
+          "id": "generated.forgemod:ambientsounds:6.3.4@jar",
+          "name": "AmbientSounds",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 84811185,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/AmbientSounds_NEOFORGE_v6.3.4_mc1.21.1.jar",
+            "MD5": "852627ec7fbf278441c1866df2aab1a9"
+          }
         },
         {
-            "id": "WesterosCraftTest-1.13.2",
-            "name": "WesterosCraft 1.13.2 Test Server",
-            "description": "Tests for our version change to 1.13.2 are live here.",
-            "icon": "http://mc.westeroscraft.com/WesterosCraftLauncher/files/server-test.png",
-            "version": "5.0.0",
-            "address": "mc.westeroscraft.com:4445",
-            "minecraftVersion": "1.13.2",
-            "discord": {
-                "shortId": "1.13.2 Test Server",
-                "largeImageText": "WesterosCraft 1.13.2 Test Server",
-                "largeImageKey": "server-test"
-            },
-            "mainServer": false,
-            "autoconnect": false,
-            "modules": [
-                {
-                    "id": "net.minecraftforge:forge:1.13.2-25.0.219",
-                    "name": "Minecraft Forge (base jar)",
-                    "type": "ForgeHosted",
-                    "artifact": {
-                        "size": 159918,
-                        "MD5": "c5a9c40711feb2b4ab0329c48256e30d",
-                        "url": ""
-                    },
-                    "subModules": [
-                        {
-                            "id": "net.minecraftforge:forge:1.13.2-25.0.219:universal",
-                            "name": "Minecraft Forge (universal jar)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 2343272 ,
-                                "MD5": "338c495d266da44ac1955caf91cc14c4",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "net.minecraftforge:forge:1.13.2-25.0.219:client",
-                            "name": "Minecraft Forge (client jar)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 3065519,
-                                "MD5": "df63f7288a8118c9b8836a3e53827aac",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "net.minecraft:client:1.13.2:extra",
-                            "name": "Minecraft Forge (client extra)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 9622361,
-                                "MD5": "dc66e2219e3de6e7ca05847fd3c7746d",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "net.minecraft:client:1.13.2-20190213.203750:srg",
-                            "name": "Minecraft Forge (client srg)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 8198877,
-                                "MD5": "80f355cffe270d2c2943301b96d98fa6",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "1.13.2-forge-25.0.219",
-                            "name": "Minecraft Forge (version.json)",
-                            "type": "VersionManifest",
-                            "artifact": {
-                                "size": 11511,
-                                "MD5": "f13f9e20324d0a55c646d5fb8876b2bb",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "com.paulscode:soundsystem:201809301515",
-                            "name": "Minecraft Forge (Paul's Code Soundsystem)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 66607,
-                                "MD5": "bf43e7b9f628534614b3fc5e4e69d209",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "org.ow2.asm:asm:6.2",
-                            "name": "Minecraft Forge (asm)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 111214,
-                                "MD5": "7abdce94068615d690495f45eb6eb980",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "org.ow2.asm:asm-commons:6.2",
-                            "name": "Minecraft Forge (asm-commons)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 78919,
-                                "MD5": "a031c9a32770c02c2f91d2bcbeceabcd",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "org.ow2.asm:asm-tree:6.2",
-                            "name": "Minecraft Forge (asm-tree)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 50370,
-                                "MD5": "e7279981c6764dcd73a99705acf5c9a6",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "cpw.mods:modlauncher:2.1.1",
-                            "name": "Minecraft Forge (modlauncher)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 101586,
-                                "MD5": "089ae3cf5afe10e96bb930b70dd99402",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "cpw.mods:grossjava9hacks:1.1.0",
-                            "name": "Minecraft Forge (Gross Java 9 Hacks)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 1759,
-                                "MD5": "1adde27730734a786f461ed048d440a0",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "net.minecraftforge:accesstransformers:0.16.0-shadowed",
-                            "name": "Minecraft Forge (Access Transformers)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 444428,
-                                "MD5": "dbe346d662c7bdff0988f941342932e6",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "net.minecraftforge:eventbus:0.9.2-service",
-                            "name": "Minecraft Forge (EventBus)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 38908,
-                                "MD5": "77c6c079914a8369a185e11ae1a7a878",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "net.minecraftforge:forgespi:0.13.0",
-                            "name": "Minecraft Forge (Forge SPI)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 16607,
-                                "MD5": "5634ba7001f8501a2b553430e2068751",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "net.minecraftforge:coremods:0.5.0",
-                            "name": "Minecraft Forge (coremods)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 12284,
-                                "MD5": "d3da5879965cf6f37413d6d1a80d92a7",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "net.minecraftforge:unsafe:0.2.0",
-                            "name": "Minecraft Forge (unsafe)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 2834,
-                                "MD5": "2d1016ebe4c1a63dd50a59d26bd12db1",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "com.electronwill.night-config:core:3.6.0",
-                            "name": "Minecraft Forge (night-config core)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 199763,
-                                "MD5": "841adeca8f5e5e092c7bafb412dcb615",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "com.electronwill.night-config:toml:3.6.0",
-                            "name": "Minecraft Forge (night-config toml)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 31256,
-                                "MD5": "2d1d5f1fa4735b4e654613b493512432",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "org.jline:jline:3.9.0",
-                            "name": "Minecraft Forge (jline)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 707273,
-                                "MD5": "2db9aae140f810a72fc4a5cb5aa5cf9b",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "org.apache.maven:maven-artifact:3.6.0",
-                            "name": "Minecraft Forge (maven-artifact)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 55051,
-                                "MD5": "89e95013b11f347e48c0525965600404",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "net.jodah:typetools:0.6.0",
-                            "name": "Minecraft Forge (typetools)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 14734,
-                                "MD5": "9f65b6e90eb986fe25afc39b8ed3f43b",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "java3d:vecmath:1.5.2",
-                            "name": "Minecraft Forge (vecmath)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 318956,
-                                "MD5": "e5d2b7f46c4800a32f62ce75676a5710",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "org.apache.logging.log4j:log4j-api:2.11.2",
-                            "name": "Minecraft Forge (log4j-api)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 266283,
-                                "MD5": "3f7ee51e3dd0830de799dae0b90243dd",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "org.apache.logging.log4j:log4j-core:2.11.2",
-                            "name": "Minecraft Forge (log4j-core)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 1629585,
-                                "MD5": "c8bd8b5c5aaaa07a3dcbf57de01c9266",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "net.minecrell:terminalconsoleappender:1.1.1",
-                            "name": "Minecraft Forge (terminalconsoleappender)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 15240,
-                                "MD5": "a190e88073a41dfa1b1d47854c41230b",
-                                "url": ""
-                            }
-                        },
-                        {
-                            "id": "net.sf.jopt-simple:jopt-simple:5.0.4",
-                            "name": "Minecraft Forge (jopt-simple)",
-                            "type": "Library",
-                            "artifact": {
-                                "size": 78146,
-                                "MD5": "eb0d9dffe9b0eddead68fe678be76c49",
-                                "url": ""
-                            }
-                        }
-                        
-                    ]
-                },
-                {
-                    "id": "squeek:appleskin:1.0.11",
-                    "name": "AppleSkin (test mod)",
-                    "type": "ForgeMod",
-                    "artifact": {
-                        "size": 27382,
-                         "MD5": "a1c0cfed77b2cb7b6699e59ba0252a50",
-                        "url": ""
-                    }
-                },
-                {
-                    "id": "com.blamejared:controlling:4.0.1",
-                    "name": "Controlling (Test Mod)",
-                    "type": "ForgeMod",
-                    "artifact": {
-                        "size": 34914,
-                         "MD5": "b4dc10b9039518ce00845ca962e6a136",
-                        "url": ""
-                    }
-                }
-            ]
+          "id": "generated.forgemod:appleskin:3.0.8+mc1.21@jar",
+          "name": "AppleSkin",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 75595,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/appleskin-neoforge-mc1.21-3.0.8.jar",
+            "MD5": "9da2c7b1d00041794cce7f41a12f0935"
+          }
+        },
+        {
+          "id": "generated.forgemod:armourers_workshop:3.2.7-beta@jar",
+          "name": "Armourer's Workshop",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 5892376,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/armourersworkshop-forge-1.21.1-3.2.7-beta.jar",
+            "MD5": "c01559a659655155320d77401fd86a6f"
+          }
+        },
+        {
+          "id": "generated.forgemod:betterfpsdist:6.0@jar",
+          "name": "Betterfpsdist mod",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 22742,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/betterfpsdist-1.21-6.0.jar",
+            "MD5": "081882282efe6239ac294b2d1fe2cd22"
+          }
+        },
+        {
+          "id": "generated.forgemod:betterthirdperson:1.9.0@jar",
+          "name": "Better Third Person",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 60941,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/BetterThirdPerson-neoforge-1.9.0.jar",
+            "MD5": "cb6470da1b6bbe6880fcf721aa87e0e1"
+          }
+        },
+        {
+          "id": "generated.forgemod:blur:6.1.0@jar",
+          "name": "Blur+",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 196983,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/blur-neoforge-6.1.0+1.21.1.jar",
+            "MD5": "b930086c6cfefab1fd310252c9f79b62"
+          }
+        },
+        {
+          "id": "generated.forgemod:blurserveraddress:1.2.0+mc1.21.1@jar",
+          "name": "BlurServerAddress",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 10810,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/blurserveraddress-neoforge-1.2.0+mc1.21.1.jar",
+            "MD5": "2bd9bceb47ecb24c931bb99d60b08834"
+          }
+        },
+        {
+          "id": "generated.forgemod:chat_heads:0.14.2@jar",
+          "name": "Chat Heads",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 85282,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/chat_heads-0.14.2-neoforge-1.21.jar",
+            "MD5": "3fb967e0ae6e2429981b6bbf56ef7861"
+          }
+        },
+        {
+          "id": "generated.forgemod:cloth_config:15.0.140@jar",
+          "name": "Cloth Config v15 API",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 1163890,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/cloth-config-15.0.140-neoforge.jar",
+            "MD5": "4c3757160403fcccb8ad468c2ea22862"
+          }
+        },
+        {
+          "id": "generated.forgemod:notenoughanimations:1.11.1@jar",
+          "name": "NotEnoughAnimations",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 1928789,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/notenoughanimations-neoforge-1.11.1-mc1.21.1.jar",
+            "MD5": "b68335d3c4bb23b78a2a73cdf0a81f4a"
+          }
+        },
+        {
+          "id": "generated.forgemod:clumps:19.0.0.1@jar",
+          "name": "Clumps",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 18382,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/Clumps-neoforge-1.21.1-19.0.0.1.jar",
+            "MD5": "8b42a9d7a72bde90fa061d17e2859e7b"
+          }
+        },
+        {
+          "id": "generated.forgemod:connector:2.0.0-beta.12+1.21.1-full@jar",
+          "name": "Connector",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 4528520,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/connector-2.0.0-beta.12+1.21.1-full.jar",
+            "MD5": "ca4679d1f7b4fbafb4cd0ba0d103a057"
+          }
+        },
+        {
+          "id": "generated.forgemod:coroutil:1.21.0-1.3.8@jar",
+          "name": "CoroUtil",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 63981,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/coroutil-neoforge-1.21.0-1.3.8.jar",
+            "MD5": "9d410a84fe0216ce18568993afb4f8e5"
+          }
+        },
+        {
+          "id": "generated.forgemod:creativecore:2.13.26@jar",
+          "name": "CreativeCore",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 1207043,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/CreativeCore_NEOFORGE_v2.13.26_mc1.21.1.jar",
+            "MD5": "8971b0f402ec1459a0cfc6d4cf783f62"
+          }
+        },
+        {
+          "id": "generated.forgemod:cullleaves:4.1.1@jar",
+          "name": "CullLeaves",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 94735,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/cullleaves-neoforge-4.1.1+1.21.1.jar",
+            "MD5": "2b0b25cd86a1bb1179862aa4088677aa"
+          }
+        },
+        {
+          "id": "generated.forgemod:cupboard:2.9@jar",
+          "name": "Cupboard mod",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 23509,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/cupboard-1.21-2.9.jar",
+            "MD5": "9cc5caf701898ba7236ca1e841d9049b"
+          }
+        },
+        {
+          "id": "generated.forgemod:dynamic_fps:3.11.4@jar",
+          "name": "Dynamic FPS",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 220193,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/dynamic-fps-3.11.4+minecraft-1.21.0-neoforge.jar",
+            "MD5": "e5ef3e5d37eedad79cf44897229fd8f2"
+          }
+        },
+        {
+          "id": "generated.forgemod:dynamiccrosshair:9.11@jar",
+          "name": "Dynamic Crosshair",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 514029,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/dynamiccrosshair-9.11+1.21.1-neoforge.jar",
+            "MD5": "3cb777c4c24b6b4ba2d23a20c48a3e33"
+          }
+        },
+        {
+          "id": "generated.forgemod:embeddium:1.0.15+mc1.21.1@jar",
+          "name": "Embeddium",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 1048745,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/embeddium-1.0.15+mc1.21.1.jar",
+            "MD5": "55d23daccc9bf63447a4cb10e3c21db1"
+          }
+        },
+        {
+          "id": "generated.forgemod:emotecraft:2.4.12@jar",
+          "name": "Emotecraft",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 861829,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/emotecraft-for-MC1.21.1-2.4.12-neoforge.jar",
+            "MD5": "c4840725c74865e2ba95807396c66a4f"
+          }
+        },
+        {
+          "id": "generated.forgemod:entity_model_features:3.0.10@jar",
+          "name": "Entity Model Features",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 487476,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/entity_model_features_1.21-neoforge-3.0.10.jar",
+            "MD5": "14c68b73cf3d57e9fb1bf49df080fa96"
+          }
+        },
+        {
+          "id": "generated.forgemod:entity_texture_features:7.0.8@jar",
+          "name": "Entity Texture Features",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 733270,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/entity_texture_features_1.21-neoforge-7.0.8.jar",
+            "MD5": "2b4dc28a1c96981182ea88d9c1c0a770"
+          }
+        },
+        {
+          "id": "generated.forgemod:entityculling:1.9.5@jar",
+          "name": "EntityCulling",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 1564767,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/entityculling-neoforge-1.9.5-mc1.21.1.jar",
+            "MD5": "ef1da268d5562d65d85da5af3c290a03"
+          }
+        },
+        {
+          "id": "generated.forgemod:equipmentcompare:1.3.13@jar",
+          "name": "Equipment Compare",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 35691,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/EquipmentCompare-1.21.1-neoforge-1.3.13.jar",
+            "MD5": "3cd142f21a18d3eb6249424e274983c2"
+          }
+        },
+        {
+          "id": "generated.forgemod:fabric:language-kotlin-1.13.8+kotlin.2.3.0@jar",
+          "name": "Fabric",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 7618852,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/fabric-language-kotlin-1.13.8+kotlin.2.3.0.jar",
+            "MD5": "964103287b72e606de845420d1a8cc57"
+          }
+        },
+        {
+          "id": "generated.forgemod:framework:0.13.11-mc1.21.1@jar",
+          "name": "Framework",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 387334,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/framework-neoforge-1.21.1-0.13.11.jar",
+            "MD5": "06f94f31d9e0b59c8b42a5b0df7013d6"
+          }
+        },
+        {
+          "id": "generated.forgemod:refurbished_furniture:1.0.22-mc1.21.1@jar",
+          "name": "Refurbished Furniture",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 7133477,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/refurbished_furniture-neoforge-1.21.1-1.0.22.jar",
+            "MD5": "7379bc72b92f838949c073961dc72351"
+          }
+        },
+        {
+          "id": "generated.forgemod:fallingleaves:2.5.1@jar",
+          "name": "Fallingleaves",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 153343,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/fallingleaves-1.21.1-2.5.1.jar",
+            "MD5": "79fe63b32b05155bb1d70cd491a9a6b1"
+          }
+        },
+        {
+          "id": "generated.forgemod:farsight_view:4.5@jar",
+          "name": "Farsight mod",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 438450,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/farsight-1.21.1-4.5.jar",
+            "MD5": "df8d68fefe71a3f444f6538bd865dc8b"
+          }
+        },
+        {
+          "id": "generated.forgemod:fabric_api:0.116.7+2.2.0+1.21.1@jar",
+          "name": "Forgified Fabric API",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 5551427,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/forgified-fabric-api-0.116.7+2.2.0+1.21.1.jar",
+            "MD5": "16c594229ea54cbed4e015aa423c6ac6"
+          }
+        },
+        {
+          "id": "generated.forgemod:fragmentum:2.1.1@jar",
+          "name": "Fragmentum",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 888074,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/fragmentum-neoforge-1.21.1-2.1.1.jar",
+            "MD5": "01806c9d61343f5d87d126ea27c0aa29"
+          }
+        },
+        {
+          "id": "generated.forgemod:holdmyitemsnf:2.0@jar",
+          "name": "HoldMyItems",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 107291,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/holdmyitemsnf-1.21.1v2.1.jar",
+            "MD5": "ae6743d15412348eb542f72522c2a6a5"
+          }
+        },
+        {
+          "id": "generated.forgemod:iceberg:1.3.2@jar",
+          "name": "Iceberg",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 213853,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/Iceberg-1.21.1-neoforge-1.3.2.jar",
+            "MD5": "68473a4ca9a827669c13d3855c8dc0e2"
+          }
+        },
+        {
+          "id": "generated.forgemod:imfast:1.0.2@jar",
+          "name": "I'm Fast",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 4157,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/imfast-NEOFORGE-1.0.2.jar",
+            "MD5": "c5452cd774be8b0bd67fa75c54be2dba"
+          }
+        },
+        {
+          "id": "generated.forgemod:immediatelyfast:1.6.10+1.21.1@jar",
+          "name": "ImmediatelyFast",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 368598,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/ImmediatelyFast-NeoForge-1.6.10+1.21.1.jar",
+            "MD5": "567bb6d9155070ad858740af12450c63"
+          }
+        },
+        {
+          "id": "generated.forgemod:itemphysic:1.8.9@jar",
+          "name": "ItemPhysic",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 53673,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/ItemPhysic_NEOFORGE_v1.8.9_mc1.21.1.jar",
+            "MD5": "4c4f31f87c0dd20dbaa8a5e3880d8820"
+          }
+        },
+        {
+          "id": "generated.forgemod:jei:19.27.0.336@jar",
+          "name": "Just Enough Items",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 1529192,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/jei-1.21.1-neoforge-19.27.0.336.jar",
+            "MD5": "d3da422d1a44e31af8a8d036b3d338f7"
+          }
+        },
+        {
+          "id": "generated.forgemod:supermartijn642configlib:1.1.8-mc1.21@jar",
+          "name": "SuperMartijn642 Config Lib",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 207514,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/supermartijn642configlib-1.1.8-neoforge-mc1.21.jar",
+            "MD5": "0428149c5db7bad43d75e6f758f47678"
+          }
+        },
+        {
+          "id": "generated.forgemod:supermartijn642corelib:1.1.20-mc1.21@jar",
+          "name": "SuperMartijn642 Core Lib",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 558373,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/supermartijn642corelib-1.1.20-neoforge-mc1.21.jar",
+            "MD5": "37a5ba87dacdb6c2062ba4af5cf348cd"
+          }
+        },
+        {
+          "id": "generated.forgemod:journeymap:1.21.1-6.0.0-beta.53@jar",
+          "name": "Journeymap",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 3538766,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/journeymap-neoforge-1.21.1-6.0.0-beta.53.jar",
+            "MD5": "78a5a8cb98b346291857628580c936e9"
+          }
+        },
+        {
+          "id": "generated.forgemod:koreanpatch:1.9.5+mc1.21@jar",
+          "name": "Korean Patch",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 310970,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/koreanpatch-neoforge-1.9.5+mc1.21.jar",
+            "MD5": "dce947c251851ba71f60d8d71c859160"
+          }
+        },
+        {
+          "id": "generated.forgemod:lithostitched:1.5.7@jar",
+          "name": "Lithostitched",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 567562,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/lithostitched-1.5.7-neoforge-1.21.1.jar",
+            "MD5": "18d36534a251cb17530c630982fc98a9"
+          }
+        },
+        {
+          "id": "generated.forgemod:midnightlib:1.9.2@jar",
+          "name": "MidnightLib",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 60347,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/midnightlib-neoforge-1.9.2+1.21.1.jar",
+            "MD5": "2ed25f310dc20c6aef4ad032c806d4b7"
+          }
+        },
+        {
+          "id": "generated.forgemod:oculus:1.8.7@jar",
+          "name": "NeOculus",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 2799219,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/neoculus-mc1.21.1-1.8.7.jar",
+            "MD5": "81faed9f91d6d588114d188d8b34ba0b"
+          }
+        },
+        {
+          "id": "generated.forgemod:another_furniture:4.0.2@jar",
+          "name": "Another Furniture",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 2417424,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/another_furniture-neoforge-4.0.2.jar",
+            "MD5": "49f67d0c26a0d9efe494c07ebc04dc82"
+          }
+        },
+        {
+          "id": "generated.forgemod:obscure_tooltips:4.2.2@jar",
+          "name": "Obscure Tooltips",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 448523,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/obscure_tooltips-neoforge-1.21.1-4.2.2.jar",
+            "MD5": "0bd25912f66e034f260fbcb72b2521f0"
+          }
+        },
+        {
+          "id": "generated.forgemod:optigui:2.3.0-beta.9+1.21@jar",
+          "name": "Optigui",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 614152,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/optigui-2.3.0-beta.9+1.21.jar",
+            "MD5": "a32591f69f9ba7fd056c7fb28b82c521"
+          }
+        },
+        {
+          "id": "generated.forgemod:saturn:0.1.5@jar",
+          "name": "Saturn",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 84147,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/saturn-mc1.21.1-0.1.5.jar",
+            "MD5": "f05622f75f99d76cab97388c57d7f22e"
+          }
+        },
+        {
+          "id": "generated.forgemod:smoothboot:1.0.0@jar",
+          "name": "SmoothBoot NeoForged",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 16821,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/smoothboot-1.0.jar",
+            "MD5": "2994061c02eab0adf75229802ec3a93c"
+          }
+        },
+        {
+          "id": "generated.forgemod:smoothgui:1.1.0@jar",
+          "name": "SmoothGui",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 176633,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/smoothgui-neoforge-1.21.1-1.1.0.jar",
+            "MD5": "bb461675c7a7b3dcf6693e11d3a53ea6"
+          }
+        },
+        {
+          "id": "generated.forgemod:snowundertrees:1.5@jar",
+          "name": "Snow Under Trees",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 30334,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/snowundertrees-1.21.1-1.5.jar",
+            "MD5": "0582f5d04dc3d4445947bb0782f64ab5"
+          }
+        },
+        {
+          "id": "generated.forgemod:sodiumdynamiclights:1.0.9@jar",
+          "name": "Sodium Dynamic Lights",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 299353,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/sodiumdynamiclights-neoforge-1.0.10-1.21.1.jar",
+            "MD5": "daaa3a9e438fddffc1db19bf8a7dfba0"
+          }
+        },
+        {
+          "id": "generated.forgemod:sound_physics_remastered:1.21.1-1.5.1@jar",
+          "name": "Sound Physics Remastered",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 202454,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/sound-physics-remastered-neoforge-1.21.1-1.5.1.jar",
+            "MD5": "fe3cafa3f67c86272ee1d0cdf96fb2ac"
+          }
+        },
+        {
+          "id": "generated.forgemod:voicechat:1.21.1-2.6.11@jar",
+          "name": "Simple Voice Chat",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 4890462,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/voicechat-neoforge-1.21.1-2.6.11.jar",
+            "MD5": "6348bb7afabdea396e0b59c8d7dca16f"
+          }
+        },
+        {
+          "id": "generated.forgemod:wso64:1.0.0@jar",
+          "name": "Why stack only 64",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 5695,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/forgemods/required/wso64-1.0.0.jar",
+            "MD5": "1b1908fe2c63bf1e21da5a9b7b1fab86"
+          }
+        },
+        {
+          "id": "advancementplaques.toml",
+          "name": "advancementplaques.toml",
+          "type": "File",
+          "artifact": {
+            "size": 3284,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/advancementplaques.toml",
+            "MD5": "e931b1b03f143d5cff1040ffa8043b8f",
+            "path": "config/advancementplaques.toml"
+          }
+        },
+        {
+          "id": "ambientsounds-client.json",
+          "name": "ambientsounds-client.json",
+          "type": "File",
+          "artifact": {
+            "size": 4179,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/ambientsounds-client.json",
+            "MD5": "6b8ebdcbdee9b424b9d8973a5073c717",
+            "path": "config/ambientsounds-client.json"
+          }
+        },
+        {
+          "id": "appleskin-client.toml",
+          "name": "appleskin-client.toml",
+          "type": "File",
+          "artifact": {
+            "size": 1376,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/appleskin-client.toml",
+            "MD5": "94c0854d749d20069783913cf035ca31",
+            "path": "config/appleskin-client.toml"
+          }
+        },
+        {
+          "id": "armourers_workshop-client.toml",
+          "name": "armourers_workshop-client.toml",
+          "type": "File",
+          "artifact": {
+            "size": 5286,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/armourers_workshop-client.toml",
+            "MD5": "62ecaca346e9c65a7d5965d488cf7bf3",
+            "path": "config/armourers_workshop-client.toml"
+          }
+        },
+        {
+          "id": "armourers_workshop-common.toml",
+          "name": "armourers_workshop-common.toml",
+          "type": "File",
+          "artifact": {
+            "size": 5869,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/armourers_workshop-common.toml",
+            "MD5": "5838057870ebd3135a9cf7e95814931e",
+            "path": "config/armourers_workshop-common.toml"
+          }
+        },
+        {
+          "id": "betterfpsdist.json",
+          "name": "betterfpsdist.json",
+          "type": "File",
+          "artifact": {
+            "size": 697,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/betterfpsdist.json",
+            "MD5": "40c3a07479a3ca023b5c5bd604ee25c0",
+            "path": "config/betterfpsdist.json"
+          }
+        },
+        {
+          "id": "betterthirdperson-common.toml",
+          "name": "betterthirdperson-common.toml",
+          "type": "File",
+          "artifact": {
+            "size": 749,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/betterthirdperson-common.toml",
+            "MD5": "5bef953b7ce37c8febd8a4eb0cdbdfff",
+            "path": "config/betterthirdperson-common.toml"
+          }
+        },
+        {
+          "id": "blur.json",
+          "name": "blur.json",
+          "type": "File",
+          "artifact": {
+            "size": 644,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/blur.json",
+            "MD5": "4d9b7ff3bde22bcab2ae7f50c421af73",
+            "path": "config/blur.json"
+          }
+        },
+        {
+          "id": "chat_heads.json5",
+          "name": "chat_heads.json5",
+          "type": "File",
+          "artifact": {
+            "size": 207,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/chat_heads.json5",
+            "MD5": "95907776cd681dd4b584741aa8cccdd2",
+            "path": "config/chat_heads.json5"
+          }
+        },
+        {
+          "id": "ChosunCentennial_ttf.ttf",
+          "name": "ChosunCentennial_ttf.ttf",
+          "type": "File",
+          "artifact": {
+            "size": 5120116,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/ChosunCentennial_ttf.ttf",
+            "MD5": "305c34752205c6c211dd41cf02b72599",
+            "path": "config/ChosunCentennial_ttf.ttf"
+          }
+        },
+        {
+          "id": "Mellow Shader v3.0.3.zip",
+          "name": "Mellow Shader v3.0.3.zip",
+          "type": "File",
+          "artifact": {
+            "size": 24867143,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/shaderpacks/Mellow Shader v3.0.3.zip",
+            "MD5": "0e7b5c6b7d3d0b4a6a6c2dfb0d9b8f9e",
+            "path": "shaderpacks/Mellow Shader v3.0.3.zip"
+          }
+        },
+        {
+          "id": "miniature-shader-2.18.10.zip",
+          "name": "miniature-shader-2.18.10.zip",
+          "type": "File",
+          "artifact": {
+            "size": 1398421,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/shaderpacks/miniature-shader-2.18.10.zip",
+            "MD5": "9c0a6e5b1b88f1a2fdd0b5c62c7bff4c",
+            "path": "shaderpacks/miniature-shader-2.18.10.zip"
+          }
+        },
+        {
+          "id": "Nostalgia_v5.1.zip",
+          "name": "Nostalgia_v5.1.zip",
+          "type": "File",
+          "artifact": {
+            "size": 4839201,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/shaderpacks/Nostalgia_v5.1.zip",
+            "MD5": "d1e6a4a92b67c52e6dfd6fbe8d18b6e1",
+            "path": "shaderpacks/Nostalgia_v5.1.zip"
+          }
+        },
+        {
+          "id": "ComplementaryReimagined_r5.7.1.zip",
+          "name": "ComplementaryReimagined_r5.7.1.zip",
+          "type": "File",
+          "artifact": {
+            "size": 21345678,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/shaderpacks/ComplementaryReimagined_r5.7.1.zip",
+            "MD5": "5a4b8bdf2f7c4dcb8b6c9f5a1a9c4e2f",
+            "path": "shaderpacks/ComplementaryReimagined_r5.7.1.zip"
+          }
+        },
+        {
+          "id": "MakeUp-UltraFast-9.4c.zip",
+          "name": "MakeUp-UltraFast-9.4c.zip",
+          "type": "File",
+          "artifact": {
+            "size": 6348123,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/shaderpacks/MakeUp-UltraFast-9.4c.zip",
+            "MD5": "8c2d5b6a0a9d4d2f7e1a9b5c6d7e8f90",
+            "path": "shaderpacks/MakeUp-UltraFast-9.4c.zip"
+          }
+        },
+        {
+          "id": "BSL_v10.1.1.zip",
+          "name": "BSL_v10.1.1.zip",
+          "type": "File",
+          "artifact": {
+            "size": 7845123,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/shaderpacks/BSL_v10.1.1.zip",
+            "MD5": "3f7e6c5b2a1d9c8b7a6e5d4c3b2a190f",
+            "path": "shaderpacks/BSL_v10.1.1.zip"
+          }
+        },
+        {
+          "id": "ComplementaryUnbound_r5.6.1.zip",
+          "name": "ComplementaryUnbound_r5.6.1.zip",
+          "type": "File",
+          "artifact": {
+            "size": 19873456,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/shaderpacks/ComplementaryUnbound_r5.6.1.zip",
+            "MD5": "6b2d4e8f1c3a5b7d9e0f2a4c6d8e1f3a",
+            "path": "shaderpacks/ComplementaryUnbound_r5.6.1.zip"
+          }
+        },
+        {
+          "id": "connector.json",
+          "name": "connector.json",
+          "type": "File",
+          "artifact": {
+            "size": 176,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/connector.json",
+            "MD5": "dc2f7f96d02e287525490645087e02c2",
+            "path": "config/connector.json"
+          }
+        },
+        {
+          "id": "generated.zip",
+          "name": "generated.zip",
+          "type": "File",
+          "artifact": {
+            "size": 2478,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/resourcepacks/generated.zip",
+            "MD5": "3c1a9f2e6b4d8c7f5e0a2d9b6c4f1e73",
+            "path": "resourcepacks/generated.zip"
+          }
+        },
+        {
+          "id": "General.toml",
+          "name": "General.toml",
+          "type": "File",
+          "artifact": {
+            "size": 129,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/CoroUtil/General.toml",
+            "MD5": "e89054829f589efab442167898ecfd29",
+            "path": "config/CoroUtil/General.toml"
+          }
+        },
+        {
+          "id": "gonjang.json",
+          "name": "gonjang.json",
+          "type": "File",
+          "artifact": {
+            "size": 6123,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/emotes/gonjang.json",
+            "MD5": "5c8f2f6c4e6c9f5b9f0d3b7a1c6a2e91",
+            "path": "emotes/gonjang.json"
+          }
+        },
+        {
+          "id": "creativecore-client.json",
+          "name": "creativecore-client.json",
+          "type": "File",
+          "artifact": {
+            "size": 23,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/creativecore-client.json",
+            "MD5": "235bb114cb2741da4a4dd79c3f559c15",
+            "path": "config/creativecore-client.json"
+          }
+        },
+        {
+          "id": "creativecore.json",
+          "name": "creativecore.json",
+          "type": "File",
+          "artifact": {
+            "size": 274,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/creativecore.json",
+            "MD5": "a3979095f52fee66bc8624b7898d2e8e",
+            "path": "config/creativecore.json"
+          }
+        },
+        {
+          "id": "cullleaves.json",
+          "name": "cullleaves.json",
+          "type": "File",
+          "artifact": {
+            "size": 42,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/cullleaves.json",
+            "MD5": "727604a10633c683eb5b0b24985f2db2",
+            "path": "config/cullleaves.json"
+          }
+        },
+        {
+          "id": "cupboard.json",
+          "name": "cupboard.json",
+          "type": "File",
+          "artifact": {
+            "size": 1090,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/cupboard.json",
+            "MD5": "7725e2ad17f08b6221f0ecdeda137888",
+            "path": "config/cupboard.json"
+          }
+        },
+        {
+          "id": "CustomNpcs.cfg",
+          "name": "CustomNpcs.cfg",
+          "type": "File",
+          "artifact": {
+            "size": 1683,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/CustomNpcs.cfg",
+            "MD5": "7bd2e84bba067aaec6d3318d85912a2e",
+            "path": "config/CustomNpcs.cfg"
+          }
+        },
+        {
+          "id": "dynamiccrosshair.json5",
+          "name": "dynamiccrosshair.json5",
+          "type": "File",
+          "artifact": {
+            "size": 3674,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/dynamiccrosshair.json5",
+            "MD5": "21373c0020ad51948076ae7f5a69f58c",
+            "path": "config/dynamiccrosshair.json5"
+          }
+        },
+        {
+          "id": "dynamic_fps.json",
+          "name": "dynamic_fps.json",
+          "type": "File",
+          "artifact": {
+            "size": 3,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/dynamic_fps.json",
+            "MD5": "8a80554c91d9fca8acb82f023de02f11",
+            "path": "config/dynamic_fps.json"
+          }
+        },
+        {
+          "id": "embeddium-fingerprint.json",
+          "name": "embeddium-fingerprint.json",
+          "type": "File",
+          "artifact": {
+            "size": 427,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/embeddium-fingerprint.json",
+            "MD5": "bcd721d437937be598c227b1c1d03a46",
+            "path": "config/embeddium-fingerprint.json"
+          }
+        },
+        {
+          "id": "embeddium-mixins.properties",
+          "name": "embeddium-mixins.properties",
+          "type": "File",
+          "artifact": {
+            "size": 268,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/embeddium-mixins.properties",
+            "MD5": "27966c422d246713e5f16002807bbd9a",
+            "path": "config/embeddium-mixins.properties"
+          }
+        },
+        {
+          "id": "embeddium-options.json",
+          "name": "embeddium-options.json",
+          "type": "File",
+          "artifact": {
+            "size": 848,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/embeddium-options.json",
+            "MD5": "e0b5af3e21094ef2e0853b1d7ff8fa90",
+            "path": "config/embeddium-options.json"
+          }
+        },
+        {
+          "id": "emotecraft.json",
+          "name": "emotecraft.json",
+          "type": "File",
+          "artifact": {
+            "size": 1095,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/emotecraft.json",
+            "MD5": "f1f82b6bbfb1c2c1518b3d2893179ca0",
+            "path": "config/emotecraft.json"
+          }
+        },
+        {
+          "id": "emotecraft_emote_map.json",
+          "name": "emotecraft_emote_map.json",
+          "type": "File",
+          "artifact": {
+            "size": 117,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/emotecraft_emote_map.json",
+            "MD5": "fdcffe9e7eaa4949ee1d33d613a7c2eb",
+            "path": "config/emotecraft_emote_map.json"
+          }
+        },
+        {
+          "id": "entityculling.json",
+          "name": "entityculling.json",
+          "type": "File",
+          "artifact": {
+            "size": 1897,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/entityculling.json",
+            "MD5": "422b1718498a957ece2de2453634102a",
+            "path": "config/entityculling.json"
+          }
+        },
+        {
+          "id": "entity_model_features.json",
+          "name": "entity_model_features.json",
+          "type": "File",
+          "artifact": {
+            "size": 1028,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/entity_model_features.json",
+            "MD5": "9aaef5955221727cd953761ff358ce83",
+            "path": "config/entity_model_features.json"
+          }
+        },
+        {
+          "id": "entity_texture_features.json",
+          "name": "entity_texture_features.json",
+          "type": "File",
+          "artifact": {
+            "size": 1420,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/entity_texture_features.json",
+            "MD5": "70bc0a7c3e75a25a9049facdc3a0a7ea",
+            "path": "config/entity_texture_features.json"
+          }
+        },
+        {
+          "id": "equipmentcompare.toml",
+          "name": "equipmentcompare.toml",
+          "type": "File",
+          "artifact": {
+            "size": 1583,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/equipmentcompare.toml",
+            "MD5": "4785d538904beeb1779da70c096d6afd",
+            "path": "config/equipmentcompare.toml"
+          }
+        },
+        {
+          "id": "etf_warnings.json",
+          "name": "etf_warnings.json",
+          "type": "File",
+          "artifact": {
+            "size": 28,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/etf_warnings.json",
+            "MD5": "b49b5603d2df29fa132f89ec91974572",
+            "path": "config/etf_warnings.json"
+          }
+        },
+        {
+          "id": "indigo-renderer.properties",
+          "name": "indigo-renderer.properties",
+          "type": "File",
+          "artifact": {
+            "size": 290,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/fabric/indigo-renderer.properties",
+            "MD5": "f400150dc9ca96fddaf5c5b240e4efd9",
+            "path": "config/fabric/indigo-renderer.properties"
+          }
+        },
+        {
+          "id": "fallingleaves-client.toml",
+          "name": "fallingleaves-client.toml",
+          "type": "File",
+          "artifact": {
+            "size": 1735,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/fallingleaves-client.toml",
+            "MD5": "a33d5a25f0fc64aef46b5bc6d64bed18",
+            "path": "config/fallingleaves-client.toml"
+          }
+        },
+        {
+          "id": "farsight.json",
+          "name": "farsight.json",
+          "type": "File",
+          "artifact": {
+            "size": 120,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/farsight.json",
+            "MD5": "6890a1825bb1529a13650cd17409b8b6",
+            "path": "config/farsight.json"
+          }
+        },
+        {
+          "id": "fml.toml",
+          "name": "fml.toml",
+          "type": "File",
+          "artifact": {
+            "size": 1551,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/fml.toml",
+            "MD5": "f222c7e4d15992f0de10b9f35656ccde",
+            "path": "config/fml.toml"
+          }
+        },
+        {
+          "id": "holdmyitemsnf-client.toml",
+          "name": "holdmyitemsnf-client.toml",
+          "type": "File",
+          "artifact": {
+            "size": 3023,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/holdmyitemsnf-client.toml",
+            "MD5": "48406fc0b73916b767752ac67cceb370",
+            "path": "config/holdmyitemsnf-client.toml"
+          }
+        },
+        {
+          "id": "immediatelyfast.json",
+          "name": "immediatelyfast.json",
+          "type": "File",
+          "artifact": {
+            "size": 1114,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/immediatelyfast.json",
+            "MD5": "8c5364d78b0f6f9c1461f88ca38e8d84",
+            "path": "config/immediatelyfast.json"
+          }
+        },
+        {
+          "id": "itemphysic-client.json",
+          "name": "itemphysic-client.json",
+          "type": "File",
+          "artifact": {
+            "size": 654,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/itemphysic-client.json",
+            "MD5": "6e3a0d8e01e687b22dcc4d6123c1ce79",
+            "path": "config/itemphysic-client.json"
+          }
+        },
+        {
+          "id": "itemphysic.json",
+          "name": "itemphysic.json",
+          "type": "File",
+          "artifact": {
+            "size": 8850,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/itemphysic.json",
+            "MD5": "b8204caef6de1b5d6b1c997722c8e760",
+            "path": "config/itemphysic.json"
+          }
+        },
+        {
+          "id": "blacklist.json",
+          "name": "blacklist.json",
+          "type": "File",
+          "artifact": {
+            "size": 19,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/jei/blacklist.json",
+            "MD5": "78f1a39821342258f73e542d9ea40e0f",
+            "path": "config/jei/blacklist.json"
+          }
+        },
+        {
+          "id": "ingredient-list-mod-sort-order.ini",
+          "name": "ingredient-list-mod-sort-order.ini",
+          "type": "File",
+          "artifact": {
+            "size": 45,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/jei/ingredient-list-mod-sort-order.ini",
+            "MD5": "31e12add2d2b8ca5751667b48c4cff76",
+            "path": "config/jei/ingredient-list-mod-sort-order.ini"
+          }
+        },
+        {
+          "id": "ingredient-list-type-sort-order.ini",
+          "name": "ingredient-list-type-sort-order.ini",
+          "type": "File",
+          "artifact": {
+            "size": 78,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/jei/ingredient-list-type-sort-order.ini",
+            "MD5": "0328cc64f29f41e751136fade109eaff",
+            "path": "config/jei/ingredient-list-type-sort-order.ini"
+          }
+        },
+        {
+          "id": "jei-client.ini",
+          "name": "jei-client.ini",
+          "type": "File",
+          "artifact": {
+            "size": 10825,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/jei/jei-client.ini",
+            "MD5": "cf47ac66b4b62d92ec160bc5e8c69b03",
+            "path": "config/jei/jei-client.ini"
+          }
+        },
+        {
+          "id": "jei-colors.ini",
+          "name": "jei-colors.ini",
+          "type": "File",
+          "artifact": {
+            "size": 1362,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/jei/jei-colors.ini",
+            "MD5": "2b1d073ff360c11353f0079b7539cb2e",
+            "path": "config/jei/jei-colors.ini"
+          }
+        },
+        {
+          "id": "jei-debug.ini",
+          "name": "jei-debug.ini",
+          "type": "File",
+          "artifact": {
+            "size": 1454,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/jei/jei-debug.ini",
+            "MD5": "b8f5e776d54844cfe84071acac178805",
+            "path": "config/jei/jei-debug.ini"
+          }
+        },
+        {
+          "id": "jei-mod-id-format.ini",
+          "name": "jei-mod-id-format.ini",
+          "type": "File",
+          "artifact": {
+            "size": 550,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/jei/jei-mod-id-format.ini",
+            "MD5": "a450b7e5023fe11c0d6f7238aaaf71da",
+            "path": "config/jei/jei-mod-id-format.ini"
+          }
+        },
+        {
+          "id": "recipe-category-sort-order.ini",
+          "name": "recipe-category-sort-order.ini",
+          "type": "File",
+          "artifact": {
+            "size": 265,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/jei/recipe-category-sort-order.ini",
+            "MD5": "8e41d4da530be24923be0593a91ca233",
+            "path": "config/jei/recipe-category-sort-order.ini"
+          }
+        },
+        {
+          "id": "bookmarks.json",
+          "name": "bookmarks.json",
+          "type": "File",
+          "artifact": {
+            "size": 1196,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/jei/world/server/Minecraft____2757f1e0/bookmarks.json",
+            "MD5": "3e0536780ee2baf49182986e9b7b4a7e",
+            "path": "config/jei/world/server/Minecraft____2757f1e0/bookmarks.json"
+          }
+        },
+        {
+          "id": "lookupHistory.json",
+          "name": "lookupHistory.json",
+          "type": "File",
+          "artifact": {
+            "size": 310,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/jei/world/server/Minecraft____2757f1e0/lookupHistory.json",
+            "MD5": "9e470f387861deaced28fa47950b9fbe",
+            "path": "config/jei/world/server/Minecraft____2757f1e0/lookupHistory.json"
+          }
+        },
+        {
+          "id": "jei-server.toml",
+          "name": "jei-server.toml",
+          "type": "File",
+          "artifact": {
+            "size": 324,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/jei-server.toml",
+            "MD5": "6912479d1f35b27783befe8326720922",
+            "path": "config/jei-server.toml"
+          }
+        },
+        {
+          "id": "journeymap-server.toml",
+          "name": "journeymap-server.toml",
+          "type": "File",
+          "artifact": {
+            "size": 550,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/journeymap-server.toml",
+            "MD5": "84dcc81ca8a4926e479104038e7184ba",
+            "path": "config/journeymap-server.toml"
+          }
+        },
+        {
+          "id": "koreanpatch.json5",
+          "name": "koreanpatch.json5",
+          "type": "File",
+          "artifact": {
+            "size": 1513,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/koreanpatch.json5",
+            "MD5": "db57d63145cae2aa9d67e8b160151008",
+            "path": "config/koreanpatch.json5"
+          }
+        },
+        {
+          "id": "lithostitched.json",
+          "name": "lithostitched.json",
+          "type": "File",
+          "artifact": {
+            "size": 284,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/lithostitched.json",
+            "MD5": "345e5fd8f4228a78675c761850e85ba9",
+            "path": "config/lithostitched.json"
+          }
+        },
+        {
+          "id": "midnightlib.json",
+          "name": "midnightlib.json",
+          "type": "File",
+          "artifact": {
+            "size": 37,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/midnightlib.json",
+            "MD5": "5d33d36208b50f3a0951695c2e806d98",
+            "path": "config/midnightlib.json"
+          }
+        },
+        {
+          "id": "neoforge-client.toml",
+          "name": "neoforge-client.toml",
+          "type": "File",
+          "artifact": {
+            "size": 578,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/neoforge-client.toml",
+            "MD5": "7f81c16ea3d467da83df18250f772149",
+            "path": "config/neoforge-client.toml"
+          }
+        },
+        {
+          "id": "neoforge-common.toml",
+          "name": "neoforge-common.toml",
+          "type": "File",
+          "artifact": {
+            "size": 772,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/neoforge-common.toml",
+            "MD5": "914110a675baa858ef6725e3f56e513c",
+            "path": "config/neoforge-common.toml"
+          }
+        },
+        {
+          "id": "neoforge-server.toml",
+          "name": "neoforge-server.toml",
+          "type": "File",
+          "artifact": {
+            "size": 1177,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/neoforge-server.toml",
+            "MD5": "5fad417d8fbff12e98bf3bbaa3782864",
+            "path": "config/neoforge-server.toml"
+          }
+        },
+        {
+          "id": "notenoughanimations.json",
+          "name": "notenoughanimations.json",
+          "type": "File",
+          "artifact": {
+            "size": 2530,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/notenoughanimations.json",
+            "MD5": "972fce6e4f229a4bbd308ed0e9099e02",
+            "path": "config/notenoughanimations.json"
+          }
+        },
+        {
+          "id": "obscure_tooltips-client.toml",
+          "name": "obscure_tooltips-client.toml",
+          "type": "File",
+          "artifact": {
+            "size": 1746,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/obscuria/obscure_tooltips-client.toml",
+            "MD5": "2beff5774b9fa090fc932ae273493e01",
+            "path": "config/obscuria/obscure_tooltips-client.toml"
+          }
+        },
+        {
+          "id": "saturn-optimizations.toml",
+          "name": "saturn-optimizations.toml",
+          "type": "File",
+          "artifact": {
+            "size": 443,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/saturn-optimizations.toml",
+            "MD5": "f851a4d85ca8cf097e88342e890eba34",
+            "path": "config/saturn-optimizations.toml"
+          }
+        },
+        {
+          "id": "skinlayers.json",
+          "name": "skinlayers.json",
+          "type": "File",
+          "artifact": {
+            "size": 497,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/skinlayers.json",
+            "MD5": "04d6f743e89a6fba20ddef26e3fbef9a",
+            "path": "config/skinlayers.json"
+          }
+        },
+        {
+          "id": "smoothboot.json",
+          "name": "smoothboot.json",
+          "type": "File",
+          "artifact": {
+            "size": 198,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/smoothboot.json",
+            "MD5": "70ffc7bd8c3159c1675727386fcea810",
+            "path": "config/smoothboot.json"
+          }
+        },
+        {
+          "id": "smoothgui.json",
+          "name": "smoothgui.json",
+          "type": "File",
+          "artifact": {
+            "size": 164,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/smoothgui.json",
+            "MD5": "411c7a55ab79c2062ac56ec187cbefb8",
+            "path": "config/smoothgui.json"
+          }
+        },
+        {
+          "id": "snowundertrees-common.toml",
+          "name": "snowundertrees-common.toml",
+          "type": "File",
+          "artifact": {
+            "size": 472,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/snowundertrees-common.toml",
+            "MD5": "f8b748c5a5cb01f810e488d9fff689ce",
+            "path": "config/snowundertrees-common.toml"
+          }
+        },
+        {
+          "id": "sodiumdynamiclights-client.toml",
+          "name": "sodiumdynamiclights-client.toml",
+          "type": "File",
+          "artifact": {
+            "size": 655,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/sodiumdynamiclights-client.toml",
+            "MD5": "1aa7ab78fb5b1f74d98a096821d7ac08",
+            "path": "config/sodiumdynamiclights-client.toml"
+          }
+        },
+        {
+          "id": "occlusion.properties",
+          "name": "occlusion.properties",
+          "type": "File",
+          "artifact": {
+            "size": 4831,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/sound_physics_remastered/occlusion.properties",
+            "MD5": "65630e0f012205fc8b074e2f90ff89c2",
+            "path": "config/sound_physics_remastered/occlusion.properties"
+          }
+        },
+        {
+          "id": "reflectivity.properties",
+          "name": "reflectivity.properties",
+          "type": "File",
+          "artifact": {
+            "size": 4713,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/sound_physics_remastered/reflectivity.properties",
+            "MD5": "a96fdc43367fe049dff56acbf204a79d",
+            "path": "config/sound_physics_remastered/reflectivity.properties"
+          }
+        },
+        {
+          "id": "soundphysics.properties",
+          "name": "soundphysics.properties",
+          "type": "File",
+          "artifact": {
+            "size": 5104,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/sound_physics_remastered/soundphysics.properties",
+            "MD5": "1f6041a6026f08f1d6088437da611263",
+            "path": "config/sound_physics_remastered/soundphysics.properties"
+          }
+        },
+
+        {
+          "id": "sound_rates.properties",
+          "name": "sound_rates.properties",
+          "type": "File",
+          "artifact": {
+            "size": 63015,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/sound_physics_remastered/sound_rates.properties",
+            "MD5": "31c68222c8cfd50cf61a9904538bfffa",
+            "path": "config/sound_physics_remastered/sound_rates.properties"
+          }
+        },
+        {
+          "id": "transition.json",
+          "name": "transition.json",
+          "type": "File",
+          "artifact": {
+            "size": 62,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/transition.json",
+            "MD5": "939cbb1d75f242d47e2aa1a9d536a3e7",
+            "path": "config/transition.json"
+          }
+        },
+        {
+          "id": "trender.json",
+          "name": "trender.json",
+          "type": "File",
+          "artifact": {
+            "size": 47,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/trender.json",
+            "MD5": "c449ad0a8d190858ec253ed1bc75e05d",
+            "path": "config/trender.json"
+          }
+        },
+        {
+          "id": "watut-client.toml",
+          "name": "watut-client.toml",
+          "type": "File",
+          "artifact": {
+            "size": 3444,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/watut-client.toml",
+            "MD5": "e6a73d35914167498f8c997ab9b7fd21",
+            "path": "config/watut-client.toml"
+          }
+        },
+        {
+          "id": "watut-common.toml",
+          "name": "watut-common.toml",
+          "type": "File",
+          "artifact": {
+            "size": 169,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/watut-common.toml",
+            "MD5": "e1ad6e33dc749f2f9be5c16174ee1c0d",
+            "path": "config/watut-common.toml"
+          }
+        },
+        {
+          "id": "watut-item-arm-adjustments.json",
+          "name": "watut-item-arm-adjustments.json",
+          "type": "File",
+          "artifact": {
+            "size": 3367,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/watut-item-arm-adjustments.json",
+            "MD5": "25925ecf5d13afcb55b2d4fcff81361c",
+            "path": "config/watut-item-arm-adjustments.json"
+          }
+        },
+        {
+          "id": "watut-server.toml",
+          "name": "watut-server.toml",
+          "type": "File",
+          "artifact": {
+            "size": 2945,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/watut-server.toml",
+            "MD5": "22c0bedd7b79ffa96d6f60650c1c3115",
+            "path": "config/watut-server.toml"
+          }
+        },
+        {
+          "id": "wso64-common.toml",
+          "name": "wso64-common.toml",
+          "type": "File",
+          "artifact": {
+            "size": 104,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/config/wso64-common.toml",
+            "MD5": "eadbd185e8e63d0553876320d4f93793",
+            "path": "config/wso64-common.toml"
+          }
+        },
+        {
+          "id": "CYML.zip",
+          "name": "CYML.zip",
+          "type": "File",
+          "artifact": {
+            "size": 10569466,
+            "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/resourcepacks/CYML-싸촌.zip",
+            "MD5": "453e1f07df1be24facf77a7e1fefdad3",
+            "path": "resourcepacks/CYML-싸촌.zip"
+          }
+        },
+        {
+        "id": "servers.dat",
+        "name": "servers.dat",
+        "type": "File",
+        "artifact": {
+          "size": 164,
+          "url": "https://hanol0927.github.io/Ssachon/servers/Ssachon-1.21.1/files/servers.dat",
+          "MD5": "9b6f3d7a9c1d6c5f4e2a1b8d3c7e5f21",
+          "path": "servers.dat"
+          }
         }
-    ]
+      ]
+    },
+    {
+      "id": "Ruxelmon-1.16.5",
+      "name": "러켓몬",
+      "description": "러켓몬 1.16.5 (Forge v36.2.39)",
+      "icon": "https://hanol0927.github.io/Ruxelmon-Launcher/servers/Ruxelmon-1.16.5/Icon.png",
+      "version": "1.0.0",
+      "address": "",
+      "minecraftVersion": "1.16.5",
+      "discord": {
+        "shortId": "1378585488205680741",
+        "largeImageText": "1.16.5 러켓몬 서버",
+        "largeImageKey": "icon_1024x1024"
+      },
+      "mainServer": false,
+      "autoconnect": true,
+      "modules": [
+      ]
+    },
+    {
+      "id": "Cupkemon-1.16.5",
+      "name": "컵켓몬",
+      "description": "컵켓몬 1.16.5 (Forge v36.2.34)",
+      "icon": "https://hanol0927.github.io/Cupkemon/servers/Cupkemon-1.16.5/Icon.png",
+      "version": "1.0.0",
+      "address": "",
+      "minecraftVersion": "1.16.5",
+      "discord": {
+        "shortId": "<FILL IN OR REMOVE DISCORD OBJECT>",
+        "largeImageText": "<FILL IN OR REMOVE DISCORD OBJECT>",
+        "largeImageKey": "<FILL IN OR REMOVE DISCORD OBJECT>"
+      },
+      "mainServer": false,
+      "autoconnect": true,
+      "modules": [
+      ]
+    },
+    {
+      "id": "Sigwal-1.20.1",
+      "name": "으시시괄",
+      "description": "으시시괄 1.20.1 (Fabric v0.17.3)",
+      "icon": "https://hanol0927.github.io/Sigwal/servers/Sigwal-1.20.1/Icon.png",
+      "version": "1.0.0",
+      "address": "aassdd889900.kr",
+      "minecraftVersion": "1.20.1",
+      "discord": {
+        "shortId": "<FILL IN OR REMOVE DISCORD OBJECT>",
+        "largeImageText": "<FILL IN OR REMOVE DISCORD OBJECT>",
+        "largeImageKey": "<FILL IN OR REMOVE DISCORD OBJECT>"
+      },
+      "mainServer": false,
+      "autoconnect": true,
+      "modules": [
+      ]
+    },
+    {
+      "id": "Rush-1.21.10",
+      "name": "러쉬",
+      "description": "러쉬 1.21.10 (Fabric v0.18.0)",
+      "icon": "https://hanol0927.github.io/Rush/servers/Rush-1.21.10/Icon.png",
+      "version": "1.0.0",
+      "address": "",
+      "minecraftVersion": "1.21.10",
+      "discord": {
+        "shortId": "<FILL IN OR REMOVE DISCORD OBJECT>",
+        "largeImageText": "<FILL IN OR REMOVE DISCORD OBJECT>",
+        "largeImageKey": "<FILL IN OR REMOVE DISCORD OBJECT>"
+      },
+      "mainServer": false,
+      "autoconnect": false,
+      "modules": [
+      ]
+    },
+    {
+      "id": "Nuketmon-1.16.5",
+      "name": "너켓몬",
+      "description": "너켓몬 1.16.5 (Forge v36.2.42)",
+      "icon": "https://hanol0927.github.io/nuketmon/servers/Nuketmon-1.16.5/Icon.png",
+      "version": "1.0.0",
+      "address": "",
+      "minecraftVersion": "1.16.5",
+      "discord": {
+        "shortId": "<FILL IN OR REMOVE DISCORD OBJECT>",
+        "largeImageText": "<FILL IN OR REMOVE DISCORD OBJECT>",
+        "largeImageKey": "<FILL IN OR REMOVE DISCORD OBJECT>"
+      },
+      "mainServer": false,
+      "autoconnect": false,
+      "modules": [
+      ]
+    },
+    {
+      "id": "Iris-1.21.10",
+      "name": "이리스",
+      "description": "이리스 1.21.10 (Fabric v0.18.2)",
+      "icon": "https://hanol0927.github.io/Iris/servers/Iris-1.21.10/Icon.png",
+      "version": "1.0.0",
+      "address": "",
+      "minecraftVersion": "1.21.10",
+      "discord": {
+        "shortId": "<FILL IN OR REMOVE DISCORD OBJECT>",
+        "largeImageText": "<FILL IN OR REMOVE DISCORD OBJECT>",
+        "largeImageKey": "<FILL IN OR REMOVE DISCORD OBJECT>"
+      },
+      "mainServer": false,
+      "autoconnect": true,
+      "modules": [
+      ]
+    },
+    {
+      "id": "ChaQ-1.20.1",
+      "name": "차큐",
+      "description": "차큐 1.20.1 (Forge v47.4.10)",
+      "icon": "https://hanol0927.github.io/ChaQ/servers/ChaQ-1.20.1/Icon.png",
+      "version": "1.0.0",
+      "address": "",
+      "minecraftVersion": "1.20.1",
+      "discord": {
+        "shortId": "<FILL IN OR REMOVE DISCORD OBJECT>",
+        "largeImageText": "<FILL IN OR REMOVE DISCORD OBJECT>",
+        "largeImageKey": "<FILL IN OR REMOVE DISCORD OBJECT>"
+      },
+      "mainServer": false,
+      "autoconnect": true,
+      "modules": [
+      ]
+    },
+    {
+      "id": "chaennawizard-1.16.5",
+      "name": "챈리포터 (Minecraft 1.16.5)",
+      "description": "챈리포터 1.16.5 (Forge v36.2.42)",
+      "icon": "https://hanol0927.github.io/chaennawizard/servers/chaennawizard-1.16.5/Icon.png",
+      "version": "1.0.0",
+      "address": "",
+      "minecraftVersion": "1.16.5",
+      "discord": {
+        "shortId": "<FILL IN OR REMOVE DISCORD OBJECT>",
+        "largeImageText": "<FILL IN OR REMOVE DISCORD OBJECT>",
+        "largeImageKey": "<FILL IN OR REMOVE DISCORD OBJECT>"
+      },
+      "mainServer": false,
+      "autoconnect": true,
+      "modules": [
+      ]
+    },
+    {
+      "id": "haru-1.21.4",
+      "name": "하루네",
+      "description": "범죄도시 (NeoForge v21.4.156)",
+      "icon": "https://hanol0927.github.io/haru/servers/haru-1.21.4/Icon.png",
+      "version": "1.0.0",
+      "address": "182.216.39.123:20016",
+      "minecraftVersion": "1.21.4",
+      "discord": {
+        "shortId": "<FILL IN OR REMOVE DISCORD OBJECT>",
+        "largeImageText": "<FILL IN OR REMOVE DISCORD OBJECT>",
+        "largeImageKey": "<FILL IN OR REMOVE DISCORD OBJECT>"
+      },
+      "mainServer": true,
+      "autoconnect": true,
+      "modules": [
+      ]
+    },
+    {
+      "id": "chaenna-1.21.1",
+      "name": "챈나경도",
+      "description": "챈나경도 1.21.1",
+      "icon": "https://hanol0927.github.io/chaennawizard/servers/chaennawizard-1.16.5/Icon.png",
+      "version": "1.0.0",
+      "address": "211.245.95.16",
+      "minecraftVersion": "1.21.1",
+      "discord": {
+        "shortId": "<FILL IN OR REMOVE DISCORD OBJECT>",
+        "largeImageText": "<FILL IN OR REMOVE DISCORD OBJECT>",
+        "largeImageKey": "<FILL IN OR REMOVE DISCORD OBJECT>"
+      },
+      "mainServer": false,
+      "autoconnect": true,
+      "modules": [
+      ]
+    }
+  ]
 }
