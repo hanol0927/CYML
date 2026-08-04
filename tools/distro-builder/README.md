@@ -5,14 +5,21 @@
 해주는 정적 웹 도구입니다. 백엔드 서버나 데이터베이스가 없고, 전부 `index.html` / `app.js` /
 `github-api.js` / `md5.js` 정적 파일과 GitHub REST API 호출로만 동작합니다.
 
-## 이 도구가 하는 일 / 하지 않는 일
+## 이 도구가 하는 일
 
-- **함**: 서버 메타데이터(이름/설명/아이콘/주소/버전), Java 요구 버전 자동 계산, 화이트리스트,
-  배경화면, 모드 jar 추가, 설정 파일 추가, 기존 모드/설정 모듈 삭제.
-- **안 함**: NeoForge/Forge 로더 자체의 초기 모듈 트리(라이브러리, version manifest 등)를
-  새로 만들어주지 않습니다. 새 서버를 처음 만들 때는 비슷한 기존 서버의 `distribution.json`
-  항목에서 로더 관련 모듈들을 복사해오거나, 별도 배포용 도구로 한 번 세팅해야 합니다. 이후
-  모드 추가/삭제, 화이트리스트, 배경화면 교체 같은 일상적인 유지보수가 이 도구의 용도입니다.
+- 서버 메타데이터(이름/설명/아이콘/주소/버전), Java 요구 버전 자동 계산, 화이트리스트,
+  배경화면·아이콘 파일 업로드(URL 자동 생성), 모드 jar 추가(버전 교체 지정 가능), 설정 파일
+  추가("최초 1회만" vs "매번 강제 적용"), 기존 모드/설정 모듈 삭제.
+- **로더(모드로더) 생성**: 새 서버를 만들 때
+  - **Fabric**: 브라우저에서 완전 자동 생성 (Mojang/Fabric 공개 API가 CORS를 허용해서
+    JVM 없이도 가능함을 확인함).
+  - **Forge/NeoForge**: 브라우저에서는 원천적으로 불가능(설치 과정에 로컬 Java 바이트패치가
+    필요하고 그 결과물이 공개 배포되지 않음). 대신 `tools/distro-ci`의 GitHub Actions
+    워크플로우가 대신 실행해줍니다(별도 저장소 설정 필요, `tools/distro-ci/README.md` 참고,
+    **이 환경에서 실행 검증은 못 해서 실험적**). 안 되면 로컬에서 NeoNebula를 한 번 돌리고
+    결과 JSON을 붙여넣는 수동 경로도 그대로 남아있습니다.
+- 기존 서버 편집 중에는 로더 관련 모듈을 절대 재생성/덮어쓰지 않습니다 — 로더 갱신은 항상
+  "새 서버 만들기" 흐름(자동 생성 또는 붙여넣기)으로만 이루어집니다.
 
 ## 처음 설정하기
 
@@ -21,7 +28,10 @@
 1. GitHub → Settings → Developer settings → **Fine-grained personal access tokens** → Generate new token
 2. **Repository access**: distribution.json 저장소(예: `ddumon`)와 자산 저장소(예:
    `hanol0927.github.io`) 두 개만 선택 — 전체 저장소 권한을 주지 마세요.
-3. **Permissions** → Repository permissions → **Contents: Read and write** 만 체크하면 됩니다.
+3. **Permissions** → Repository permissions → **Contents: Read and write**를 체크합니다.
+   Forge·NeoForge 자동 생성(GitHub Actions) 기능을 쓰려면, 위 저장소 선택에
+   `tools/distro-ci` 설정 시 만든 워크플로우 저장소도 추가하고, **Actions: Read and
+   write** 권한도 함께 체크하세요(안 쓸 거면 생략 가능).
 4. 만료 기간을 짧게(예: 90일) 설정해두고, 만료되면 다시 발급하는 걸 권장합니다.
 5. 생성된 토큰(`github_pat_...`)을 복사해둡니다. **이 토큰은 저장소 쓰기 권한이므로 다른 사람과
    공유하지 마세요.**

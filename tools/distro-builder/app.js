@@ -6,7 +6,9 @@ const DEFAULTS = {
     owner: 'hanol0927',
     distroRepo: 'ddumon',
     assetRepo: 'hanol0927.github.io',
-    branch: 'main'
+    branch: 'main',
+    ciRepo: 'distro-ci',
+    ciWorkflowFile: 'generate-server.yml'
 }
 
 // distribution.json에 javaOptions가 없을 때 쓰는 기본값과 동일한 테이블.
@@ -99,7 +101,8 @@ const state = {
     existingModules: [], // [{ module, remove }]
     newMods: [],          // [{ file, name, type, required }]
     newConfigs: [],       // [{ file, path }]
-    backgroundFile: null
+    backgroundFile: null,
+    iconFile: null
 }
 
 function currentSettings() {
@@ -108,7 +111,9 @@ function currentSettings() {
         distroRepo: $('ghDistroRepo').value.trim() || DEFAULTS.distroRepo,
         assetRepo: $('ghAssetRepo').value.trim() || DEFAULTS.assetRepo,
         branch: $('ghBranch').value.trim() || DEFAULTS.branch,
-        assetBaseUrl: $('assetBaseUrl').value.trim().replace(/\/$/, '')
+        assetBaseUrl: $('assetBaseUrl').value.trim().replace(/\/$/, ''),
+        ciRepo: $('ciRepo').value.trim() || DEFAULTS.ciRepo,
+        ciWorkflowFile: $('ciWorkflowFile').value.trim() || DEFAULTS.ciWorkflowFile
     }
 }
 
@@ -119,6 +124,8 @@ function initSettingsUI() {
     $('ghAssetRepo').value = saved.assetRepo || DEFAULTS.assetRepo
     $('ghBranch').value = saved.branch || DEFAULTS.branch
     $('assetBaseUrl').value = saved.assetBaseUrl || `https://${saved.owner || DEFAULTS.owner}.github.io`
+    $('ciRepo').value = saved.ciRepo || DEFAULTS.ciRepo
+    $('ciWorkflowFile').value = saved.ciWorkflowFile || DEFAULTS.ciWorkflowFile
     $('ghToken').value = getToken()
     $('ghTokenPersist').checked = !!localStorage.getItem(TOKEN_KEY)
 
@@ -178,17 +185,108 @@ async function refreshServerPicker() {
     }
 }
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+function loaderGenLog(message) {
+    const el = $('loaderGenLog')
+    const line = document.createElement('div')
+    line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`
+    el.appendChild(line)
+    el.scrollTop = el.scrollHeight
+}
+
+/**
+ * "GitHub Actions로 생성 시작" 버튼 핸들러. Forge/NeoForge는 브라우저에서 직접 만들
+ * 수 없어서(JVM 필요), 별도 워크플로우 저장소의 GitHub Actions를 워크플로우
+ * dispatch로 실행시키고 완료를 폴링한다. 워크플로우 자체가 ddumon/distribution.json에
+ * 이 서버 하나만 안전하게 upsert하도록 돼 있다고 가정한다(tools/distro-ci 참고).
+ * 이 저장소 환경에서 실제로 실행해보지 못한 실험적 기능 — 실패하면 forgePasteBlock의
+ * 수동 붙여넣기로 우회할 수 있다.
+ */
+async function startForgeLoaderGeneration() {
+    const token = getToken()
+    if (!token) {
+        alert('먼저 GitHub 토큰을 입력하고 저장하세요.')
+        return
+    }
+    const serverId = $('serverId').value.trim()
+    const mcVersion = $('serverMcVersion').value.trim()
+    const loaderType = $('forgeLoaderType').value
+    const loaderVersion = $('forgeLoaderVersion').value.trim()
+    if (!serverId || !mcVersion || !loaderVersion) {
+        alert('서버 id, 마인크래프트 버전, 로더 버전을 모두 입력하세요.')
+        return
+    }
+
+    const { owner, ciRepo, ciWorkflowFile, branch } = currentSettings()
+    $('generateLoaderBtn').disabled = true
+    $('loaderGenStatus').textContent = '시작하는 중..'
+    $('loaderGenLog').innerHTML = ''
+
+    try {
+        const sinceMs = Date.now() - 5000 // 브라우저/서버 시계 오차 대비 약간 여유
+        loaderGenLog(`워크플로우 실행 요청 중.. (${ciRepo}/${ciWorkflowFile})`)
+        await GitHubAPI.dispatchWorkflow(token, owner, ciRepo, ciWorkflowFile, branch, {
+            serverId, mcVersion, loaderType, loaderVersion
+        })
+
+        loaderGenLog('실행 확인 중..')
+        let run = null
+        for (let i = 0; i < 15 && run == null; i++) {
+            await sleep(2000)
+            run = await GitHubAPI.findRunSince(token, owner, ciRepo, ciWorkflowFile, sinceMs)
+        }
+        if (run == null) {
+            throw new Error('워크플로우 실행을 찾지 못했습니다. 저장소/파일명 설정과, 그 저장소에 워크플로우가 실제로 등록됐는지 확인하세요.')
+        }
+        loaderGenLog(`실행 확인됨: ${run.html_url}`)
+
+        let status = run.status
+        while (status !== 'completed') {
+            await sleep(5000)
+            run = await GitHubAPI.getWorkflowRun(token, owner, ciRepo, run.id)
+            status = run.status
+            $('loaderGenStatus').textContent = status
+        }
+
+        if (run.conclusion !== 'success') {
+            loaderGenLog(`실패(${run.conclusion}). 로그: ${run.html_url}`)
+            loaderGenLog('자동화가 막히면 "JSON 직접 붙여넣기"로 우회하세요.')
+            return
+        }
+
+        loaderGenLog('성공! distribution.json에 반영됐습니다. 불러오는 중..')
+        await refreshServerPicker()
+        $('existingServerSelect').value = serverId
+        loadServerIntoForm(serverId)
+        loaderGenLog('완료 — 이제 이름/설명/화이트리스트/배경화면 등을 채우고 "GitHub에 배포"를 누르면 됩니다.')
+    } catch (err) {
+        console.error(err)
+        loaderGenLog(`오류: ${err.message}`)
+    } finally {
+        $('generateLoaderBtn').disabled = false
+        $('loaderGenStatus').textContent = ''
+    }
+}
+
 function resetFormForNewServer() {
     state.editingServerId = null
     state.existingModules = []
-    ;['serverId', 'serverName', 'serverDescription', 'serverIcon', 'serverAddress', 'serverMcVersion'].forEach(id => { $(id).value = '' })
+    ;['serverId', 'serverName', 'serverDescription', 'serverAddress', 'serverMcVersion'].forEach(id => { $(id).value = '' })
     $('serverId').disabled = false
     $('serverAutoconnect').checked = false
     $('serverMainServer').checked = false
     $('whitelistTextarea').value = ''
     $('backgroundCurrentUrl').value = ''
     $('backgroundPreview').style.display = 'none'
+    $('iconCurrentUrl').value = ''
+    $('iconPreview').style.display = 'none'
+    state.iconFile = null
     $('javaOptionsManual').checked = false
+    $('loaderTypeSection').style.display = ''
+    $('importedLoaderJson').value = ''
     renderExistingModules()
     updateJavaPreview()
 }
@@ -207,7 +305,6 @@ function loadServerIntoForm(serverId) {
     $('serverId').disabled = true
     $('serverName').value = serv.name || ''
     $('serverDescription').value = serv.description || ''
-    $('serverIcon').value = serv.icon || ''
     $('serverAddress').value = serv.address || ''
     $('serverMcVersion').value = serv.minecraftVersion || ''
     $('serverAutoconnect').checked = !!serv.autoconnect
@@ -220,6 +317,16 @@ function loadServerIntoForm(serverId) {
     } else {
         $('backgroundPreview').style.display = 'none'
     }
+    state.iconFile = null
+    $('iconCurrentUrl').value = serv.icon || ''
+    if (serv.icon) {
+        $('iconPreview').src = serv.icon
+        $('iconPreview').style.display = ''
+    } else {
+        $('iconPreview').style.display = 'none'
+    }
+    // 기존 서버 편집 중엔 로더 모듈을 절대 재생성하지 않으므로 이 섹션은 숨긴다.
+    $('loaderTypeSection').style.display = 'none'
 
     if (serv.javaOptions != null) {
         $('javaOptionsManual').checked = true
@@ -268,6 +375,39 @@ function updateJavaPreview() {
     }
 }
 
+// ---- 로더 선택 UI ----
+
+function updateLoaderTypeBlocks() {
+    const loaderType = $('loaderType').value
+    $('fabricLoaderBlock').style.display = loaderType === 'fabric' ? '' : 'none'
+    $('forgeAutoBlock').style.display = loaderType === 'forge-auto' ? '' : 'none'
+    $('forgePasteBlock').style.display = loaderType === 'forge-paste' ? '' : 'none'
+    if (loaderType === 'fabric') {
+        refreshFabricLoaderVersions()
+    }
+}
+
+async function refreshFabricLoaderVersions() {
+    if ($('loaderType').value !== 'fabric') return
+    const mcVersion = $('serverMcVersion').value.trim()
+    const select = $('fabricLoaderVersion')
+    select.innerHTML = ''
+    if (!mcVersion) return
+    try {
+        const versions = await fetchFabricLoaderVersions(mcVersion)
+        for (const v of versions) {
+            const opt = document.createElement('option')
+            opt.value = v.loader.version
+            opt.textContent = v.loader.version + (v.loader.stable ? ' (stable)' : '')
+            select.appendChild(opt)
+        }
+        const stableIdx = versions.findIndex(v => v.loader.stable)
+        if (stableIdx >= 0) select.selectedIndex = stableIdx
+    } catch (err) {
+        console.error(err)
+    }
+}
+
 // ---- File drop zones ----
 
 function setupDropzone(zoneId, inputId, onFiles) {
@@ -289,7 +429,7 @@ function setupDropzone(zoneId, inputId, onFiles) {
 
 function addModFiles(files) {
     for (const file of files) {
-        state.newMods.push({ file, name: file.name, type: 'ForgeMod', required: true })
+        state.newMods.push({ file, name: file.name, type: 'ForgeMod', required: true, replacesModuleIdx: null })
     }
     renderNewMods()
 }
@@ -297,6 +437,9 @@ function addModFiles(files) {
 function renderNewMods() {
     const container = $('modsList')
     container.innerHTML = ''
+    const replaceOptions = state.existingModules
+        .map((entry, i) => `<option value="${i}">${entry.module.name || entry.module.id}</option>`)
+        .join('')
     state.newMods.forEach((entry, idx) => {
         const row = document.createElement('div')
         row.className = 'fileRow'
@@ -307,10 +450,17 @@ function renderNewMods() {
                 ${MODULE_TYPES.map(t => `<option value="${t}" ${t === entry.type ? 'selected' : ''}>${t}</option>`).join('')}
             </select>
             <label><input type="checkbox" class="modRequiredCheck" ${entry.required ? 'checked' : ''}> 필수</label>
+            <select class="modReplaceSelect" title="이 파일이 대체하는 기존 모듈">
+                <option value="">대체 안 함</option>
+                ${replaceOptions}
+            </select>
             <button type="button" class="removeBtn">삭제</button>
         `
         row.querySelector('.modTypeSelect').addEventListener('change', e => { state.newMods[idx].type = e.target.value })
         row.querySelector('.modRequiredCheck').addEventListener('change', e => { state.newMods[idx].required = e.target.checked })
+        row.querySelector('.modReplaceSelect').addEventListener('change', e => {
+            state.newMods[idx].replacesModuleIdx = e.target.value === '' ? null : parseInt(e.target.value, 10)
+        })
         row.querySelector('.removeBtn').addEventListener('click', () => { state.newMods.splice(idx, 1); renderNewMods() })
         container.appendChild(row)
     })
@@ -321,7 +471,7 @@ function renderNewMods() {
 
 function addConfigFiles(files) {
     for (const file of files) {
-        state.newConfigs.push({ file, path: `config/${file.name}` })
+        state.newConfigs.push({ file, path: `config/${file.name}`, forceEveryLaunch: false })
     }
     renderNewConfigs()
 }
@@ -336,9 +486,11 @@ function renderNewConfigs() {
             <span class="fileName">${entry.file.name}</span>
             <span class="fileSize">${formatBytes(entry.file.size)}</span>
             <input type="text" class="configPathInput" value="${entry.path}">
+            <label><input type="checkbox" class="configForceCheck" ${entry.forceEveryLaunch ? 'checked' : ''}> 매번 강제 적용</label>
             <button type="button" class="removeBtn">삭제</button>
         `
         row.querySelector('.configPathInput').addEventListener('input', e => { state.newConfigs[idx].path = e.target.value })
+        row.querySelector('.configForceCheck').addEventListener('change', e => { state.newConfigs[idx].forceEveryLaunch = e.target.checked })
         row.querySelector('.removeBtn').addEventListener('click', () => { state.newConfigs.splice(idx, 1); renderNewConfigs() })
         container.appendChild(row)
     })
@@ -364,13 +516,106 @@ function bytesToBase64(bytes) {
     return btoa(binary)
 }
 
-async function hashAndEncode(file) {
-    const bytes = await readFileAsBytes(file)
+function hashAndEncodeBytes(bytes) {
     return {
         size: bytes.length,
         md5: md5.hexFromBytes(bytes),
         base64: bytesToBase64(bytes)
     }
+}
+
+async function hashAndEncode(file) {
+    return hashAndEncodeBytes(await readFileAsBytes(file))
+}
+
+async function fetchBytes(url) {
+    const res = await fetch(url)
+    if (!res.ok) {
+        throw new Error(`파일을 받아오지 못했습니다: ${url} (HTTP ${res.status})`)
+    }
+    return new Uint8Array(await res.arrayBuffer())
+}
+
+// "group:artifact:version[:classifier]" -> 메이븐 저장소 상대 경로
+function mavenNameToPath(name) {
+    const [group, artifact, version, classifier] = name.split(':')
+    const groupPath = group.replace(/\./g, '/')
+    const fileName = classifier != null
+        ? `${artifact}-${version}-${classifier}.jar`
+        : `${artifact}-${version}.jar`
+    return `${groupPath}/${artifact}/${version}/${fileName}`
+}
+
+// ---- Fabric 자동 생성 (Mojang/Fabric 공개 API, CORS 허용 확인됨 — JVM 불필요) ----
+
+async function fetchFabricLoaderVersions(mcVersion) {
+    const res = await fetch(`https://meta.fabricmc.net/v2/versions/loader/${encodeURIComponent(mcVersion)}`)
+    if (!res.ok) return []
+    return res.json()
+}
+
+/**
+ * Fabric 서버의 로더 모듈 트리를 브라우저에서 완전히 조립한다.
+ * profile/json 응답 자체는 요청마다 시간 정보가 바뀌어서(캐시 불안정) fabricmc.net에
+ * 직접 링크하지 않고 받아온 그대로(재직렬화 없이) 자산 저장소에 재호스팅한다.
+ * 나머지 라이브러리/로더 jar는 maven.fabricmc.net URL을 그대로 참조한다.
+ *
+ * @returns {Promise<{modules: Array, assetFiles: Array}>}
+ */
+async function buildFabricModules(mcVersion, loaderVersion, serverFolder, assetBaseUrl) {
+    log(`Fabric 프로필 조회 중: ${mcVersion} / ${loaderVersion}`)
+    const profileUrl = `https://meta.fabricmc.net/v2/versions/loader/${encodeURIComponent(mcVersion)}/${encodeURIComponent(loaderVersion)}/profile/json`
+    const profileBytes = await fetchBytes(profileUrl)
+    const profile = JSON.parse(new TextDecoder('utf-8').decode(profileBytes))
+
+    const assetFiles = []
+    const subModules = []
+    let fabricLoaderModule = null
+
+    const profileEncoded = hashAndEncodeBytes(profileBytes)
+    const profilePath = `${serverFolder}/fabric/${profile.id}.json`
+    assetFiles.push({ path: profilePath, base64Content: profileEncoded.base64 })
+    subModules.push({
+        id: profile.id,
+        name: 'Fabric Loader (version.json)',
+        type: 'VersionManifest',
+        artifact: { size: profileEncoded.size, MD5: profileEncoded.md5, url: `${assetBaseUrl}/${profilePath}` }
+    })
+
+    for (const lib of profile.libraries) {
+        const libUrl = lib.url + mavenNameToPath(lib.name)
+        if (lib.name.startsWith('net.fabricmc:fabric-loader:')) {
+            log(`fabric-loader jar 해시 계산 중: ${lib.name}`)
+            const { size, md5: hash } = hashAndEncodeBytes(await fetchBytes(libUrl))
+            fabricLoaderModule = {
+                id: lib.name,
+                name: `Fabric Loader ${loaderVersion}`,
+                type: 'Fabric',
+                artifact: { size, MD5: hash, url: libUrl }
+            }
+            continue
+        }
+        let size = lib.size
+        let hash = lib.md5
+        if (size == null || hash == null) {
+            log(`${lib.name} 해시 계산 중 (메타에 없음): intermediary 등`)
+            const encoded = hashAndEncodeBytes(await fetchBytes(libUrl))
+            size = encoded.size
+            hash = encoded.md5
+        }
+        subModules.push({
+            id: lib.name,
+            name: lib.name,
+            type: 'Library',
+            artifact: { size, MD5: hash, url: libUrl }
+        })
+    }
+
+    if (fabricLoaderModule == null) {
+        throw new Error('Fabric 프로필에서 fabric-loader 항목을 찾지 못했습니다.')
+    }
+    fabricLoaderModule.subModules = subModules
+    return { modules: [fabricLoaderModule], assetFiles }
 }
 
 // ---- Deploy pipeline ----
@@ -404,7 +649,37 @@ async function deploy() {
         const assetFiles = [] // { path, base64Content }
         const modModules = []
         const configModules = []
+        const newOnceFiles = [] // { path, url, size, MD5 } - modules[] 밖의 커스텀 필드
         const serverFolder = `${serverId}/servers/${serverId}`
+
+        // 새 서버를 만들 때만 로더 모듈을 조립한다. 기존 서버 편집 중에는 이미 있는
+        // 로더 모듈(remainingExisting을 통해 유지됨)을 절대 재생성/덮어쓰지 않는다.
+        // Forge·NeoForge "자동 생성"은 별도의 GitHub Actions 버튼으로 처리되므로 여기선 다루지 않는다.
+        let loaderModules = []
+        if (state.editingServerId == null) {
+            const loaderType = $('loaderType').value
+            const mcVersion = $('serverMcVersion').value.trim()
+            if (loaderType === 'fabric') {
+                const fabricLoaderVersion = $('fabricLoaderVersion').value
+                if (!fabricLoaderVersion) {
+                    throw new Error('Fabric 로더 버전을 선택하세요.')
+                }
+                const built = await buildFabricModules(mcVersion, fabricLoaderVersion, serverFolder, assetBaseUrl)
+                loaderModules = built.modules
+                assetFiles.push(...built.assetFiles)
+            } else if (loaderType === 'forge-paste') {
+                const raw = $('importedLoaderJson').value.trim()
+                if (raw) {
+                    const parsed = JSON.parse(raw)
+                    loaderModules = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.modules) ? parsed.modules : [parsed])
+                    for (const m of loaderModules) {
+                        if (m.type == null || m.artifact == null) {
+                            throw new Error('붙여넣은 JSON에 type/artifact가 없는 항목이 있습니다.')
+                        }
+                    }
+                }
+            }
+        }
 
         for (const mod of state.newMods) {
             log(`해시 계산 중: ${mod.file.name}`)
@@ -425,12 +700,18 @@ async function deploy() {
             const { size, md5: hash, base64 } = await hashAndEncode(cfg.file)
             const path = `${serverFolder}/files/${cfg.path}`
             assetFiles.push({ path, base64Content: base64 })
-            configModules.push({
-                id: cfg.file.name,
-                name: cfg.file.name,
-                type: 'File',
-                artifact: { size, MD5: hash, url: `${assetBaseUrl}/${path}`, path: cfg.path }
-            })
+            if (cfg.forceEveryLaunch) {
+                configModules.push({
+                    id: cfg.file.name,
+                    name: cfg.file.name,
+                    type: 'File',
+                    artifact: { size, MD5: hash, url: `${assetBaseUrl}/${path}`, path: cfg.path }
+                })
+            } else {
+                // 최초 1회만: modules[]가 아니라 onceFiles[]에 넣어서 FullRepair가
+                // 존재 자체를 모르게 한다 (landing.js의 ensureOnceFiles가 처리).
+                newOnceFiles.push({ path: cfg.path, url: `${assetBaseUrl}/${path}`, size, MD5: hash })
+            }
         }
 
         let backgroundUrl = $('backgroundCurrentUrl').value.trim() || undefined
@@ -441,6 +722,16 @@ async function deploy() {
             const path = `${serverFolder}/background.${ext}`
             assetFiles.push({ path, base64Content: base64 })
             backgroundUrl = `${assetBaseUrl}/${path}`
+        }
+
+        let iconUrl = $('iconCurrentUrl').value.trim() || undefined
+        if (state.iconFile != null) {
+            log(`아이콘 업로드 준비: ${state.iconFile.name}`)
+            const { base64 } = await hashAndEncode(state.iconFile)
+            const ext = state.iconFile.name.split('.').pop() || 'png'
+            const path = `${serverFolder}/icon.${ext}`
+            assetFiles.push({ path, base64Content: base64 })
+            iconUrl = `${assetBaseUrl}/${path}`
         }
 
         // 자산 커밋을 distribution.json 갱신보다 먼저 수행한다.
@@ -470,16 +761,28 @@ async function deploy() {
             ? { supported: $('javaSupported').value.trim(), suggestedMajor: parseInt($('javaSuggestedMajor').value, 10) }
             : undefined // 비워두면 런처가 JAVA_VERSION_TABLE로 자동 판단
 
-        const remainingExisting = state.existingModules.filter(e => !e.remove).map(e => e.module)
-        const modules = [...remainingExisting, ...modModules, ...configModules]
+        // 새 모드 업로드에서 "대체" 지정한 기존 모듈은 체크박스로 지운 것과 동일하게 제외.
+        const replacedIdxs = new Set(state.newMods.map(m => m.replacesModuleIdx).filter(i => i != null))
+        const remainingExisting = state.existingModules
+            .filter((e, i) => !e.remove && !replacedIdxs.has(i))
+            .map(e => e.module)
+        const modules = [...loaderModules, ...remainingExisting, ...modModules, ...configModules]
 
         const existingServer = distribution.servers.find(s => s.id === serverId)
+
+        // 같은 path는 새 걸로 교체(중복 방지), 나머지 기존 onceFiles는 유지.
+        const mergedOnceFiles = [
+            ...(existingServer && Array.isArray(existingServer.onceFiles)
+                ? existingServer.onceFiles.filter(e => !newOnceFiles.some(n => n.path === e.path))
+                : []),
+            ...newOnceFiles
+        ]
 
         const serverObj = Object.assign({}, existingServer, {
             id: serverId,
             name: $('serverName').value.trim(),
             description: $('serverDescription').value.trim(),
-            icon: $('serverIcon').value.trim(),
+            icon: iconUrl,
             version: bumpVersion(existingServer ? existingServer.version : '1.0.0'),
             address: $('serverAddress').value.trim(),
             minecraftVersion: $('serverMcVersion').value.trim(),
@@ -487,7 +790,8 @@ async function deploy() {
             mainServer: $('serverMainServer').checked || undefined,
             modules,
             whitelist: whitelist.length > 0 ? whitelist : undefined,
-            background: backgroundUrl
+            background: backgroundUrl,
+            onceFiles: mergedOnceFiles.length > 0 ? mergedOnceFiles : undefined
         })
         if (manualJava) {
             serverObj.javaOptions = javaOptions
@@ -514,6 +818,7 @@ async function deploy() {
         state.newMods = []
         state.newConfigs = []
         state.backgroundFile = null
+        state.iconFile = null
         renderNewMods()
         renderNewConfigs()
         await refreshServerPicker()
@@ -543,6 +848,10 @@ document.addEventListener('DOMContentLoaded', () => {
     $('javaOptionsManual').addEventListener('change', updateJavaPreview)
     updateJavaPreview()
 
+    $('loaderType').addEventListener('change', updateLoaderTypeBlocks)
+    updateLoaderTypeBlocks()
+    $('serverMcVersion').addEventListener('change', refreshFabricLoaderVersions)
+
     setupDropzone('modsDropzone', 'modsFileInput', addModFiles)
     setupDropzone('configsDropzone', 'configsFileInput', addConfigFiles)
 
@@ -555,7 +864,17 @@ document.addEventListener('DOMContentLoaded', () => {
         e.target.value = ''
     })
 
+    $('iconFileInput').addEventListener('change', e => {
+        const file = e.target.files[0]
+        if (file == null) return
+        state.iconFile = file
+        $('iconPreview').src = URL.createObjectURL(file)
+        $('iconPreview').style.display = ''
+        e.target.value = ''
+    })
+
     $('deployBtn').addEventListener('click', deploy)
+    $('generateLoaderBtn').addEventListener('click', startForgeLoaderGeneration)
 
     resetFormForNewServer()
     if (getToken()) {

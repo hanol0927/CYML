@@ -3,6 +3,8 @@
  */
 // Requirements
 const { URL }                 = require('url')
+const path                    = require('path')
+const fs                      = require('fs-extra')
 const {
     MojangRestAPI,
     getServerStatus
@@ -597,6 +599,36 @@ const GAME_JOINED_REGEX = /\[.+\]: Sound engine started/
 const GAME_LAUNCH_REGEX = /^\[.+\]: (?:MinecraftForge .+ Initialized|ModLauncher .+ starting: .+|Loading Minecraft .+ with Fabric Loader .+)$/
 const MIN_LINGER = 5000
 
+/**
+ * distribution.json의 커스텀 필드 onceFiles(정식 modules[]가 아님, distro-builder가
+ * "최초 1회만" 체크된 설정 파일을 여기 넣음)에 있는 파일을 확인한다. 로컬에 이미
+ * 파일이 있으면(최초 설치 때 받은 것이든 플레이어가 직접 수정한 것이든) 절대 손대지
+ * 않고, 없을 때만 받는다. FullRepair/DistributionIndexProcessor는 modules[]만 보기
+ * 때문에 이 파일들의 존재 자체를 몰라서, 한 번 받힌 뒤엔 매 실행마다 해시 불일치로
+ * 원본으로 덮어써지는 일이 없다.
+ *
+ * @param {Object} serv DistroAPI가 반환하는 서버 객체
+ */
+async function ensureOnceFiles(serv) {
+    const onceFiles = serv.rawServer.onceFiles
+    if(!Array.isArray(onceFiles) || onceFiles.length === 0) {
+        return
+    }
+    const instanceDir = path.join(ConfigManager.getInstanceDirectory(), serv.rawServer.id)
+    for(const entry of onceFiles) {
+        const destPath = path.join(instanceDir, entry.path)
+        if(await fs.pathExists(destPath)) {
+            continue
+        }
+        loggerLanding.info(`최초 1회 설정 파일 다운로드: ${entry.path}`)
+        try {
+            await downloadFile(entry.url, destPath)
+        } catch(err) {
+            loggerLanding.error(`최초 1회 설정 파일 다운로드 실패: ${entry.path}`, err)
+        }
+    }
+}
+
 async function dlAsync(login = true) {
 
     // Login parameter is temporary for debug purposes. Allows testing the validation/downloads without
@@ -630,6 +662,8 @@ async function dlAsync(login = true) {
             return
         }
     }
+
+    await ensureOnceFiles(serv)
 
     setLaunchDetails(Lang.queryJS('landing.dlAsync.pleaseWait'))
     toggleLaunchArea(true)

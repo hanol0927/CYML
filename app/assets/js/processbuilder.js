@@ -34,6 +34,7 @@ class ProcessBuilder {
         this.forgeModListFile = path.join(this.gameDir, 'forgeMods.list') // 1.13+
         this.fmlDir = path.join(this.gameDir, 'forgeModList.json')
         this.llDir = path.join(this.gameDir, 'liteloaderModList.json')
+        this.copiedModsManifestPath = path.join(this.gameDir, 'copiedModsManifest.json')
         this.libPath = path.join(this.commonDir, 'libraries')
 
         this.usingLiteLoader = false
@@ -67,7 +68,7 @@ class ProcessBuilder {
         let args = this.constructJVMArguments(uberModArr, tempNativePath)
 
         //if(mcVersionAtLeast('1.13', this.server.rawServer.minecraftVersion)){
-            //args = args.concat(this.constructModArguments(modObj.fMods))
+        //args = args.concat(this.constructModArguments(modObj.fMods))
         //    args = args.concat(this.constructModList(modObj.fMods))
         //}
 
@@ -300,45 +301,110 @@ class ProcessBuilder {
 
 
     /**
-     * 모드를 mods 폴더로 직접 복사
-     * 
+     * 모드를 mods 폴더로 직접 복사.
+     * 이전 실행 때 이 함수가 복사해뒀던 파일 중 이번엔 더 이상 필요 없는 것들은
+     * pruneOrphanedCopiedMods()로 먼저 정리한다 (distribution.json에서 모드를
+     * 빼거나 버전을 올렸을 때 옛 jar가 mods 폴더에 영구히 남는 문제 방지).
+     *
      * @param {Array.<Object>} mods 복사할 모드 배열
      */
     copyModsToFolder(mods) {
-    const modsFolder = path.join(this.gameDir, 'mods')
-    
-    if (!fs.existsSync(modsFolder)) {
-        fs.mkdirSync(modsFolder, { recursive: true })
-        logger.info('Created mods folder:', modsFolder)
+        const modsFolder = path.join(this.gameDir, 'mods')
+
+        if (!fs.existsSync(modsFolder)) {
+            fs.mkdirSync(modsFolder, { recursive: true })
+            logger.info('Created mods folder:', modsFolder)
+        }
+
+        const expectedFileNames = mods.map(mod => path.basename(mod.getPath()))
+        this.pruneOrphanedCopiedMods(modsFolder, expectedFileNames)
+
+        logger.info('Copying mods to folder...')
+
+        for (const mod of mods) {
+            try {
+                const sourcePath = mod.getPath()
+                const fileName = path.basename(sourcePath)
+                const destPath = path.join(modsFolder, fileName)
+
+                if (fs.existsSync(destPath)) {
+                    const sourceStats = fs.statSync(sourcePath)
+                    const destStats = fs.statSync(destPath)
+
+                    if (sourceStats.size === destStats.size) {
+                        logger.info('Mod already exists, skipping:', fileName)
+                        continue
+                    }
+                }
+
+                fs.copyFileSync(sourcePath, destPath)
+                logger.info('Copied mod to mods folder:', fileName)
+
+            } catch (err) {
+                logger.error('Failed to copy mod:', err)
+            }
+        }
+
+        logger.info('Mods copied successfully')
+
+        // 복사가 다 끝난 뒤에만 매니페스트를 갱신한다 — 복사 도중 죽으면 이전
+        // 매니페스트가 그대로 남아있어야, 다음 실행에서 실제로는 안 복사된
+        // 파일을 "예전에 있었다"고 착각해 잘못 지우는 일이 없다.
+        this.writeCopiedModsManifest(expectedFileNames)
     }
-    
-    logger.info('Copying mods to folder...')
-    
-    for (const mod of mods) {
-        try {
-            const sourcePath = mod.getPath()
-            const fileName = path.basename(sourcePath)
-            const destPath = path.join(modsFolder, fileName)
-            
-            if (fs.existsSync(destPath)) {
-                const sourceStats = fs.statSync(sourcePath)
-                const destStats = fs.statSync(destPath)
-                
-                if (sourceStats.size === destStats.size) {
-                    logger.info('Mod already exists, skipping:', fileName)
-                    continue
+
+    /**
+     * 이전에 이 함수가 mods 폴더로 복사해뒀지만 이번 실행의 모드 목록에는
+     * 더 이상 없는 파일들을 지운다. 매니페스트에 기록된 적 없는 파일(유저가
+     * 직접 넣은 드롭인 모드 등)은 절대 건드리지 않는다 — 이게 핵심 안전장치.
+     *
+     * @param {string} modsFolder mods 폴더 경로
+     * @param {Array.<string>} expectedFileNames 이번 실행에서 있어야 할 파일명 목록
+     */
+    pruneOrphanedCopiedMods(modsFolder, expectedFileNames) {
+        const previous = this.readCopiedModsManifest()
+        const expected = new Set(expectedFileNames)
+
+        for (const fileName of previous) {
+            if (!expected.has(fileName)) {
+                const filePath = path.join(modsFolder, fileName)
+                try {
+                    if (fs.existsSync(filePath)) {
+                        fs.unlinkSync(filePath)
+                        logger.info('Removed orphaned distro mod:', fileName)
+                    }
+                } catch (err) {
+                    logger.error('Failed to remove orphaned mod:', fileName, err)
                 }
             }
-            
-            fs.copyFileSync(sourcePath, destPath)
-            logger.info('Copied mod to mods folder:', fileName)
-            
-        } catch (err) {
-            logger.error('Failed to copy mod:', err)
         }
     }
-    
-    logger.info('Mods copied successfully')
+
+    /**
+     * 지난 실행에서 copyModsToFolder()가 복사했던 파일명 목록을 읽는다.
+     * 파일이 없거나(첫 실행) 손상돼서 파싱이 안 되면 빈 배열을 반환한다 —
+     * 절대 throw하지 않는다(정리 로직이 build()를 막으면 안 됨).
+     *
+     * @returns {Array.<string>}
+     */
+    readCopiedModsManifest() {
+        try {
+            const raw = fs.readFileSync(this.copiedModsManifestPath, 'UTF-8')
+            const parsed = JSON.parse(raw)
+            return Array.isArray(parsed.mods) ? parsed.mods : []
+        } catch (err) {
+            return []
+        }
+    }
+
+    /**
+     * 이번 실행에서 복사한 파일명 목록을 매니페스트로 저장한다.
+     *
+     * @param {Array.<string>} fileNames
+     */
+    writeCopiedModsManifest(fileNames) {
+        const json = JSON.stringify({ mods: fileNames }, null, 4)
+        fs.writeFileSync(this.copiedModsManifestPath, json, 'UTF-8')
     }
 
     /**

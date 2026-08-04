@@ -127,5 +127,35 @@
         return newCommit.sha
     }
 
-    global.GitHubAPI = { getFile, putFile, commitFilesBatch, utf8ToBase64 }
+    // ---- Actions API: Forge/NeoForge 로더 자동 생성 워크플로우 트리거/폴링 ----
+    // 브라우저 쪽 PAT에 "Actions: Read and write" 권한이 추가로 필요하다.
+
+    /**
+     * @param {Object} inputs workflow_dispatch inputs (문자열 값만 지원)
+     */
+    async function dispatchWorkflow(token, owner, repo, workflowFile, ref, inputs) {
+        await ghRequest(token, 'POST', `/repos/${owner}/${repo}/actions/workflows/${encodeURIComponent(workflowFile)}/dispatches`, {
+            ref,
+            inputs
+        })
+    }
+
+    /**
+     * dispatch 이후 새로 생긴 workflow run을 찾는다. workflow_dispatch 자체는 run id를
+     * 돌려주지 않아서(204 No Content), sinceMs 이후 생성된 run 중 가장 최근 것을 찾는
+     * 방식으로 대응한다.
+     */
+    async function findRunSince(token, owner, repo, workflowFile, sinceMs) {
+        const data = await ghRequest(token, 'GET',
+            `/repos/${owner}/${repo}/actions/workflows/${encodeURIComponent(workflowFile)}/runs?event=workflow_dispatch&per_page=5`)
+        const runs = (data.workflow_runs || []).filter(r => new Date(r.created_at).getTime() >= sinceMs)
+        if (runs.length === 0) return null
+        return runs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0]
+    }
+
+    async function getWorkflowRun(token, owner, repo, runId) {
+        return ghRequest(token, 'GET', `/repos/${owner}/${repo}/actions/runs/${runId}`)
+    }
+
+    global.GitHubAPI = { getFile, putFile, commitFilesBatch, dispatchWorkflow, findRunSince, getWorkflowRun, utf8ToBase64 }
 })(window)

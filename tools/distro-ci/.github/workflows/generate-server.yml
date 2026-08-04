@@ -1,0 +1,98 @@
+name: Generate Forge/NeoForge server
+
+# distro-builder(웹 도구)의 "GitHub Actions로 생성 시작" 버튼이 workflow_dispatch로
+# 이 워크플로우를 트리거한다. Forge/NeoForge(1.13+)는 설치 과정에 실제 로컬 Java
+# 바이트패치 단계가 있어서 브라우저에서 직접 만들 수 없기 때문에, 여기서 대신
+# NeoNebula(https://github.com/bayergg/NeoNebula, Nebula 포크)를 실행해준다.
+#
+# ⚠️ 이 저장소 환경에서 실제로 실행해보지 못했다. NeoNebula의 ROOT 디렉터리 내부
+# 구조(특히 아래 "Locate generated files" 단계의 경로 가정)는 문서만으로 완전히
+# 확인하지 못한 부분이라, 처음 실행했을 때 안 맞으면 그 실행의 로그를 보고
+# merge-server.js의 파일 탐색 로직을 조정해야 할 수 있다.
+
+on:
+  workflow_dispatch:
+    inputs:
+      serverId:
+        description: '서버 id (예: Ssachon-1.21.1)'
+        required: true
+      mcVersion:
+        description: '마인크래프트 버전'
+        required: true
+      loaderType:
+        description: 'forge 또는 neoforge'
+        required: true
+      loaderVersion:
+        description: '로더 버전 (예: 21.1.219)'
+        required: true
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repo (merge script)
+        uses: actions/checkout@v4
+
+      - name: Checkout NeoNebula
+        uses: actions/checkout@v4
+        with:
+          repository: bayergg/NeoNebula
+          path: neonebula
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install & build NeoNebula
+        working-directory: neonebula
+        run: |
+          npm ci
+          npm run build
+
+      - name: Prepare ROOT
+        run: |
+          mkdir -p "$RUNNER_TEMP/root"
+          cd neonebula
+          node dist/index.js init root
+        env:
+          ROOT: ${{ runner.temp }}/root
+
+      - name: Write NeoNebula .env
+        working-directory: neonebula
+        run: |
+          echo "JAVA_EXECUTABLE=$JAVA_HOME/bin/java" >> .env
+          echo "ROOT=${{ runner.temp }}/root" >> .env
+          echo "BASE_URL=${{ vars.ASSET_BASE_URL }}" >> .env
+
+      - name: Generate server (Forge/NeoForge)
+        working-directory: neonebula
+        run: |
+          if [ "${{ inputs.loaderType }}" = "neoforge" ]; then
+            node dist/index.js generate server "${{ inputs.serverId }}" "${{ inputs.mcVersion }}" --neoforge "${{ inputs.loaderVersion }}"
+          else
+            node dist/index.js generate server "${{ inputs.serverId }}" "${{ inputs.mcVersion }}" --forge "${{ inputs.loaderVersion }}"
+          fi
+
+      - name: Assemble distribution.json (this ROOT only contains the one server just generated)
+        working-directory: neonebula
+        run: node dist/index.js generate distro
+
+      - name: Merge into ddumon + push assets
+        run: node merge-server.js
+        env:
+          GH_TOKEN: ${{ secrets.DISTRO_PAT }}
+          OWNER: ${{ vars.OWNER }}
+          DISTRO_REPO: ${{ vars.DISTRO_REPO }}
+          ASSET_REPO: ${{ vars.ASSET_REPO }}
+          BRANCH: ${{ vars.DISTRO_BRANCH || 'main' }}
+          BASE_URL: ${{ vars.ASSET_BASE_URL }}
+          SERVER_ID: ${{ inputs.serverId }}
+          MC_VERSION: ${{ inputs.mcVersion }}
+          ROOT_DIR: ${{ runner.temp }}/root
