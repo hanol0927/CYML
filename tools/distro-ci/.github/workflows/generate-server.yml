@@ -72,7 +72,12 @@ jobs:
         run: |
           echo "JAVA_EXECUTABLE=$JAVA_HOME/bin/java" >> .env
           echo "ROOT=${{ runner.temp }}/root" >> .env
-          echo "BASE_URL=${{ vars.ASSET_BASE_URL }}/${{ inputs.assetRepo }}" >> .env
+          # NeoNebula는 BASE_URL을 WHATWG URL 상대경로 규칙으로 합친다(new URL(relative, base)).
+          # 끝에 '/'가 없으면 마지막 경로 조각(예: 자산 저장소 이름)이 "파일명"으로
+          # 취급되어 버려지고 NeoNebula 내부 상수인 'repo'로 대체되어 버린다
+          # (예: https://host/Chaenna + repo/lib/x.jar -> https://host/repo/lib/x.jar,
+          #  Chaenna가 증발함). 반드시 끝 슬래시를 붙여야 한다.
+          echo "BASE_URL=${{ vars.ASSET_BASE_URL }}/${{ inputs.assetRepo }}/" >> .env
 
       - name: Generate server (Forge/NeoForge)
         working-directory: neonebula
