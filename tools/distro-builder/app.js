@@ -20,6 +20,9 @@ const JAVA_VERSION_TABLE = [
 ]
 
 const MODULE_TYPES = ['ForgeMod', 'FabricMod', 'LiteMod', 'Library', 'File']
+// distro-ci/merge-server.js의 LOADER_OWNED_TYPES와 동일하게 맞출 것 — 로더 교체 시
+// 이 타입의 기존 모듈만 새 로더 모듈로 대체하고, 나머지(모드/설정 등)는 그대로 둔다.
+const LOADER_OWNED_TYPES = new Set(['Forge', 'ForgeHosted', 'Fabric', 'VersionManifest', 'Library'])
 const MAX_SAFE_UPLOAD_BYTES = 25 * 1024 * 1024
 
 function mcVersionAtLeast(desired, actual) {
@@ -285,6 +288,9 @@ function resetFormForNewServer() {
     state.iconFile = null
     $('javaOptionsManual').checked = false
     $('loaderTypeSection').style.display = ''
+    $('loaderReplaceRow').style.display = 'none'
+    $('loaderReplaceCheck').checked = false
+    $('loaderTypeFields').style.display = ''
     $('importedLoaderJson').value = ''
     renderExistingModules()
     updateJavaPreview()
@@ -343,8 +349,13 @@ function loadServerIntoForm(serverId) {
     } else {
         $('iconPreview').style.display = 'none'
     }
-    // 기존 서버 편집 중엔 로더 모듈을 절대 재생성하지 않으므로 이 섹션은 숨긴다.
-    $('loaderTypeSection').style.display = 'none'
+    // 기존 서버 편집 중엔 기본적으로 로더 모듈을 재생성하지 않는다 — 명시적으로
+    // "로더 교체" 체크박스를 켜야만 아래 로더 필드가 나타난다(loaderReplaceCheck 참고).
+    $('loaderTypeSection').style.display = ''
+    $('loaderReplaceRow').style.display = ''
+    $('loaderReplaceCheck').checked = false
+    $('loaderTypeFields').style.display = 'none'
+    $('importedLoaderJson').value = ''
 
     if (serv.javaOptions != null) {
         $('javaOptionsManual').checked = true
@@ -710,6 +721,15 @@ async function deploy() {
     // 서빙되는 구조를 그대로 따른다 (예: https://hanol0927.github.io/Ssachon/...).
     const assetRepoBaseUrl = `${assetBaseUrl}/${serverAssetRepo}`
 
+    const replacingLoader = state.editingServerId != null && $('loaderReplaceCheck').checked
+    if (replacingLoader) {
+        const ok = confirm(
+            `"${state.editingServerId}" 서버의 로더/라이브러리 모듈을 새로 교체합니다.\n` +
+            '기존 로더 모듈은 삭제되고 아래에서 새로 만든 것으로 대체됩니다. 계속할까요?'
+        )
+        if (!ok) return
+    }
+
     $('deployBtn').disabled = true
     $('deployLog').innerHTML = ''
 
@@ -722,11 +742,12 @@ async function deploy() {
         const newOnceFiles = [] // { path, url, size, MD5 } - modules[] 밖의 커스텀 필드
         const serverFolder = `servers/${serverId}`
 
-        // 새 서버를 만들 때만 로더 모듈을 조립한다. 기존 서버 편집 중에는 이미 있는
-        // 로더 모듈(remainingExisting을 통해 유지됨)을 절대 재생성/덮어쓰지 않는다.
+        // 새 서버를 만들 때, 또는 기존 서버에서 "로더 교체" 체크박스를 명시적으로 켰을
+        // 때만 로더 모듈을 조립한다. 그 외 기존 서버 편집 중에는 이미 있는 로더 모듈
+        // (remainingExisting을 통해 유지됨)을 절대 재생성/덮어쓰지 않는다.
         // Forge·NeoForge "자동 생성"은 별도의 GitHub Actions 버튼으로 처리되므로 여기선 다루지 않는다.
         let loaderModules = []
-        if (state.editingServerId == null) {
+        if (state.editingServerId == null || replacingLoader) {
             const loaderType = $('loaderType').value
             const mcVersion = $('serverMcVersion').value.trim()
             if (loaderType === 'fabric') {
@@ -836,6 +857,9 @@ async function deploy() {
         const replacedIdxs = new Set(state.newMods.map(m => m.replacesModuleIdx).filter(i => i != null))
         const remainingExisting = state.existingModules
             .filter((e, i) => !e.remove && !replacedIdxs.has(i))
+            // 로더 교체 중이면 기존 로더 소유 모듈(Fabric/Forge/Library 등)은 위에서
+            // 새로 만든 loaderModules로 완전히 대체한다 — 중복 방지.
+            .filter(e => !(replacingLoader && LOADER_OWNED_TYPES.has(e.module.type)))
             .map(e => e.module)
         const modules = [...loaderModules, ...remainingExisting, ...modModules, ...configModules]
 
@@ -922,6 +946,9 @@ document.addEventListener('DOMContentLoaded', () => {
     $('loaderType').addEventListener('change', updateLoaderTypeBlocks)
     updateLoaderTypeBlocks()
     $('serverMcVersion').addEventListener('change', refreshFabricLoaderVersions)
+    $('loaderReplaceCheck').addEventListener('change', e => {
+        $('loaderTypeFields').style.display = e.target.checked ? '' : 'none'
+    })
 
     setupDropzone('modsDropzone', 'modsFileInput', addModFiles)
     setupDropzone('configsDropzone', 'configsFileInput', addConfigFiles)

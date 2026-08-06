@@ -200,46 +200,52 @@
 </section>
 
 <section class="panel" id="loaderTypeSection">
-    <h2>3-1. 로더 (새 서버를 만들 때만)</h2>
-    <p class="hint">기존 서버 편집 중에는 로더 모듈을 절대 재생성/덮어쓰지 않으므로 이 섹션이 숨겨집니다.</p>
-    <label for="loaderType">로더 종류</label>
-    <select id="loaderType">
-        <option value="fabric">Fabric</option>
-        <option value="forge-auto">Forge·NeoForge (자동 생성)</option>
-        <option value="forge-paste">Forge·NeoForge (JSON 직접 붙여넣기 — 백업용)</option>
-    </select>
-
-    <div id="fabricLoaderBlock">
-        <label for="fabricLoaderVersion">Fabric 로더 버전</label>
-        <select id="fabricLoaderVersion"></select>
-        <p class="hint">마인크래프트 버전을 입력하면 자동으로 채워집니다.</p>
+    <h2>3-1. 로더</h2>
+    <div class="checkboxRow" id="loaderReplaceRow" style="display:none;">
+        <input type="checkbox" id="loaderReplaceCheck">
+        <label for="loaderReplaceCheck">⚠️ 이 서버의 로더/라이브러리 모듈을 새로 교체합니다 (버전 업데이트, 잘못된 경로 수정 등). 체크하지 않으면 기존 로더 모듈을 그대로 유지합니다.</label>
     </div>
 
-    <div id="forgeAutoBlock" style="display:none;">
-        <p class="hint">GitHub Actions에서 NeoNebula를 실행해 로더를 생성합니다. 처음 쓰는 경우 README의 워크플로우 저장소 설정을 먼저 해주세요. <strong>이 저장소 환경에서 실제로 검증하지 못한 실험적 기능입니다</strong> — 실패하면 아래 "JSON 직접 붙여넣기"로 우회하세요.</p>
-        <div class="row">
-            <div>
-                <label for="forgeLoaderType">종류</label>
-                <select id="forgeLoaderType">
-                    <option value="neoforge">NeoForge</option>
-                    <option value="forge">Forge</option>
-                </select>
-            </div>
-            <div>
-                <label for="forgeLoaderVersion">로더 버전</label>
-                <input type="text" id="forgeLoaderVersion" placeholder="예: 21.1.219">
-            </div>
+    <div id="loaderTypeFields">
+        <label for="loaderType">로더 종류</label>
+        <select id="loaderType">
+            <option value="fabric">Fabric</option>
+            <option value="forge-auto">Forge·NeoForge (자동 생성)</option>
+            <option value="forge-paste">Forge·NeoForge (JSON 직접 붙여넣기 — 백업용)</option>
+        </select>
+
+        <div id="fabricLoaderBlock">
+            <label for="fabricLoaderVersion">Fabric 로더 버전</label>
+            <select id="fabricLoaderVersion"></select>
+            <p class="hint">마인크래프트 버전을 입력하면 자동으로 채워집니다.</p>
         </div>
-        <p style="margin-top:10px;">
-            <button type="button" id="generateLoaderBtn" class="secondary">GitHub Actions로 생성 시작</button>
-            <span id="loaderGenStatus" class="hint"></span>
-        </p>
-        <div id="loaderGenLog" style="margin-top:8px;"></div>
-    </div>
 
-    <div id="forgePasteBlock" style="display:none;">
-        <label for="importedLoaderJson">NeoNebula로 로컬에서 <code>generate server</code>를 한 번 실행한 뒤, 결과 서버 JSON을 그대로 붙여넣으세요</label>
-        <textarea id="importedLoaderJson" placeholder='{"modules": [...]} 또는 [...] (로더 모듈 배열)'></textarea>
+        <div id="forgeAutoBlock" style="display:none;">
+            <p class="hint">GitHub Actions에서 NeoNebula를 실행해 로더를 생성합니다. 처음 쓰는 경우 README의 워크플로우 저장소 설정을 먼저 해주세요. <strong>이 저장소 환경에서 실제로 검증하지 못한 실험적 기능입니다</strong> — 실패하면 아래 "JSON 직접 붙여넣기"로 우회하세요.</p>
+            <div class="row">
+                <div>
+                    <label for="forgeLoaderType">종류</label>
+                    <select id="forgeLoaderType">
+                        <option value="neoforge">NeoForge</option>
+                        <option value="forge">Forge</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="forgeLoaderVersion">로더 버전</label>
+                    <input type="text" id="forgeLoaderVersion" placeholder="예: 21.1.219">
+                </div>
+            </div>
+            <p style="margin-top:10px;">
+                <button type="button" id="generateLoaderBtn" class="secondary">GitHub Actions로 생성 시작</button>
+                <span id="loaderGenStatus" class="hint"></span>
+            </p>
+            <div id="loaderGenLog" style="margin-top:8px;"></div>
+        </div>
+
+        <div id="forgePasteBlock" style="display:none;">
+            <label for="importedLoaderJson">NeoNebula로 로컬에서 <code>generate server</code>를 한 번 실행한 뒤, 결과 서버 JSON을 그대로 붙여넣으세요</label>
+            <textarea id="importedLoaderJson" placeholder='{"modules": [...]} 또는 [...] (로더 모듈 배열)'></textarea>
+        </div>
     </div>
 </section>
 
