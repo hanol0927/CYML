@@ -652,6 +652,34 @@ async function buildFabricModules(mcVersion, loaderVersion, serverFolder, assetB
     return { modules: [fabricLoaderModule], assetFiles }
 }
 
+/**
+ * NeoNebula를 로컬에서 돌려 얻은 JSON을 붙여넣을 때, artifact.url이 이 서버의
+ * 자산 저장소(assetRepoBaseUrl) 밑을 가리키는지 재귀적으로 검사한다.
+ * NeoNebula가 BASE_URL을 WHATWG new URL(relative, base) 규칙으로 합치는데, .env의
+ * BASE_URL 끝에 '/'가 없으면 마지막 경로 조각(자산 저장소 이름)이 사라지고 NeoNebula
+ * 내부 상수 'repo'로 대체되는 알려진 버그가 있다(tools/distro-ci/.github/workflows/
+ * generate-server.yml 참고) — 같은 문제가 로컬 실행 + 붙여넣기 경로에도 그대로 생길 수
+ * 있어서 여기서 미리 걸러낸다.
+ */
+function validateLoaderModuleUrls(modules, assetBaseUrl, assetRepoBaseUrl, serverAssetRepo) {
+    if (!assetBaseUrl) return
+    const expectedPrefix = `${assetRepoBaseUrl}/`
+    for (const m of modules) {
+        const url = m.artifact && m.artifact.url
+        if (url && url.startsWith(assetBaseUrl) && !url.startsWith(expectedPrefix)) {
+            throw new Error(
+                `붙여넣은 로더 JSON의 "${m.name || m.id}" 항목이 이 서버의 자산 저장소(${serverAssetRepo})가 ` +
+                `아닌 경로를 가리킵니다: ${url}\nNeoNebula를 로컬에서 실행할 때 .env의 BASE_URL 끝에 슬래시를 ` +
+                `빠뜨리면 저장소 이름이 사라지고 'repo'로 대체되는 알려진 버그가 있습니다. ` +
+                `BASE_URL을 "${expectedPrefix}"처럼 끝에 슬래시를 붙여서 다시 생성한 뒤 다시 붙여넣으세요.`
+            )
+        }
+        if (Array.isArray(m.subModules) && m.subModules.length > 0) {
+            validateLoaderModuleUrls(m.subModules, assetBaseUrl, assetRepoBaseUrl, serverAssetRepo)
+        }
+    }
+}
+
 // ---- Deploy pipeline ----
 
 function bumpVersion(version) {
@@ -719,6 +747,7 @@ async function deploy() {
                             throw new Error('붙여넣은 JSON에 type/artifact가 없는 항목이 있습니다.')
                         }
                     }
+                    validateLoaderModuleUrls(loaderModules, assetBaseUrl, assetRepoBaseUrl, serverAssetRepo)
                 }
             }
         }
