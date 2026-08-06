@@ -691,6 +691,33 @@ function validateLoaderModuleUrls(modules, assetBaseUrl, assetRepoBaseUrl, serve
     }
 }
 
+/**
+ * 이미 distribution.json에 저장된(과거에 잘못 배포된) 모듈 중, 위 NeoNebula BASE_URL
+ * 슬래시 버그로 자산 저장소 이름이 빠진 채 "<assetBaseUrl>/repo/..." 형태로 남아있는
+ * URL을 "<assetRepoBaseUrl>/repo/..."로 제자리에서 고친다. 배포 때마다 항상 실행되므로
+ * 별도 조작 없이 "GitHub에 배포"만 눌러도 자동으로 반영된다.
+ * 주의: URL 문자열만 고친다 — 그 경로에 실제 파일이 없다면(자산 저장소에 한 번도
+ * 올라간 적 없다면) 여전히 404가 난다. NeoNebula 로컬 실행 결과물(ROOT의 repo 폴더)을
+ * 그 서버의 자산 저장소에 실제로 올려둔 경우에만 이 자동 보정으로 충분하다.
+ */
+function repairBrokenAssetUrls(modules, assetBaseUrl, assetRepoBaseUrl) {
+    if (!assetBaseUrl) return 0
+    const brokenPrefix = `${assetBaseUrl}/repo/`
+    const fixedPrefix = `${assetRepoBaseUrl}/repo/`
+    let count = 0
+    for (const m of modules) {
+        const url = m.artifact && m.artifact.url
+        if (url && url.startsWith(brokenPrefix) && !url.startsWith(fixedPrefix)) {
+            m.artifact.url = fixedPrefix + url.slice(brokenPrefix.length)
+            count++
+        }
+        if (Array.isArray(m.subModules) && m.subModules.length > 0) {
+            count += repairBrokenAssetUrls(m.subModules, assetBaseUrl, assetRepoBaseUrl)
+        }
+    }
+    return count
+}
+
 // ---- Deploy pipeline ----
 
 function bumpVersion(version) {
@@ -862,6 +889,11 @@ async function deploy() {
             .filter(e => !(replacingLoader && LOADER_OWNED_TYPES.has(e.module.type)))
             .map(e => e.module)
         const modules = [...loaderModules, ...remainingExisting, ...modModules, ...configModules]
+
+        const repairedCount = repairBrokenAssetUrls(modules, assetBaseUrl, assetRepoBaseUrl)
+        if (repairedCount > 0) {
+            log(`잘못된 자산 경로(자산 저장소 이름이 누락된 URL) ${repairedCount}개를 자동으로 고쳤습니다.`)
+        }
 
         const existingServer = distribution.servers.find(s => s.id === serverId)
 
