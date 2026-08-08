@@ -376,19 +376,54 @@ function renderExistingModules() {
         container.innerHTML = '<p class="hint">기존 모듈 없음</p>'
         return
     }
+
+    const removableRows = []
+    const lockedRows = []
     state.existingModules.forEach((entry, idx) => {
-        const row = document.createElement('label')
-        row.className = 'moduleRow'
-        row.innerHTML = `
-            <input type="checkbox" ${entry.remove ? 'checked' : ''}>
-            <span class="moduleType">${entry.module.type}</span>
-            <span class="moduleName">${entry.module.name || entry.module.id}</span>
-        `
-        row.querySelector('input').addEventListener('change', e => {
-            state.existingModules[idx].remove = e.target.checked
-        })
-        container.appendChild(row)
+        if (LOADER_OWNED_TYPES.has(entry.module.type)) {
+            lockedRows.push({ entry, idx })
+        } else {
+            removableRows.push({ entry, idx })
+        }
     })
+
+    if (removableRows.length > 0) {
+        const heading = document.createElement('p')
+        heading.className = 'hint'
+        heading.textContent = '모드 / 설정 파일 — 체크하고 배포하면 distribution.json에서 삭제됩니다.'
+        container.appendChild(heading)
+        for (const { entry, idx } of removableRows) {
+            const row = document.createElement('label')
+            row.className = 'moduleRow'
+            row.innerHTML = `
+                <input type="checkbox" ${entry.remove ? 'checked' : ''}>
+                <span class="moduleType">${entry.module.type}</span>
+                <span class="moduleName" style="${entry.remove ? 'text-decoration:line-through;color:var(--muted);' : ''}">${entry.module.name || entry.module.id}</span>
+                <span class="hint">${entry.remove ? '삭제 예정' : '삭제'}</span>
+            `
+            row.querySelector('input').addEventListener('change', e => {
+                state.existingModules[idx].remove = e.target.checked
+                renderExistingModules()
+            })
+            container.appendChild(row)
+        }
+    }
+
+    if (lockedRows.length > 0) {
+        const heading = document.createElement('p')
+        heading.className = 'hint'
+        heading.textContent = '로더 / 라이브러리 핵심 모듈 — 여기서는 지울 수 없습니다. 교체하려면 위 "3-1. 로더"의 교체 체크박스를 쓰세요.'
+        container.appendChild(heading)
+        for (const { entry } of lockedRows) {
+            const row = document.createElement('div')
+            row.className = 'moduleRow'
+            row.innerHTML = `
+                <span class="moduleType">${entry.module.type}</span>
+                <span class="moduleName">${entry.module.name || entry.module.id}</span>
+            `
+            container.appendChild(row)
+        }
+    }
 }
 
 // ---- Java options preview ----
