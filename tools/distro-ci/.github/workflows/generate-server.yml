@@ -53,6 +53,12 @@ jobs:
         with:
           node-version: '20'
 
+      # 구식 Forge(FG3) 어댑터가 인스톨러를 GUI로 띄우는 대신 --installClient로
+      # 헤드리스 설치하도록 소스를 패치한다. NeoForge 리졸버가 이미 쓰고 있는
+      # 방식과 동일 — 자세한 이유는 patch-neonebula.js 상단 주석 참고.
+      - name: Patch NeoNebula (headless Forge install)
+        run: node patch-neonebula.js
+
       - name: Install & build NeoNebula
         working-directory: neonebula
         run: |
