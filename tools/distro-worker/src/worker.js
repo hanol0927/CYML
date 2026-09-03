@@ -51,7 +51,10 @@ function contentTypeFor(key) {
 async function getDistribution(env) {
     const obj = await env.BUCKET.get(DISTRIBUTION_KEY)
     if (obj == null) return new Response('Not Found', { status: 404 })
-    const headers = new Headers({ 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-cache' })
+    // no-store: 브라우저가 조건부 재검증(If-None-Match)으로 처리하다가 등 그 어떤
+    // 경로로도 오래된 ETag를 캐시에서 재사용하지 못하게 완전히 막는다 — 배포 직전
+    // 재조회가 "진짜 최신" 임을 보장해야 하므로.
+    const headers = new Headers({ 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' })
     headers.set('ETag', obj.httpEtag)
     return new Response(obj.body, { status: 200, headers })
 }
@@ -72,7 +75,16 @@ async function putDistribution(request, env) {
     const putOpts = { httpMetadata: { contentType: 'application/json; charset=utf-8' } }
     if (ifMatch) putOpts.onlyIf = { etagMatches: ifMatch }
     const result = await env.BUCKET.put(DISTRIBUTION_KEY, text, putOpts)
-    if (result == null) return new Response('Precondition Failed (distribution.json changed concurrently)', { status: 412 })
+    if (result == null) {
+        // 디버깅용: 실제로 충돌났다면 클라이언트가 보낸 값과 현재 서버 값이 다를 것 —
+        // 둘 다 응답에 실어서 정말 다른지, 아니면 또 다른 형식 문제인지 바로 확인 가능하게 한다.
+        const current = await env.BUCKET.head(DISTRIBUTION_KEY)
+        return new Response(JSON.stringify({
+            error: 'Precondition Failed (distribution.json changed concurrently)',
+            sentIfMatch: ifMatch || null,
+            currentEtag: current ? current.etag : null
+        }), { status: 412, headers: { 'Content-Type': 'application/json' } })
+    }
     return new Response(JSON.stringify({ ok: true, etag: result.httpEtag }), { status: 200, headers: { 'Content-Type': 'application/json' } })
 }
 

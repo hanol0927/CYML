@@ -12,7 +12,10 @@
     const MULTIPART_CHUNK_BYTES = 40 * 1024 * 1024
 
     async function getDistribution(workerBaseUrl) {
-        const res = await fetch(`${workerBaseUrl}/distribution.json`)
+        // cache: 'no-store' — 브라우저 HTTP 캐시를 아예 거치지 않고 항상 네트워크에서
+        // 새로 받는다. 배포 직전 재조회에서 오래된 ETag를 근거로 "그 사이 변경됨"이라고
+        // 잘못 판정하는 걸 막기 위함.
+        const res = await fetch(`${workerBaseUrl}/distribution.json`, { cache: 'no-store' })
         if (res.status === 404) return { distribution: { version: '1.0.0', servers: [] }, etag: null }
         if (!res.ok) throw new Error(`distribution.json 조회 실패: ${res.status}`)
         const etag = res.headers.get('ETag')
@@ -28,7 +31,9 @@
             body: JSON.stringify(distribution, null, 2)
         })
         if (res.status === 412) {
-            const err = new Error('distribution.json이 그 사이 다른 곳에서 변경되었습니다. 새로고침 후 다시 시도하세요.')
+            const detail = await res.json().catch(() => null)
+            const debugSuffix = detail ? ` (보낸 값: ${detail.sentIfMatch}, 서버 현재 값: ${detail.currentEtag})` : ''
+            const err = new Error(`distribution.json이 그 사이 다른 곳에서 변경되었습니다. 새로고침 후 다시 시도하세요.${debugSuffix}`)
             err.status = 412
             throw err
         }
