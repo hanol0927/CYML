@@ -105,13 +105,32 @@
 <h1>distribution.json 관리 도구</h1>
 <p class="hint">
     서버 정보 / 모드 / 설정파일 / 배경화면 / 화이트리스트를 입력하고 배포하면
-    GitHub 저장소에 자동으로 커밋됩니다. 처음 쓴다면 <a href="README.md">README</a>를 먼저 읽어주세요.
-    이 도구는 정적 페이지이며 백엔드 서버가 없습니다 — 여러분의 GitHub 토큰은 이 브라우저에만 저장됩니다.
+    Cloudflare Worker(R2)에 자동으로 업로드됩니다. 처음 쓴다면 <a href="README.md">README</a>를 먼저 읽어주세요.
+    이 도구는 정적 페이지이며 별도 백엔드가 없습니다 — 업로드 시크릿은 이 브라우저에만 저장됩니다.
 </p>
 
 <section class="panel">
-    <h2>1. GitHub 연결 설정</h2>
-    <label for="ghToken">Personal Access Token (Contents 읽기/쓰기 권한, 아래 두 저장소로 범위 제한 권장)</label>
+    <h2>1. Cloudflare Worker 연결 설정</h2>
+    <label for="workerBaseUrl">Worker 기본 URL (예: https://cyml-distro-worker.&lt;계정 서브도메인&gt;.workers.dev)</label>
+    <input type="text" id="workerBaseUrl" placeholder="https://cyml-distro-worker.<subdomain>.workers.dev">
+    <label for="uploadSecret">업로드 시크릿 (wrangler secret put UPLOAD_SECRET에서 설정한 값)</label>
+    <input type="password" id="uploadSecret">
+    <div class="checkboxRow">
+        <input type="checkbox" id="uploadSecretPersist">
+        <label for="uploadSecretPersist">브라우저를 닫아도 시크릿 기억하기 (localStorage). 체크 해제 시 탭을 닫으면 사라짐.</label>
+    </div>
+    <p style="margin-top:10px;">
+        <button id="saveSettingsBtn">설정 저장</button>
+        <span id="settingsStatus" class="hint"></span>
+    </p>
+</section>
+
+<section class="panel">
+    <h2>1-1. Forge·NeoForge 자동 생성 (GitHub Actions, 선택)</h2>
+    <p class="hint">파일/distribution.json 저장은 더 이상 GitHub를 쓰지 않지만, Forge/NeoForge 로더
+    자동 생성만은 JVM이 필요해서 그대로 GitHub Actions를 씁니다. 이 기능을 안 쓰면(수동 붙여넣기나
+    Fabric만 쓴다면) 아래를 비워둬도 됩니다.</p>
+    <label for="ghToken">GitHub Personal Access Token (해당 워크플로우 저장소에 대한 Actions: Read and write 권한)</label>
     <input type="password" id="ghToken" placeholder="github_pat_...">
     <div class="checkboxRow">
         <input type="checkbox" id="ghTokenPersist">
@@ -119,33 +138,16 @@
     </div>
     <div class="row">
         <div>
-            <label for="ghOwner">GitHub 계정/조직</label>
-            <input type="text" id="ghOwner">
-        </div>
-        <div>
-            <label for="ghBranch">브랜치</label>
-            <input type="text" id="ghBranch">
-        </div>
-    </div>
-    <label for="ghDistroRepo">distribution.json 저장소</label>
-    <input type="text" id="ghDistroRepo">
-    <label for="assetBaseUrl">자산 공개 URL 베이스 (GitHub Pages 도메인, 서버별 저장소 이름은 아래 "3. 서버 정보"에서 따로 지정)</label>
-    <input type="text" id="assetBaseUrl">
-    <p class="hint">모드/설정파일/배경화면/아이콘은 서버마다 별도 GitHub 저장소(예: <code>hanol0927/Ssachon</code>)에 올라가고, 각 저장소가 GitHub Pages 프로젝트 사이트로 <code>&lt;도메인&gt;/&lt;저장소명&gt;/</code>에서 서빙되는 구조를 그대로 따릅니다. 토큰에 그 저장소들 각각에 대한 Contents 권한이 있어야 합니다.</p>
-    <div class="row">
-        <div>
-            <label for="ciRepo">Forge·NeoForge 자동 생성 워크플로우 저장소</label>
-            <input type="text" id="ciRepo">
+            <label for="ciOwner">GitHub 계정/조직</label>
+            <input type="text" id="ciOwner">
         </div>
         <div>
             <label for="ciWorkflowFile">워크플로우 파일명</label>
             <input type="text" id="ciWorkflowFile">
         </div>
     </div>
-    <p style="margin-top:10px;">
-        <button id="saveSettingsBtn">설정 저장</button>
-        <span id="settingsStatus" class="hint"></span>
-    </p>
+    <label for="ciRepo">워크플로우 저장소</label>
+    <input type="text" id="ciRepo">
 </section>
 
 <section class="panel">
@@ -177,9 +179,6 @@
     </div>
     <label for="serverDescription">설명</label>
     <input type="text" id="serverDescription">
-    <label for="serverAssetRepo">이 서버의 자산 GitHub 저장소 (모드/설정/배경/아이콘이 올라갈 저장소, 예: Ssachon)</label>
-    <input type="text" id="serverAssetRepo" placeholder="예: Ssachon">
-    <p class="hint">기존 서버를 불러오면 아이콘/배경 URL에서 자동으로 채워봅니다. 새 서버라면 GitHub에 미리 만들어둔 저장소 이름을 입력하세요 (없으면 새로 만드세요 — 이 도구가 저장소를 자동으로 만들어주진 않습니다).</p>
     <label for="serverAddress">서버 주소 (host:port)</label>
     <input type="text" id="serverAddress">
     <label for="iconCurrentUrl">아이콘</label>
@@ -222,6 +221,8 @@
 
         <div id="forgeAutoBlock" style="display:none;">
             <p class="hint">GitHub Actions에서 NeoNebula를 실행해 로더를 생성합니다. 처음 쓰는 경우 README의 워크플로우 저장소 설정을 먼저 해주세요. <strong>이 저장소 환경에서 실제로 검증하지 못한 실험적 기능입니다</strong> — 실패하면 아래 "JSON 직접 붙여넣기"로 우회하세요.</p>
+            <label for="forgeCiAssetRepo">GitHub 자산 저장소 (NeoNebula 실행 결과물이 올라갈 저장소, 예: Ssachon — R2에는 안 씀, 이 자동 생성 워크플로우 전용)</label>
+            <input type="text" id="forgeCiAssetRepo" placeholder="예: Ssachon">
             <div class="row">
                 <div>
                     <label for="forgeLoaderType">종류</label>
@@ -308,12 +309,13 @@
 
 <section class="panel">
     <h2>10. 배포</h2>
-    <button id="deployBtn">GitHub에 배포</button>
+    <button id="deployBtn">Worker에 배포</button>
     <div id="deployLog" style="margin-top:12px;"></div>
 </section>
 
 <script src="md5.js"></script>
 <script src="github-api.js"></script>
+<script src="worker-api.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

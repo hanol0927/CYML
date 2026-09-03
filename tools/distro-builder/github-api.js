@@ -4,22 +4,16 @@
  * GitHub's API supports CORS for browser requests as long as only
  * Authorization / Accept / Content-Type headers are sent (no custom
  * headers like X-GitHub-Api-Version, which aren't in the CORS allowlist).
+ *
+ * distribution.json과 자산 파일(모드/설정/배경/아이콘) 업로드는 더 이상 GitHub를 쓰지
+ * 않는다(25~30MB 업로드 한도 때문에 Cloudflare Worker+R2로 옮김, worker-api.js 참고).
+ * 이 파일에는 Forge/NeoForge 로더 자동 생성용 GitHub Actions 워크플로우 호출 기능만
+ * 남아있다 — NeoNebula 실행에 JVM이 필요해 브라우저/Worker로 옮길 수 없는 부분이다.
  */
 (function(global) {
     'use strict'
 
     const GITHUB_API = 'https://api.github.com'
-
-    function utf8ToBase64(text) {
-        // btoa() only handles latin1; this is the standard no-dependency
-        // way to base64-encode arbitrary UTF-8 text (e.g. Korean strings)
-        // in a browser without a bundler.
-        return btoa(unescape(encodeURIComponent(text)))
-    }
-
-    function base64ToUtf8(base64) {
-        return decodeURIComponent(escape(atob(base64.replace(/\n/g, ''))))
-    }
 
     async function ghRequest(token, method, path, body) {
         const res = await fetch(GITHUB_API + path, {
@@ -41,90 +35,6 @@
         }
         if (res.status === 204) return null
         return res.json()
-    }
-
-    // ---- Contents API: small files (distribution.json) ----
-
-    /**
-     * @returns {Promise<{content: string, sha: string}|null>} null if the file doesn't exist yet
-     */
-    async function getFile(token, owner, repo, path, branch) {
-        try {
-            const data = await ghRequest(token, 'GET',
-                `/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(branch)}`)
-            return { content: base64ToUtf8(data.content), sha: data.sha }
-        } catch (err) {
-            if (err.status === 404) return null
-            throw err
-        }
-    }
-
-    /**
-     * @param {string|null} sha Existing file's sha (from getFile), or null/undefined to create a new file.
-     */
-    async function putFile(token, owner, repo, path, contentText, message, sha, branch) {
-        return ghRequest(token, 'PUT', `/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`, {
-            message,
-            content: utf8ToBase64(contentText),
-            sha: sha || undefined,
-            branch
-        })
-    }
-
-    // ---- Git Data API: batched multi-file commit (mods, configs, background) ----
-
-    async function getBranchTip(token, owner, repo, branch) {
-        const ref = await ghRequest(token, 'GET', `/repos/${owner}/${repo}/git/ref/heads/${encodeURIComponent(branch)}`)
-        const commit = await ghRequest(token, 'GET', `/repos/${owner}/${repo}/git/commits/${ref.object.sha}`)
-        return { commitSha: ref.object.sha, treeSha: commit.tree.sha }
-    }
-
-    async function createBlob(token, owner, repo, base64Content) {
-        const blob = await ghRequest(token, 'POST', `/repos/${owner}/${repo}/git/blobs`, {
-            content: base64Content,
-            encoding: 'base64'
-        })
-        return blob.sha
-    }
-
-    /**
-     * Commits multiple binary files in ONE commit via the Git Data API
-     * (blob -> tree -> commit -> ref update), instead of one Contents-API
-     * commit per file. Untouched existing files are preserved automatically
-     * via base_tree.
-     *
-     * @param {Array<{path: string, base64Content: string}>} files
-     * @param {(done: number, total: number) => void} [onProgress]
-     * @returns {Promise<string>} the new commit sha
-     */
-    async function commitFilesBatch(token, owner, repo, branch, files, message, onProgress) {
-        if (files.length === 0) return null
-
-        const { commitSha, treeSha } = await getBranchTip(token, owner, repo, branch)
-
-        // Blobs are created one at a time (not Promise.all) to avoid GitHub's
-        // secondary/abuse-detection rate limiting on bursts of mutating requests.
-        const treeEntries = []
-        for (let i = 0; i < files.length; i++) {
-            const f = files[i]
-            const blobSha = await createBlob(token, owner, repo, f.base64Content)
-            treeEntries.push({ path: f.path, mode: '100644', type: 'blob', sha: blobSha })
-            if (onProgress) onProgress(i + 1, files.length)
-        }
-
-        const newTree = await ghRequest(token, 'POST', `/repos/${owner}/${repo}/git/trees`, {
-            base_tree: treeSha,
-            tree: treeEntries
-        })
-        const newCommit = await ghRequest(token, 'POST', `/repos/${owner}/${repo}/git/commits`, {
-            message,
-            tree: newTree.sha,
-            parents: [commitSha]
-        })
-        await ghRequest(token, 'PATCH', `/repos/${owner}/${repo}/git/refs/heads/${encodeURIComponent(branch)}`, {
-            sha: newCommit.sha
-        })
-        return newCommit.sha
     }
 
     // ---- Actions API: Forge/NeoForge 로더 자동 생성 워크플로우 트리거/폴링 ----
@@ -157,5 +67,5 @@
         return ghRequest(token, 'GET', `/repos/${owner}/${repo}/actions/runs/${runId}`)
     }
 
-    global.GitHubAPI = { getFile, putFile, commitFilesBatch, dispatchWorkflow, findRunSince, getWorkflowRun, utf8ToBase64 }
+    global.GitHubAPI = { dispatchWorkflow, findRunSince, getWorkflowRun }
 })(window)

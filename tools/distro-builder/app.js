@@ -1,14 +1,17 @@
 'use strict'
-/* global GitHubAPI, md5 */
+/* global GitHubAPI, WorkerAPI, md5 */
 
 // ---- 고정 기본값 (설정 패널에서 덮어쓸 수 있음, README 참고) ----
 const DEFAULTS = {
-    owner: 'hanol0927',
-    distroRepo: 'ddumon',
-    branch: 'main',
+    workerBaseUrl: 'https://cyml-distro-worker.chaenna02.workers.dev',
+    ciOwner: 'hanol0927',
     ciRepo: 'distro-ci',
     ciWorkflowFile: 'generate-server.yml'
 }
+
+// Forge/NeoForge 자동 생성(GitHub Actions) 워크플로우를 실행할 브랜치. distro-ci 저장소는
+// 항상 main 브랜치를 쓴다고 가정 — 이 값은 UI로 노출하지 않는다.
+const CI_BRANCH = 'main'
 
 // distribution.json에 javaOptions가 없을 때 쓰는 기본값과 동일한 테이블.
 // app/assets/js/scripts/landing.js의 JAVA_VERSION_TABLE과 값을 맞출 것.
@@ -23,7 +26,7 @@ const MODULE_TYPES = ['ForgeMod', 'FabricMod', 'LiteMod', 'Library', 'File']
 // distro-ci/merge-server.js의 LOADER_OWNED_TYPES와 동일하게 맞출 것 — 로더 교체 시
 // 이 타입의 기존 모듈만 새 로더 모듈로 대체하고, 나머지(모드/설정 등)는 그대로 둔다.
 const LOADER_OWNED_TYPES = new Set(['Forge', 'ForgeHosted', 'Fabric', 'VersionManifest', 'Library'])
-const MAX_SAFE_UPLOAD_BYTES = 25 * 1024 * 1024
+const MAX_SAFE_UPLOAD_BYTES = 90 * 1024 * 1024
 
 function mcVersionAtLeast(desired, actual) {
     const des = desired.split('.')
@@ -47,6 +50,7 @@ function resolveJavaOptions(mcVersion) {
 
 const SETTINGS_KEY = 'distroBuilder.settings'
 const TOKEN_KEY = 'distroBuilder.token'
+const UPLOAD_SECRET_KEY = 'distroBuilder.uploadSecret'
 
 function loadSettings() {
     try {
@@ -60,16 +64,34 @@ function saveSettingsToStorage(settings) {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings))
 }
 
+function getStoredSecret(key) {
+    return sessionStorage.getItem(key) || localStorage.getItem(key) || ''
+}
+
+function setStoredSecret(key, value, persist) {
+    sessionStorage.removeItem(key)
+    localStorage.removeItem(key)
+    if (value) {
+        (persist ? localStorage : sessionStorage).setItem(key, value)
+    }
+}
+
+// GitHub PAT — Forge/NeoForge 자동 생성(GitHub Actions) 전용.
 function getToken() {
-    return sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY) || ''
+    return getStoredSecret(TOKEN_KEY)
 }
 
 function setToken(token, persist) {
-    sessionStorage.removeItem(TOKEN_KEY)
-    localStorage.removeItem(TOKEN_KEY)
-    if (token) {
-        (persist ? localStorage : sessionStorage).setItem(TOKEN_KEY, token)
-    }
+    setStoredSecret(TOKEN_KEY, token, persist)
+}
+
+// Cloudflare Worker 업로드 시크릿 — distribution.json/자산 파일 배포용.
+function getUploadSecret() {
+    return getStoredSecret(UPLOAD_SECRET_KEY)
+}
+
+function setUploadSecret(secret, persist) {
+    setStoredSecret(UPLOAD_SECRET_KEY, secret, persist)
 }
 
 // ---- DOM helpers ----
@@ -98,7 +120,7 @@ function sanitizeMavenPart(name) {
 
 const state = {
     distribution: null,
-    distributionSha: null,
+    distributionEtag: null,
     editingServerId: null,
     existingModules: [], // [{ module, remove }]
     newMods: [],          // [{ file, name, type, required }]
@@ -109,10 +131,9 @@ const state = {
 
 function currentSettings() {
     return {
-        owner: $('ghOwner').value.trim() || DEFAULTS.owner,
-        distroRepo: $('ghDistroRepo').value.trim() || DEFAULTS.distroRepo,
-        branch: $('ghBranch').value.trim() || DEFAULTS.branch,
-        assetBaseUrl: $('assetBaseUrl').value.trim().replace(/\/$/, ''),
+        workerBaseUrl: $('workerBaseUrl').value.trim().replace(/\/$/, ''),
+        uploadSecret: $('uploadSecret').value.trim(),
+        ciOwner: $('ciOwner').value.trim() || DEFAULTS.ciOwner,
         ciRepo: $('ciRepo').value.trim() || DEFAULTS.ciRepo,
         ciWorkflowFile: $('ciWorkflowFile').value.trim() || DEFAULTS.ciWorkflowFile
     }
@@ -120,26 +141,18 @@ function currentSettings() {
 
 function initSettingsUI() {
     const saved = loadSettings()
-    $('ghOwner').value = saved.owner || DEFAULTS.owner
-    $('ghDistroRepo').value = saved.distroRepo || DEFAULTS.distroRepo
-    $('ghBranch').value = saved.branch || DEFAULTS.branch
-    $('assetBaseUrl').value = saved.assetBaseUrl || `https://${saved.owner || DEFAULTS.owner}.github.io`
+    $('workerBaseUrl').value = saved.workerBaseUrl || DEFAULTS.workerBaseUrl
+    $('ciOwner').value = saved.ciOwner || DEFAULTS.ciOwner
     $('ciRepo').value = saved.ciRepo || DEFAULTS.ciRepo
     $('ciWorkflowFile').value = saved.ciWorkflowFile || DEFAULTS.ciWorkflowFile
+    $('uploadSecret').value = getUploadSecret()
+    $('uploadSecretPersist').checked = !!localStorage.getItem(UPLOAD_SECRET_KEY)
     $('ghToken').value = getToken()
     $('ghTokenPersist').checked = !!localStorage.getItem(TOKEN_KEY)
 
-    $('ghOwner').addEventListener('change', () => {
-        if (!$('assetBaseUrl').dataset.userEdited) {
-            $('assetBaseUrl').value = `https://${$('ghOwner').value.trim() || DEFAULTS.owner}.github.io`
-        }
-    })
-    $('assetBaseUrl').addEventListener('input', () => {
-        $('assetBaseUrl').dataset.userEdited = 'true'
-    })
-
     $('saveSettingsBtn').addEventListener('click', () => {
         saveSettingsToStorage(currentSettings())
+        setUploadSecret($('uploadSecret').value.trim(), $('uploadSecretPersist').checked)
         setToken($('ghToken').value.trim(), $('ghTokenPersist').checked)
         $('settingsStatus').textContent = '저장됨'
         setTimeout(() => { $('settingsStatus').textContent = '' }, 2000)
@@ -149,23 +162,18 @@ function initSettingsUI() {
 // ---- Existing distribution.json ----
 
 async function fetchDistribution() {
-    const { owner, distroRepo, branch } = currentSettings()
-    const token = getToken()
-    if (!token) throw new Error('먼저 GitHub 토큰을 입력하고 저장하세요.')
-    const file = await GitHubAPI.getFile(token, owner, distroRepo, 'distribution.json', branch)
-    if (file == null) {
-        return { distribution: { version: '1.0.0', servers: [] }, sha: null }
-    }
-    return { distribution: JSON.parse(file.content), sha: file.sha }
+    const { workerBaseUrl } = currentSettings()
+    if (!workerBaseUrl) throw new Error('먼저 Worker 기본 URL을 입력하고 저장하세요.')
+    return WorkerAPI.getDistribution(workerBaseUrl)
 }
 
 async function refreshServerPicker() {
     $('serverLoadStatus').textContent = '불러오는 중..'
     try {
-        const { distribution, sha } = await fetchDistribution()
+        const { distribution, etag } = await fetchDistribution()
         distribution.servers = distribution.servers || []
         state.distribution = distribution
-        state.distributionSha = sha
+        state.distributionEtag = etag
         const select = $('existingServerSelect')
         const previousValue = select.value
         select.innerHTML = '<option value="">-- 새 서버 만들기 --</option>'
@@ -215,13 +223,13 @@ async function startForgeLoaderGeneration() {
     const mcVersion = $('serverMcVersion').value.trim()
     const loaderType = $('forgeLoaderType').value
     const loaderVersion = $('forgeLoaderVersion').value.trim()
-    const assetRepo = $('serverAssetRepo').value.trim()
+    const assetRepo = $('forgeCiAssetRepo').value.trim()
     if (!serverId || !mcVersion || !loaderVersion || !assetRepo) {
-        alert('서버 id, 자산 저장소, 마인크래프트 버전, 로더 버전을 모두 입력하세요.')
+        alert('서버 id, GitHub 자산 저장소, 마인크래프트 버전, 로더 버전을 모두 입력하세요.')
         return
     }
 
-    const { owner, ciRepo, ciWorkflowFile, branch } = currentSettings()
+    const { ciOwner, ciRepo, ciWorkflowFile } = currentSettings()
     $('generateLoaderBtn').disabled = true
     $('loaderGenStatus').textContent = '시작하는 중..'
     $('loaderGenLog').innerHTML = ''
@@ -229,7 +237,7 @@ async function startForgeLoaderGeneration() {
     try {
         const sinceMs = Date.now() - 5000 // 브라우저/서버 시계 오차 대비 약간 여유
         loaderGenLog(`워크플로우 실행 요청 중.. (${ciRepo}/${ciWorkflowFile})`)
-        await GitHubAPI.dispatchWorkflow(token, owner, ciRepo, ciWorkflowFile, branch, {
+        await GitHubAPI.dispatchWorkflow(token, ciOwner, ciRepo, ciWorkflowFile, CI_BRANCH, {
             serverId, mcVersion, loaderType, loaderVersion, assetRepo
         })
 
@@ -237,7 +245,7 @@ async function startForgeLoaderGeneration() {
         let run = null
         for (let i = 0; i < 15 && run == null; i++) {
             await sleep(2000)
-            run = await GitHubAPI.findRunSince(token, owner, ciRepo, ciWorkflowFile, sinceMs)
+            run = await GitHubAPI.findRunSince(token, ciOwner, ciRepo, ciWorkflowFile, sinceMs)
         }
         if (run == null) {
             throw new Error('워크플로우 실행을 찾지 못했습니다. 저장소/파일명 설정과, 그 저장소에 워크플로우가 실제로 등록됐는지 확인하세요.')
@@ -247,7 +255,7 @@ async function startForgeLoaderGeneration() {
         let status = run.status
         while (status !== 'completed') {
             await sleep(5000)
-            run = await GitHubAPI.getWorkflowRun(token, owner, ciRepo, run.id)
+            run = await GitHubAPI.getWorkflowRun(token, ciOwner, ciRepo, run.id)
             status = run.status
             $('loaderGenStatus').textContent = status
         }
@@ -275,7 +283,7 @@ async function startForgeLoaderGeneration() {
 function resetFormForNewServer() {
     state.editingServerId = null
     state.existingModules = []
-    ;['serverId', 'serverName', 'serverDescription', 'serverAssetRepo', 'serverAddress', 'serverMcVersion'].forEach(id => { $(id).value = '' })
+    ;['serverId', 'serverName', 'serverDescription', 'serverAddress', 'serverMcVersion', 'forgeCiAssetRepo'].forEach(id => { $(id).value = '' })
     $('serverId').disabled = false
     $('serverAutoconnect').checked = false
     $('serverMainServer').checked = false
@@ -296,23 +304,6 @@ function resetFormForNewServer() {
     updateJavaPreview()
 }
 
-/**
- * 서버마다 자산이 별도 GitHub 저장소(예: hanol0927/Ssachon)에 프로젝트 Pages로
- * 호스팅되는 구조라서("https://hanol0927.github.io/Ssachon/...") 이미 올라간
- * URL이 있으면 도메인 바로 다음 경로 조각을 저장소 이름으로 추측한다.
- * 못 찾으면 null — 관리자가 직접 입력해야 한다.
- */
-function guessAssetRepoFromUrl(url) {
-    if (!url) return null
-    try {
-        const u = new URL(url)
-        const firstSegment = u.pathname.split('/').filter(Boolean)[0]
-        return firstSegment || null
-    } catch (err) {
-        return null
-    }
-}
-
 function loadServerIntoForm(serverId) {
     const serv = (state.distribution.servers || []).find(s => s.id === serverId)
     if (serv == null) {
@@ -327,7 +318,9 @@ function loadServerIntoForm(serverId) {
     $('serverId').disabled = true
     $('serverName').value = serv.name || ''
     $('serverDescription').value = serv.description || ''
-    $('serverAssetRepo').value = guessAssetRepoFromUrl(serv.icon) || guessAssetRepoFromUrl(serv.background) || ''
+    // Forge/NeoForge 자동 생성(GitHub Actions) 전용 필드라 서버를 바꿀 때마다 비워서
+    // 다른 서버의 자산 저장소 이름이 실수로 남아있지 않게 한다 — 그 기능을 쓸 때만 입력.
+    $('forgeCiAssetRepo').value = ''
     $('serverAddress').value = serv.address || ''
     $('serverMcVersion').value = serv.minecraftVersion || ''
     $('serverAutoconnect').checked = !!serv.autoconnect
@@ -545,7 +538,7 @@ function renderNewMods() {
         container.appendChild(row)
     })
     $('modsWarning').textContent = state.newMods.some(m => m.file.size > MAX_SAFE_UPLOAD_BYTES)
-        ? '25MB가 넘는 파일이 있습니다. GitHub API 업로드 한도(약 25~30MB)를 초과해 실패할 수 있습니다.'
+        ? '90MB가 넘는 파일이 있습니다. Cloudflare Workers 요청 본문 한도(요금제에 따라 100MB 내외)를 초과해 실패할 수 있습니다.'
         : ''
 }
 
@@ -587,20 +580,11 @@ function readFileAsBytes(file) {
     })
 }
 
-function bytesToBase64(bytes) {
-    const CHUNK = 8192
-    let binary = ''
-    for (let i = 0; i < bytes.length; i += CHUNK) {
-        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK))
-    }
-    return btoa(binary)
-}
-
 function hashAndEncodeBytes(bytes) {
     return {
         size: bytes.length,
         md5: md5.hexFromBytes(bytes),
-        base64: bytesToBase64(bytes)
+        bytes
     }
 }
 
@@ -654,7 +638,7 @@ async function buildFabricModules(mcVersion, loaderVersion, serverFolder, assetB
 
     const profileEncoded = hashAndEncodeBytes(profileBytes)
     const profilePath = `${serverFolder}/fabric/${profile.id}.json`
-    assetFiles.push({ path: profilePath, base64Content: profileEncoded.base64 })
+    assetFiles.push({ path: profilePath, bytes: profileEncoded.bytes })
     subModules.push({
         id: profile.id,
         name: 'Fabric Loader (version.json)',
@@ -698,61 +682,6 @@ async function buildFabricModules(mcVersion, loaderVersion, serverFolder, assetB
     return { modules: [fabricLoaderModule], assetFiles }
 }
 
-/**
- * NeoNebula를 로컬에서 돌려 얻은 JSON을 붙여넣을 때, artifact.url이 이 서버의
- * 자산 저장소(assetRepoBaseUrl) 밑을 가리키는지 재귀적으로 검사한다.
- * NeoNebula가 BASE_URL을 WHATWG new URL(relative, base) 규칙으로 합치는데, .env의
- * BASE_URL 끝에 '/'가 없으면 마지막 경로 조각(자산 저장소 이름)이 사라지고 NeoNebula
- * 내부 상수 'repo'로 대체되는 알려진 버그가 있다(tools/distro-ci/.github/workflows/
- * generate-server.yml 참고) — 같은 문제가 로컬 실행 + 붙여넣기 경로에도 그대로 생길 수
- * 있어서 여기서 미리 걸러낸다.
- */
-function validateLoaderModuleUrls(modules, assetBaseUrl, assetRepoBaseUrl, serverAssetRepo) {
-    if (!assetBaseUrl) return
-    const expectedPrefix = `${assetRepoBaseUrl}/`
-    for (const m of modules) {
-        const url = m.artifact && m.artifact.url
-        if (url && url.startsWith(assetBaseUrl) && !url.startsWith(expectedPrefix)) {
-            throw new Error(
-                `붙여넣은 로더 JSON의 "${m.name || m.id}" 항목이 이 서버의 자산 저장소(${serverAssetRepo})가 ` +
-                `아닌 경로를 가리킵니다: ${url}\nNeoNebula를 로컬에서 실행할 때 .env의 BASE_URL 끝에 슬래시를 ` +
-                `빠뜨리면 저장소 이름이 사라지고 'repo'로 대체되는 알려진 버그가 있습니다. ` +
-                `BASE_URL을 "${expectedPrefix}"처럼 끝에 슬래시를 붙여서 다시 생성한 뒤 다시 붙여넣으세요.`
-            )
-        }
-        if (Array.isArray(m.subModules) && m.subModules.length > 0) {
-            validateLoaderModuleUrls(m.subModules, assetBaseUrl, assetRepoBaseUrl, serverAssetRepo)
-        }
-    }
-}
-
-/**
- * 이미 distribution.json에 저장된(과거에 잘못 배포된) 모듈 중, 위 NeoNebula BASE_URL
- * 슬래시 버그로 자산 저장소 이름이 빠진 채 "<assetBaseUrl>/repo/..." 형태로 남아있는
- * URL을 "<assetRepoBaseUrl>/repo/..."로 제자리에서 고친다. 배포 때마다 항상 실행되므로
- * 별도 조작 없이 "GitHub에 배포"만 눌러도 자동으로 반영된다.
- * 주의: URL 문자열만 고친다 — 그 경로에 실제 파일이 없다면(자산 저장소에 한 번도
- * 올라간 적 없다면) 여전히 404가 난다. NeoNebula 로컬 실행 결과물(ROOT의 repo 폴더)을
- * 그 서버의 자산 저장소에 실제로 올려둔 경우에만 이 자동 보정으로 충분하다.
- */
-function repairBrokenAssetUrls(modules, assetBaseUrl, assetRepoBaseUrl) {
-    if (!assetBaseUrl) return 0
-    const brokenPrefix = `${assetBaseUrl}/repo/`
-    const fixedPrefix = `${assetRepoBaseUrl}/repo/`
-    let count = 0
-    for (const m of modules) {
-        const url = m.artifact && m.artifact.url
-        if (url && url.startsWith(brokenPrefix) && !url.startsWith(fixedPrefix)) {
-            m.artifact.url = fixedPrefix + url.slice(brokenPrefix.length)
-            count++
-        }
-        if (Array.isArray(m.subModules) && m.subModules.length > 0) {
-            count += repairBrokenAssetUrls(m.subModules, assetBaseUrl, assetRepoBaseUrl)
-        }
-    }
-    return count
-}
-
 // ---- Deploy pipeline ----
 
 function bumpVersion(version) {
@@ -763,25 +692,24 @@ function bumpVersion(version) {
 }
 
 async function deploy() {
-    const token = getToken()
-    if (!token) {
-        alert('먼저 GitHub 토큰을 입력하고 저장하세요.')
+    const { workerBaseUrl, uploadSecret } = currentSettings()
+    if (!workerBaseUrl) {
+        alert('먼저 Worker 기본 URL을 입력하고 저장하세요.')
         return
     }
-    const { owner, distroRepo, branch, assetBaseUrl } = currentSettings()
+    if (!uploadSecret) {
+        alert('먼저 업로드 시크릿을 입력하고 저장하세요.')
+        return
+    }
     const serverId = $('serverId').value.trim()
     if (!serverId) {
         alert('서버 id를 입력하세요.')
         return
     }
-    const serverAssetRepo = $('serverAssetRepo').value.trim()
-    if (!serverAssetRepo) {
-        alert('이 서버의 자산 GitHub 저장소를 입력하세요 (예: Ssachon). 서버마다 별도 저장소를 씁니다.')
-        return
-    }
-    // 서버별 자산 저장소가 GitHub Pages 프로젝트 사이트로 <도메인>/<저장소명>/에서
-    // 서빙되는 구조를 그대로 따른다 (예: https://hanol0927.github.io/Ssachon/...).
-    const assetRepoBaseUrl = `${assetBaseUrl}/${serverAssetRepo}`
+    // R2는 버킷 하나뿐이라 서버별 저장소 구분이 필요 없다 — servers/<id>/... 경로만으로 충분.
+    // 참고: "/assets"는 Cloudflare workers.dev 엣지에서 예약된 경로라 Worker에 도달하지
+    // 못하고 막히므로(1042 오류) "/files"를 쓴다 — src/worker.js와 이름을 맞출 것.
+    const assetBaseUrl = `${workerBaseUrl}/files`
 
     const replacingLoader = state.editingServerId != null && $('loaderReplaceCheck').checked
     if (replacingLoader) {
@@ -798,7 +726,7 @@ async function deploy() {
     try {
         log('시작합니다..')
 
-        const assetFiles = [] // { path, base64Content }
+        const assetFiles = [] // { path, bytes }
         const modModules = []
         const configModules = []
         const newOnceFiles = [] // { path, url, size, MD5 } - modules[] 밖의 커스텀 필드
@@ -817,7 +745,7 @@ async function deploy() {
                 if (!fabricLoaderVersion) {
                     throw new Error('Fabric 로더 버전을 선택하세요.')
                 }
-                const built = await buildFabricModules(mcVersion, fabricLoaderVersion, serverFolder, assetRepoBaseUrl)
+                const built = await buildFabricModules(mcVersion, fabricLoaderVersion, serverFolder, assetBaseUrl)
                 loaderModules = built.modules
                 assetFiles.push(...built.assetFiles)
             } else if (loaderType === 'forge-paste') {
@@ -830,81 +758,79 @@ async function deploy() {
                             throw new Error('붙여넣은 JSON에 type/artifact가 없는 항목이 있습니다.')
                         }
                     }
-                    validateLoaderModuleUrls(loaderModules, assetBaseUrl, assetRepoBaseUrl, serverAssetRepo)
                 }
             }
         }
 
         for (const mod of state.newMods) {
             log(`해시 계산 중: ${mod.file.name}`)
-            const { size, md5: hash, base64 } = await hashAndEncode(mod.file)
+            const { size, md5: hash, bytes } = await hashAndEncode(mod.file)
             const path = `${serverFolder}/mods/${mod.file.name}`
-            assetFiles.push({ path, base64Content: base64 })
+            assetFiles.push({ path, bytes })
             modModules.push({
                 id: `generated.${mod.type.toLowerCase()}:${sanitizeMavenPart(mod.name)}:1.0.0@jar`,
                 name: mod.name,
                 type: mod.type,
                 required: { value: mod.required, def: mod.required },
-                artifact: { size, MD5: hash, url: `${assetRepoBaseUrl}/${path}` }
+                artifact: { size, MD5: hash, url: `${assetBaseUrl}/${path}` }
             })
         }
 
         for (const cfg of state.newConfigs) {
             log(`해시 계산 중: ${cfg.file.name}`)
-            const { size, md5: hash, base64 } = await hashAndEncode(cfg.file)
+            const { size, md5: hash, bytes } = await hashAndEncode(cfg.file)
             const path = `${serverFolder}/files/${cfg.path}`
-            assetFiles.push({ path, base64Content: base64 })
+            assetFiles.push({ path, bytes })
             if (cfg.forceEveryLaunch) {
                 configModules.push({
                     id: cfg.file.name,
                     name: cfg.file.name,
                     type: 'File',
-                    artifact: { size, MD5: hash, url: `${assetRepoBaseUrl}/${path}`, path: cfg.path }
+                    artifact: { size, MD5: hash, url: `${assetBaseUrl}/${path}`, path: cfg.path }
                 })
             } else {
                 // 최초 1회만: modules[]가 아니라 onceFiles[]에 넣어서 FullRepair가
                 // 존재 자체를 모르게 한다 (landing.js의 ensureOnceFiles가 처리).
-                newOnceFiles.push({ path: cfg.path, url: `${assetRepoBaseUrl}/${path}`, size, MD5: hash })
+                newOnceFiles.push({ path: cfg.path, url: `${assetBaseUrl}/${path}`, size, MD5: hash })
             }
         }
 
         let backgroundUrl = $('backgroundCurrentUrl').value.trim() || undefined
         if (state.backgroundFile != null) {
             log(`배경화면 업로드 준비: ${state.backgroundFile.name}`)
-            const { base64 } = await hashAndEncode(state.backgroundFile)
+            const { bytes } = await hashAndEncode(state.backgroundFile)
             const ext = state.backgroundFile.name.split('.').pop() || 'png'
             const path = `${serverFolder}/background.${ext}`
-            assetFiles.push({ path, base64Content: base64 })
-            backgroundUrl = `${assetRepoBaseUrl}/${path}`
+            assetFiles.push({ path, bytes })
+            backgroundUrl = `${assetBaseUrl}/${path}`
         }
 
         let iconUrl = $('iconCurrentUrl').value.trim() || undefined
         if (state.iconFile != null) {
             log(`아이콘 업로드 준비: ${state.iconFile.name}`)
-            const { base64 } = await hashAndEncode(state.iconFile)
+            const { bytes } = await hashAndEncode(state.iconFile)
             const ext = state.iconFile.name.split('.').pop() || 'png'
             const path = `${serverFolder}/icon.${ext}`
-            assetFiles.push({ path, base64Content: base64 })
-            iconUrl = `${assetRepoBaseUrl}/${path}`
+            assetFiles.push({ path, bytes })
+            iconUrl = `${assetBaseUrl}/${path}`
         }
 
-        // 자산 커밋을 distribution.json 갱신보다 먼저 수행한다.
+        // 자산 업로드를 distribution.json 갱신보다 먼저 수행한다.
         // (실패 안전성: 자산이 존재하지 않는 채로 distribution.json이 먼저 배포되어
         //  실사용자의 런처가 깨지는 상황을 피하기 위함)
         if (assetFiles.length > 0) {
-            log(`자산 저장소(${serverAssetRepo})에 파일 ${assetFiles.length}개 커밋 중..`)
-            await GitHubAPI.commitFilesBatch(
-                token, owner, serverAssetRepo, branch, assetFiles,
-                `distro-builder: update assets for ${serverId}`,
-                (done, total) => log(`  blob 업로드 ${done}/${total}`)
+            log(`Worker에 파일 ${assetFiles.length}개 업로드 중..`)
+            await WorkerAPI.uploadFilesSequential(
+                workerBaseUrl, uploadSecret, assetFiles,
+                (done, total) => log(`  업로드 ${done}/${total}`)
             )
-            log('자산 커밋 완료.')
+            log('자산 업로드 완료.')
         } else {
             log('새로 추가된 자산 파일 없음, 건너뜀.')
         }
 
         log('distribution.json 다시 불러오는 중.. (동시 편집 충돌 방지)')
-        const { distribution, sha } = await fetchDistribution()
+        const { distribution, etag } = await fetchDistribution()
         distribution.servers = distribution.servers || []
 
         const whitelist = $('whitelistTextarea').value
@@ -924,11 +850,6 @@ async function deploy() {
             .filter(e => !(replacingLoader && LOADER_OWNED_TYPES.has(e.module.type)))
             .map(e => e.module)
         const modules = [...loaderModules, ...remainingExisting, ...modModules, ...configModules]
-
-        const repairedCount = repairBrokenAssetUrls(modules, assetBaseUrl, assetRepoBaseUrl)
-        if (repairedCount > 0) {
-            log(`잘못된 자산 경로(자산 저장소 이름이 누락된 URL) ${repairedCount}개를 자동으로 고쳤습니다.`)
-        }
 
         const existingServer = distribution.servers.find(s => s.id === serverId)
 
@@ -966,16 +887,11 @@ async function deploy() {
         else distribution.servers.push(serverObj)
         distribution.version = bumpVersion(distribution.version)
 
-        log('distribution.json 커밋 중..')
-        await GitHubAPI.putFile(
-            token, owner, distroRepo, 'distribution.json',
-            JSON.stringify(distribution, null, 2),
-            `distro-builder: update ${serverId}`,
-            sha, branch
-        )
+        log('distribution.json 업로드 중..')
+        await WorkerAPI.putDistribution(workerBaseUrl, uploadSecret, distribution, etag)
 
         log('완료! distribution.json과 자산이 배포되었습니다.')
-        log(`https://raw.githubusercontent.com/${owner}/${distroRepo}/${branch}/distribution.json`)
+        log(`${workerBaseUrl}/distribution.json`)
 
         state.newMods = []
         state.newConfigs = []
@@ -987,7 +903,7 @@ async function deploy() {
     } catch (err) {
         console.error(err)
         log(`오류 발생: ${err.message}`)
-        if (err.status === 409) {
+        if (err.status === 412) {
             log('distribution.json이 그 사이 다른 곳에서 변경된 것 같습니다. 다시 시도해주세요.')
         }
     } finally {
@@ -1026,7 +942,7 @@ document.addEventListener('DOMContentLoaded', () => {
     $('generateLoaderBtn').addEventListener('click', startForgeLoaderGeneration)
 
     resetFormForNewServer()
-    if (getToken()) {
+    if (currentSettings().workerBaseUrl) {
         refreshServerPicker()
     }
 })

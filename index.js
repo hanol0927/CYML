@@ -414,21 +414,25 @@ async function downloadFile(url, targetPath) {
 async function downloadExtraFiles() {
     const baseDir = path.join(app.getPath('appData'), '.cymlauncher', 'instances')
         
+    // 예전 GitHub Pages 경로(https://hanol0927.github.io/ddumon/servers/...)에서
+    // Cloudflare Worker+R2로 옮김 — tools/distro-worker/migrate.js가 같은 상대 경로
+    // 구조(servers/ddumon-26.1.2/files/...)를 그대로 유지해서 이관했다.
+    const workerBase = 'https://cyml-distro-worker.chaenna02.workers.dev'
     const filesToDownload = [
         {
-            url: 'https://hanol0927.github.io/ddumon/servers/ddumon-26.1.2/files/options.txt',
+            url: `${workerBase}/files/servers/ddumon-26.1.2/files/options.txt`,
             target: path.join(baseDir, 'ddumon-26.1.2', 'options.txt')
         },
         {
-            url: 'https://hanol0927.github.io/ddumon/servers/ddumon-26.1.2/files/config/iris.properties',
+            url: `${workerBase}/files/servers/ddumon-26.1.2/files/config/iris.properties`,
             target: path.join(baseDir, 'ddumon-26.1.2', 'config' ,'iris.properties')
         },
         {
-            url: 'https://hanol0927.github.io/ddumon/servers/ddumon-26.1.2/files/config/sodium-options.json',
+            url: `${workerBase}/files/servers/ddumon-26.1.2/files/config/sodium-options.json`,
             target: path.join(baseDir, 'ddumon-26.1.2', 'config' ,'sodium-options.json')
         },
         {
-            url: 'https://hanol0927.github.io/ddumon/servers/ddumon-26.1.2/files/config/sodium-extra-options.json',
+            url: `${workerBase}/files/servers/ddumon-26.1.2/files/config/sodium-extra-options.json`,
             target: path.join(baseDir, 'ddumon-26.1.2', 'config' ,'sodium-extra-options.json')
         }
     ]
