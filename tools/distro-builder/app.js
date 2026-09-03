@@ -26,7 +26,10 @@ const MODULE_TYPES = ['ForgeMod', 'FabricMod', 'LiteMod', 'Library', 'File']
 // distro-ci/merge-server.js의 LOADER_OWNED_TYPES와 동일하게 맞출 것 — 로더 교체 시
 // 이 타입의 기존 모듈만 새 로더 모듈로 대체하고, 나머지(모드/설정 등)는 그대로 둔다.
 const LOADER_OWNED_TYPES = new Set(['Forge', 'ForgeHosted', 'Fabric', 'VersionManifest', 'Library'])
-const MAX_SAFE_UPLOAD_BYTES = 90 * 1024 * 1024
+// 90MB 넘는 파일은 WorkerAPI가 자동으로 멀티파트 업로드로 전환하므로(worker-api.js의
+// MULTIPART_THRESHOLD_BYTES) 실패 걱정 없이 훨씬 큰 파일도 올라간다 — 이 값은 이제
+// "느려질 수 있다"는 정보성 안내 기준일 뿐, 업로드 가능 여부의 한계가 아니다.
+const LARGE_FILE_NOTICE_BYTES = 2 * 1024 * 1024 * 1024
 
 function mcVersionAtLeast(desired, actual) {
     const des = desired.split('.')
@@ -537,8 +540,8 @@ function renderNewMods() {
         row.querySelector('.removeBtn').addEventListener('click', () => { state.newMods.splice(idx, 1); renderNewMods() })
         container.appendChild(row)
     })
-    $('modsWarning').textContent = state.newMods.some(m => m.file.size > MAX_SAFE_UPLOAD_BYTES)
-        ? '90MB가 넘는 파일이 있습니다. Cloudflare Workers 요청 본문 한도(요금제에 따라 100MB 내외)를 초과해 실패할 수 있습니다.'
+    $('modsWarning').textContent = state.newMods.some(m => m.file.size > LARGE_FILE_NOTICE_BYTES)
+        ? '2GB가 넘는 파일이 있습니다. 자동으로 여러 조각으로 나눠 업로드하지만(멀티파트) 네트워크 상황에 따라 시간이 오래 걸릴 수 있습니다.'
         : ''
 }
 
@@ -822,7 +825,8 @@ async function deploy() {
             log(`Worker에 파일 ${assetFiles.length}개 업로드 중..`)
             await WorkerAPI.uploadFilesSequential(
                 workerBaseUrl, uploadSecret, assetFiles,
-                (done, total) => log(`  업로드 ${done}/${total}`)
+                (done, total) => log(`  업로드 ${done}/${total}`),
+                (path, part, totalParts) => log(`    (멀티파트) ${path}: 조각 ${part}/${totalParts}`)
             )
             log('자산 업로드 완료.')
         } else {

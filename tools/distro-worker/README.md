@@ -3,8 +3,10 @@
 `distribution.json`과 서버 자산 파일(모드/설정/배경/아이콘/로더 JSON)을 서빙·업로드하는
 Cloudflare Worker다. `tools/distro-builder`가 예전에 쓰던 GitHub REST API를 대체한다 —
 GitHub의 Git Data API(base64-in-JSON)는 ~25-30MB가 넘는 파일 업로드가 실패했지만, 여기서는
-요청 본문을 그대로 R2에 스트리밍하므로 Cloudflare Workers의 요청 본문 한도(Free/Pro
-100MiB)까지 문제없이 올라간다.
+요청 본문을 그대로 R2에 스트리밍하므로 base64 오버헤드가 없다. 그보다도 큰 파일(수백MB~
+2GB 이상)은 멀티파트 업로드 라우트로 여러 조각으로 나눠 올리므로, Cloudflare Workers의
+"요청 하나"당 본문 한도(Free/Pro 100MiB 내외)에 걸리지 않는다 — 최종적으로 R2에 합쳐진
+오브젝트는 R2 자체 한도(5TiB)까지 커질 수 있다.
 
 ## 구성
 
@@ -14,7 +16,13 @@ GitHub의 Git Data API(base64-in-JSON)는 ~25-30MB가 넘는 파일 업로드가
     헤더를 보내면 R2의 조건부 쓰기로 동시 편집 충돌을 412로 감지한다.
   - `GET /files/<path>` — 공개, R2 오브젝트를 그대로 스트리밍
   - `PUT /files/<path>` — `Authorization: Bearer <UPLOAD_SECRET>` 필요, 요청 본문을
-    그대로 R2에 스트리밍 (base64 인코딩 없음)
+    그대로 R2에 스트리밍 (base64 인코딩 없음). 작은~중간 크기 파일용 단일 요청 업로드.
+  - 멀티파트 업로드(큰 파일용, `distro-builder`의 `worker-api.js`가 80MB 넘는 파일에
+    자동으로 이 경로를 씀) — 전부 `Authorization: Bearer <UPLOAD_SECRET>` 필요:
+    - `POST /files/<path>?mpu=create` → `{ uploadId }`
+    - `PUT /files/<path>?mpu=uploadpart&uploadId=<id>&partNumber=<n>` (본문=조각 바이트) → `{ etag }`
+    - `POST /files/<path>?mpu=complete&uploadId=<id>` (본문 `{"parts":[{"partNumber":1,"etag":"..."}]}`)
+    - `POST /files/<path>?mpu=abort&uploadId=<id>` — 실패 시 정리용
 
   (`/assets/<path>`가 아니라 `/files/<path>`인 이유: Cloudflare workers.dev 엣지가
   `/assets`를 예약 경로로 취급해서 Worker 코드에 도달하기 전에 1042 오류로 막습니다 —
@@ -69,6 +77,7 @@ GitHub 원본은 읽기 전용으로만 접근하고 절대 수정/삭제하지 
   덮어쓸 수 있으니 GitHub PAT과 마찬가지로 신중히 다룬다.
 - 삭제 API는 없다 — `distribution.json`에서 참조를 빼는 것만으로 충분하고(GitHub 시절과
   동일한 동작), R2에 남는 고아 오브젝트 정리는 이번 범위 밖의 선택적 후속 작업이다.
-- R2 단일 `put()` 한도는 5GiB라 이 프로젝트에서 다루는 파일 크기(모드 jar, 리소스팩 등)에는
-  충분하다. 그보다 큰 파일이 필요해지면 R2 멀티파트 업로드가 필요한데, 이는 아직 구현되어
-  있지 않다.
+- 80MB 넘는 파일은 `worker-api.js`가 자동으로 40MB 조각으로 나눠 멀티파트 업로드로
+  올린다. 150MB(4조각) 업로드→다운로드 바이트 일치까지 실측 확인했고, 조각 개수만
+  늘어날 뿐 같은 메커니즘이라 2GB 이상도 문제없이 동작할 것으로 예상한다(R2 멀티파트
+  한도는 오브젝트당 5TiB, 파트 최대 10000개 — 40MB 조각 기준 400GB까지 여유).

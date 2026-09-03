@@ -3,13 +3,16 @@
 // distribution.json + 서버 자산 파일(모드/설정/배경/아이콘 등)을 R2에서 서빙/업로드하는
 // Cloudflare Worker. GitHub Git Data API의 base64-in-JSON 방식이 가진 ~25-30MB 실질 업로드
 // 한도를 대체한다 — 여기서는 요청 본문을 그대로 스트리밍해 R2에 저장하므로 base64 오버헤드가
-// 없고, Cloudflare Workers의 요청 본문 한도(Free/Pro 100MiB)까지 그대로 업로드 가능하다.
+// 없다. 다만 Cloudflare Workers 자체의 "요청 하나"당 본문 한도(요금제별로 100~200MiB 선)는
+// 여전히 있어서, 그보다 큰 파일(최대 2GB 이상)은 아래 멀티파트 업로드 라우트로 여러 조각을
+// 나눠 보낸다 — 각 조각은 Workers 요청 본문 한도 밑이지만, R2에 합쳐진 최종 오브젝트는
+// R2의 실제 한도(5TiB)까지 커질 수 있다.
 
 const DISTRIBUTION_KEY = 'distribution.json'
 
 const CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, HEAD, PUT, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, HEAD, PUT, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Authorization, Content-Type, If-Match',
     'Access-Control-Expose-Headers': 'ETag',
     'Access-Control-Max-Age': '86400'
@@ -90,9 +93,57 @@ async function putAsset(key, request, env) {
     return new Response(JSON.stringify({ ok: true, key, etag: result.httpEtag }), { status: 200, headers: { 'Content-Type': 'application/json' } })
 }
 
+// ---- 멀티파트 업로드 (큰 파일용 — Workers 요청 본문 한도를 조각 단위로 우회) ----
+// distro-builder가 파일을 여러 조각으로 나눠 순서대로 이 라우트들을 호출한다:
+//   1) POST /files/<path>?mpu=create                                  -> { uploadId }
+//   2) PUT  /files/<path>?mpu=uploadpart&uploadId=X&partNumber=N (body=조각 바이트)  -> { etag }  (N번 반복)
+//   3) POST /files/<path>?mpu=complete&uploadId=X  body={"parts":[{"partNumber":1,"etag":"..."}, ...]}
+//   실패 시 정리용: POST /files/<path>?mpu=abort&uploadId=X
+
+async function createMultipartUpload(key, request, env) {
+    if (!checkAuth(request, env)) return new Response('Unauthorized', { status: 401 })
+    const upload = await env.BUCKET.createMultipartUpload(key, {
+        httpMetadata: { contentType: contentTypeFor(key) }
+    })
+    return new Response(JSON.stringify({ ok: true, uploadId: upload.uploadId }), { status: 200, headers: { 'Content-Type': 'application/json' } })
+}
+
+async function uploadMultipartPart(key, request, env, uploadId, partNumber) {
+    if (!checkAuth(request, env)) return new Response('Unauthorized', { status: 401 })
+    if (!uploadId || !partNumber || Number.isNaN(partNumber)) return new Response('Bad Request', { status: 400 })
+    if (request.body == null) return new Response('Empty body', { status: 400 })
+    const upload = env.BUCKET.resumeMultipartUpload(key, uploadId)
+    const part = await upload.uploadPart(partNumber, request.body)
+    return new Response(JSON.stringify({ ok: true, partNumber: part.partNumber, etag: part.etag }), { status: 200, headers: { 'Content-Type': 'application/json' } })
+}
+
+async function completeMultipartUpload(key, request, env, uploadId) {
+    if (!checkAuth(request, env)) return new Response('Unauthorized', { status: 401 })
+    if (!uploadId) return new Response('Bad Request', { status: 400 })
+    let body
+    try {
+        body = JSON.parse(await request.text())
+    } catch (e) {
+        return new Response('Invalid JSON', { status: 400 })
+    }
+    if (!Array.isArray(body.parts) || body.parts.length === 0) return new Response('parts가 필요합니다', { status: 400 })
+    const upload = env.BUCKET.resumeMultipartUpload(key, uploadId)
+    const result = await upload.complete(body.parts)
+    return new Response(JSON.stringify({ ok: true, key, etag: result.httpEtag }), { status: 200, headers: { 'Content-Type': 'application/json' } })
+}
+
+async function abortMultipartUpload(key, request, env, uploadId) {
+    if (!checkAuth(request, env)) return new Response('Unauthorized', { status: 401 })
+    if (!uploadId) return new Response('Bad Request', { status: 400 })
+    const upload = env.BUCKET.resumeMultipartUpload(key, uploadId)
+    await upload.abort()
+    return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'Content-Type': 'application/json' } })
+}
+
 export default {
     async fetch(request, env) {
-        const { pathname } = new URL(request.url)
+        const url = new URL(request.url)
+        const { pathname } = url
 
         if (request.method === 'OPTIONS') return withCors(new Response(null, { status: 204 }))
 
@@ -106,6 +157,26 @@ export default {
             if (pathname.startsWith('/files/')) {
                 const key = decodeURIComponent(pathname.slice('/files/'.length))
                 if (!key || key.includes('..')) return withCors(new Response('Bad Request', { status: 400 }))
+
+                const mpu = url.searchParams.get('mpu')
+                if (mpu != null) {
+                    const uploadId = url.searchParams.get('uploadId')
+                    if (mpu === 'create' && request.method === 'POST') {
+                        return withCors(await createMultipartUpload(key, request, env))
+                    }
+                    if (mpu === 'uploadpart' && request.method === 'PUT') {
+                        const partNumber = parseInt(url.searchParams.get('partNumber'), 10)
+                        return withCors(await uploadMultipartPart(key, request, env, uploadId, partNumber))
+                    }
+                    if (mpu === 'complete' && request.method === 'POST') {
+                        return withCors(await completeMultipartUpload(key, request, env, uploadId))
+                    }
+                    if (mpu === 'abort' && request.method === 'POST') {
+                        return withCors(await abortMultipartUpload(key, request, env, uploadId))
+                    }
+                    return withCors(new Response('Bad Request', { status: 400 }))
+                }
+
                 if (request.method === 'GET' || request.method === 'HEAD') {
                     return withCors(await getAsset(key, env, request.method === 'HEAD'))
                 }
