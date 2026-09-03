@@ -64,7 +64,11 @@ async function putDistribution(request, env) {
     } catch (e) {
         return new Response('Invalid JSON', { status: 400 })
     }
-    const ifMatch = request.headers.get('If-Match')
+    // R2의 onlyIf.etagMatches는 따옴표 없는 원본 해시를 기대하는데, HTTP ETag/If-Match
+    // 관례상 클라이언트는 따옴표 붙은 값("abc123...")을 그대로 돌려보내는 게 정상이라
+    // (실측 확인: 따옴표가 붙어 있으면 실제 일치 여부와 무관하게 형식 오류로 매번 실패함)
+    // 여기서 방어적으로 벗겨준다.
+    const ifMatch = request.headers.get('If-Match')?.replace(/^"|"$/g, '')
     const putOpts = { httpMetadata: { contentType: 'application/json; charset=utf-8' } }
     if (ifMatch) putOpts.onlyIf = { etagMatches: ifMatch }
     const result = await env.BUCKET.put(DISTRIBUTION_KEY, text, putOpts)
