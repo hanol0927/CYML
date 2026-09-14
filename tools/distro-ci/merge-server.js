@@ -131,7 +131,35 @@ function locateGeneratedDistribution(rootDir) {
     // 못 찾으면 ROOT 전체에서 이름이 distribution*.json인 첫 파일을 재귀 탐색.
     const found = findFileRecursive(rootDir, /^distribution.*\.json$/i)
     if (found) return found
-    throw new Error(`ROOT(${rootDir})에서 생성된 distribution.json을 찾지 못했습니다. NeoNebula의 출력 경로가 예상과 다른 것 같습니다 — 워크플로우 로그의 파일 목록을 확인하세요.`)
+
+    // 후보 경로가 전부 빗나갔다 — 다음에 또 헤매지 않도록 ROOT 전체 트리를
+    // 워크플로우 로그에 그대로 찍어서, 이 실행의 로그만 보고 바로
+    // locateGeneratedDistribution()의 후보 경로를 고칠 수 있게 한다.
+    const tree = []
+    listAllFilesRecursive(rootDir, tree, 0)
+    console.error(`ROOT(${rootDir}) 아래 실제 파일 목록:`)
+    console.error(tree.length > 0 ? tree.join('\n') : '  (비어 있음 — ROOT 아래에 파일이 하나도 없습니다. generate server/generate distro 단계 로그를 확인하세요.)')
+    throw new Error(`ROOT(${rootDir})에서 생성된 distribution.json을 찾지 못했습니다. NeoNebula의 출력 경로가 예상과 다른 것 같습니다 — 바로 위에 찍힌 ROOT 파일 목록을 참고해 locateGeneratedDistribution()의 후보 경로를 맞추세요.`)
+}
+
+function listAllFilesRecursive(dir, out, depth) {
+    if (depth > 8) return // 안전장치: 비정상적으로 깊은 트리로 로그가 무한히 커지는 것 방지
+    let entries
+    try {
+        entries = fs.readdirSync(dir, { withFileTypes: true })
+    } catch (err) {
+        out.push(`  (읽기 실패: ${dir} - ${err.message})`)
+        return
+    }
+    for (const entry of entries) {
+        const full = path.join(dir, entry.name)
+        if (entry.isDirectory()) {
+            out.push(`  [dir]  ${full}`)
+            listAllFilesRecursive(full, out, depth + 1)
+        } else {
+            out.push(`  [file] ${full}`)
+        }
+    }
 }
 
 function findFileRecursive(dir, pattern) {

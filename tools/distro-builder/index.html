@@ -294,16 +294,28 @@
 
 <section class="panel">
     <h2>8. 설정 파일 (config)</h2>
-    <div id="configsDropzone" class="dropzone">클릭하거나 설정 파일을 여기로 드래그하세요</div>
+    <div id="configsDropzone" class="dropzone">클릭하거나 설정 파일/폴더를 여기로 드래그하세요</div>
     <input type="file" id="configsFileInput" multiple style="display:none;">
-    <p class="hint">저장 경로는 config/ 아래 상대 경로 기준이며, 각 파일마다 직접 수정할 수 있습니다.<br>
+    <input type="file" id="configsFolderInput" webkitdirectory multiple style="display:none;">
+    <p><button type="button" id="configsFolderBtn" class="secondary">폴더 선택</button></p>
+    <p class="hint">저장 경로는 config/ 아래 상대 경로 기준이며, 각 파일마다 직접 수정할 수 있습니다. 폴더째 올리면(드래그하거나 "폴더 선택") 폴더 안의 하위 폴더/파일 구조가 그대로 경로에 반영됩니다 — 예: test 폴더 안에 test1~test4 파일이 있으면 config/test/test1 ~ config/test/test4로 자동으로 잡힙니다. 폴더 안에 폴더가 있어도 그대로 재귀적으로 반영됩니다.<br>
     "매번 강제 적용"을 체크 안 하면(기본값) 플레이어 폴더에 파일이 이미 있을 때 절대 덮어쓰지 않습니다 — options.txt, iris.properties처럼 플레이어가 직접 바꾸는 설정에 적합합니다. 체크하면 매 실행마다 이 파일로 강제로 되돌립니다.</p>
     <div id="configsList"></div>
 </section>
 
 <section class="panel">
+    <h2>8-1. 루트 파일 (config/ 없이, instances/&lt;서버id&gt; 바로 아래)</h2>
+    <p class="hint">config/ 접두사 없이 instances/&lt;서버id&gt; 바로 아래에 그대로 저장할 파일입니다. 위 설정 파일 칸과 마찬가지로 폴더째 올리면 폴더 구조가 그대로 경로에 반영되고, 각 파일 경로는 직접 수정할 수 있습니다.</p>
+    <div id="rootFilesDropzone" class="dropzone">클릭하거나 파일/폴더를 여기로 드래그하세요</div>
+    <input type="file" id="rootFilesFileInput" multiple style="display:none;">
+    <input type="file" id="rootFilesFolderInput" webkitdirectory multiple style="display:none;">
+    <p><button type="button" id="rootFilesFolderBtn" class="secondary">폴더 선택</button></p>
+    <div id="rootFilesList"></div>
+</section>
+
+<section class="panel">
     <h2>9. 기존 모듈 (수정 중인 서버에만 표시)</h2>
-    <p class="hint">직접 추가했던 모드/설정 파일을 체크해서 지울 수 있습니다. 로더/라이브러리 핵심 모듈은 실수로 지우지 못하도록 이 목록에서 삭제가 막혀 있습니다.</p>
+    <p class="hint">직접 추가했던 모드/설정 파일을 체크해서 지울 수 있습니다. "최초 1회 적용" 방식으로 올린 설정 파일(onceFiles)도 여기서 지울 수 있습니다. 로더/라이브러리 핵심 모듈은 실수로 지우지 못하도록 이 목록에서 삭제가 막혀 있습니다. 체크 후 배포하면 distribution.json 참조만 지워지고, R2에 남은 실제 파일은 지워지지 않습니다.</p>
     <div id="existingModulesList"><p class="hint">새 서버입니다.</p></div>
 </section>
 

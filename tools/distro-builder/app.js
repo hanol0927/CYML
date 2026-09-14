@@ -126,8 +126,9 @@ const state = {
     distributionEtag: null,
     editingServerId: null,
     existingModules: [], // [{ module, remove }]
+    existingOnceFiles: [], // [{ entry, remove }] - serv.onceFiles 항목 (최초 1회 적용 설정 파일)
     newMods: [],          // [{ file, name, type, required }]
-    newConfigs: [],       // [{ file, path }]
+    newConfigs: [],       // [{ file, path, forceEveryLaunch, section }] - section: 'config' | 'root'
     backgroundFile: null,
     iconFile: null
 }
@@ -286,6 +287,7 @@ async function startForgeLoaderGeneration() {
 function resetFormForNewServer() {
     state.editingServerId = null
     state.existingModules = []
+    state.existingOnceFiles = []
     ;['serverId', 'serverName', 'serverDescription', 'serverAddress', 'serverMcVersion', 'forgeCiAssetRepo'].forEach(id => { $(id).value = '' })
     $('serverId').disabled = false
     $('serverAutoconnect').checked = false
@@ -315,6 +317,7 @@ function loadServerIntoForm(serverId) {
     }
     state.editingServerId = serverId
     state.existingModules = (serv.modules || []).map(m => ({ module: m, remove: false }))
+    state.existingOnceFiles = (serv.onceFiles || []).map(o => ({ entry: o, remove: false }))
 
     $('serverId').value = serv.id
     // 기존 서버의 id는 여기서 바꾸지 않는다 — 바뀌면 런처의 선택 서버/자바 경로 저장 키가 끊어짐.
@@ -368,7 +371,7 @@ function loadServerIntoForm(serverId) {
 function renderExistingModules() {
     const container = $('existingModulesList')
     container.innerHTML = ''
-    if (state.existingModules.length === 0) {
+    if (state.existingModules.length === 0 && state.existingOnceFiles.length === 0) {
         container.innerHTML = '<p class="hint">기존 모듈 없음</p>'
         return
     }
@@ -419,6 +422,28 @@ function renderExistingModules() {
             `
             container.appendChild(row)
         }
+    }
+
+    if (state.existingOnceFiles.length > 0) {
+        const heading = document.createElement('p')
+        heading.className = 'hint'
+        heading.textContent = '설정 파일 (최초 1회 적용, onceFiles) — 체크하고 배포하면 distribution.json에서 삭제됩니다.'
+        container.appendChild(heading)
+        state.existingOnceFiles.forEach((entry, idx) => {
+            const row = document.createElement('label')
+            row.className = 'moduleRow'
+            row.innerHTML = `
+                <input type="checkbox" ${entry.remove ? 'checked' : ''}>
+                <span class="moduleType">File</span>
+                <span class="moduleName" style="${entry.remove ? 'text-decoration:line-through;color:var(--muted);' : ''}">${entry.entry.path}</span>
+                <span class="hint">${entry.remove ? '삭제 예정' : '삭제'}</span>
+            `
+            row.querySelector('input').addEventListener('change', e => {
+                state.existingOnceFiles[idx].remove = e.target.checked
+                renderExistingModules()
+            })
+            container.appendChild(row)
+        })
     }
 }
 
@@ -487,6 +512,94 @@ function setupDropzone(zoneId, inputId, onFiles) {
     })
 }
 
+// ---- Folder-aware file collection (드래그앤드롭 폴더/하위폴더 재귀 탐색) ----
+
+function readAllDirectoryEntries(reader) {
+    return new Promise((resolve, reject) => {
+        const entries = []
+        function readBatch() {
+            // Chrome은 한 번의 readEntries 호출당 최대 100개만 반환하므로 빈 배열이
+            // 나올 때까지 반복 호출해야 폴더 안의 모든 항목을 다 읽을 수 있다.
+            reader.readEntries(batch => {
+                if (batch.length === 0) {
+                    resolve(entries)
+                } else {
+                    entries.push(...batch)
+                    readBatch()
+                }
+            }, reject)
+        }
+        readBatch()
+    })
+}
+
+function readEntryFile(entry) {
+    return new Promise((resolve, reject) => entry.file(resolve, reject))
+}
+
+async function collectFilesFromEntry(entry, out) {
+    if (entry.isFile) {
+        const file = await readEntryFile(entry)
+        out.push({ file, relativePath: entry.fullPath.replace(/^\//, '') })
+    } else if (entry.isDirectory) {
+        const entries = await readAllDirectoryEntries(entry.createReader())
+        for (const child of entries) {
+            await collectFilesFromEntry(child, out)
+        }
+    }
+}
+
+async function collectFilesFromDataTransfer(dataTransfer) {
+    const items = dataTransfer.items
+    if (items == null || items.length === 0 || typeof items[0].webkitGetAsEntry !== 'function') {
+        return Array.from(dataTransfer.files).map(file => ({ file, relativePath: file.name }))
+    }
+    const entries = Array.from(items)
+        .map(item => item.webkitGetAsEntry && item.webkitGetAsEntry())
+        .filter(entry => entry != null)
+    if (entries.length === 0) {
+        return Array.from(dataTransfer.files).map(file => ({ file, relativePath: file.name }))
+    }
+    const out = []
+    for (const entry of entries) {
+        await collectFilesFromEntry(entry, out)
+    }
+    return out
+}
+
+function entriesFromFolderInput(fileList) {
+    // webkitdirectory로 선택한 폴더의 각 File은 webkitRelativePath에 "폴더명/하위경로"가 담겨 있다.
+    return Array.from(fileList).map(file => ({ file, relativePath: file.webkitRelativePath || file.name }))
+}
+
+function entriesFromPlainInput(fileList) {
+    return Array.from(fileList).map(file => ({ file, relativePath: file.name }))
+}
+
+function setupFolderAwareDropzone(zoneId, inputId, folderInputId, folderBtnId, onEntries) {
+    const zone = $(zoneId)
+    const input = $(inputId)
+    const folderInput = $(folderInputId)
+    const folderBtn = $(folderBtnId)
+    zone.addEventListener('click', () => input.click())
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover') })
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'))
+    zone.addEventListener('drop', async e => {
+        e.preventDefault()
+        zone.classList.remove('dragover')
+        onEntries(await collectFilesFromDataTransfer(e.dataTransfer))
+    })
+    input.addEventListener('change', () => {
+        onEntries(entriesFromPlainInput(input.files))
+        input.value = ''
+    })
+    folderBtn.addEventListener('click', () => folderInput.click())
+    folderInput.addEventListener('change', () => {
+        onEntries(entriesFromFolderInput(folderInput.files))
+        folderInput.value = ''
+    })
+}
+
 function addBackgroundFile(files) {
     const file = files[0]
     if (file == null) return
@@ -545,17 +658,22 @@ function renderNewMods() {
         : ''
 }
 
-function addConfigFiles(files) {
-    for (const file of files) {
-        state.newConfigs.push({ file, path: `config/${file.name}`, forceEveryLaunch: false })
+function addConfigEntries(entries, section) {
+    const basePrefix = section === 'root' ? '' : 'config'
+    for (const { file, relativePath } of entries) {
+        const path = basePrefix ? `${basePrefix}/${relativePath}` : relativePath
+        state.newConfigs.push({ file, path, forceEveryLaunch: false, section })
     }
     renderNewConfigs()
 }
 
 function renderNewConfigs() {
-    const container = $('configsList')
-    container.innerHTML = ''
+    const configContainer = $('configsList')
+    const rootContainer = $('rootFilesList')
+    configContainer.innerHTML = ''
+    rootContainer.innerHTML = ''
     state.newConfigs.forEach((entry, idx) => {
+        const container = entry.section === 'root' ? rootContainer : configContainer
         const row = document.createElement('div')
         row.className = 'fileRow'
         row.innerHTML = `
@@ -857,10 +975,13 @@ async function deploy() {
 
         const existingServer = distribution.servers.find(s => s.id === serverId)
 
-        // 같은 path는 새 걸로 교체(중복 방지), 나머지 기존 onceFiles는 유지.
+        // 같은 path는 새 걸로 교체(중복 방지), 체크박스로 지운 것은 제외, 나머지 기존 onceFiles는 유지.
+        const removedOnceFilePaths = new Set(
+            state.existingOnceFiles.filter(e => e.remove).map(e => e.entry.path)
+        )
         const mergedOnceFiles = [
             ...(existingServer && Array.isArray(existingServer.onceFiles)
-                ? existingServer.onceFiles.filter(e => !newOnceFiles.some(n => n.path === e.path))
+                ? existingServer.onceFiles.filter(e => !newOnceFiles.some(n => n.path === e.path) && !removedOnceFilePaths.has(e.path))
                 : []),
             ...newOnceFiles
         ]
@@ -938,7 +1059,10 @@ document.addEventListener('DOMContentLoaded', () => {
     })
 
     setupDropzone('modsDropzone', 'modsFileInput', addModFiles)
-    setupDropzone('configsDropzone', 'configsFileInput', addConfigFiles)
+    setupFolderAwareDropzone('configsDropzone', 'configsFileInput', 'configsFolderInput', 'configsFolderBtn',
+        entries => addConfigEntries(entries, 'config'))
+    setupFolderAwareDropzone('rootFilesDropzone', 'rootFilesFileInput', 'rootFilesFolderInput', 'rootFilesFolderBtn',
+        entries => addConfigEntries(entries, 'root'))
     setupDropzone('backgroundDropzone', 'backgroundFileInput', addBackgroundFile)
     setupDropzone('iconDropzone', 'iconFileInput', addIconFile)
 
