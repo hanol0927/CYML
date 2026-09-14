@@ -17,6 +17,14 @@
  * 이 스크립트는 ForgeGradle3.resolver.ts의 executeInstaller 호출부를 NeoForge와
  * 동일한 방식으로 패치해서, Forge도 GUI 없이 헤드리스로 설치되게 만든다.
  *
+ * 추가로: NeoNebula는 "Minecraft 1.18~1.20이면 항상 lowcodelanguage 라이브러리가
+ * 있다"고 가정하고 못 찾으면 예외를 던진다(isVersionAcceptable(mcVersion,
+ * [18,19,20])). 그런데 실제로 lowcodelanguage는 Forge 40.1.41(=Minecraft 1.18.2)
+ * 부터 추가된 아티팩트라서, 그 이전 1.18/1.18.1용 Forge 빌드(예: 38.0.17)에는
+ * 애초에 존재하지 않는다 — NeoNebula가 이 세부 버전 차이를 반영 못 한 버그.
+ * lowcodelanguage 항목에 skipIfNotPresent: true를 추가해서, 없으면 조용히 건너
+ * 뛰게 만든다(있으면 여전히 포함됨 — 최신 1.18.2 빌드는 그대로 정상 동작).
+ *
  * NeoNebula 소스가 바뀌어서 아래 문자열이 더 이상 안 맞으면(치환 대상을 못 찾으면)
  * 조용히 넘어가지 않고 바로 에러로 죽는다 — 그래야 다음에 사람이 로그를 보고
  * 이 패치를 다시 손봐야 한다는 걸 바로 알 수 있다.
@@ -85,6 +93,22 @@ function main() {
             ForgeGradle3Adapter.logger.info('===========================================')`,
         `            ForgeGradle3Adapter.logger.debug(\`Installing headlessly (--installClient) to \${installerOutputDir}\`)`,
         '안내 로그 메시지'
+    )
+
+    source = replaceOnce(
+        source,
+        `                        name: 'lowcodelanguage',
+                        group: LibRepoStructure.FORGE_GROUP,
+                        artifact: LibRepoStructure.LOWCODELANGUAGE_ARTIFACT,
+                        version: this.artifactVersion,
+                        classifiers: [undefined]`,
+        `                        name: 'lowcodelanguage',
+                        group: LibRepoStructure.FORGE_GROUP,
+                        artifact: LibRepoStructure.LOWCODELANGUAGE_ARTIFACT,
+                        version: this.artifactVersion,
+                        classifiers: [undefined],
+                        skipIfNotPresent: true`,
+        'lowcodelanguage 없어도 통과하도록 (1.18.2 40.1.41 미만 Forge 대응)'
     )
 
     fs.writeFileSync(TARGET, source)
