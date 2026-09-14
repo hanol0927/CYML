@@ -5,6 +5,11 @@ name: Generate Forge/NeoForge server
 # 바이트패치 단계가 있어서 브라우저에서 직접 만들 수 없기 때문에, 여기서 대신
 # NeoNebula(https://github.com/bayergg/NeoNebula, Nebula 포크)를 실행해준다.
 #
+# 생성 결과(로더 모듈 + 실제 바이너리 파일)는 distro-worker(Cloudflare Worker +
+# R2, tools/distro-builder가 쓰는 것과 동일)로 업로드된다 — 서버별 GitHub Pages
+# 자산 저장소를 쓰던 예전 방식은 distro-builder의 R2 마이그레이션 이후로 런처가
+# 더 이상 읽지 않는 곳이라 폐기했다. 자세한 내용은 merge-server.js 상단 주석 참고.
+#
 # ⚠️ 이 저장소 환경에서 실제로 실행해보지 못했다. NeoNebula의 ROOT 디렉터리 내부
 # 구조(특히 아래 "Locate generated files" 단계의 경로 가정)는 문서만으로 완전히
 # 확인하지 못한 부분이라, 처음 실행했을 때 안 맞으면 그 실행의 로그를 보고
@@ -24,9 +29,6 @@ on:
         required: true
       loaderVersion:
         description: '로더 버전 (예: 21.1.219)'
-        required: true
-      assetRepo:
-        description: '이 서버 전용 자산 저장소 이름 (예: Ssachon — 서버마다 별도 저장소를 씀)'
         required: true
 
 jobs:
@@ -79,11 +81,12 @@ jobs:
           echo "JAVA_EXECUTABLE=$JAVA_HOME/bin/java" >> .env
           echo "ROOT=${{ runner.temp }}/root" >> .env
           # NeoNebula는 BASE_URL을 WHATWG URL 상대경로 규칙으로 합친다(new URL(relative, base)).
-          # 끝에 '/'가 없으면 마지막 경로 조각(예: 자산 저장소 이름)이 "파일명"으로
-          # 취급되어 버려지고 NeoNebula 내부 상수인 'repo'로 대체되어 버린다
-          # (예: https://host/Chaenna + repo/lib/x.jar -> https://host/repo/lib/x.jar,
-          #  Chaenna가 증발함). 반드시 끝 슬래시를 붙여야 한다.
-          echo "BASE_URL=${{ vars.ASSET_BASE_URL }}/${{ inputs.assetRepo }}/" >> .env
+          # 끝에 '/'가 없으면 마지막 경로 조각이 "파일명"으로 취급되어 버려지고
+          # NeoNebula 내부 상수인 'repo'로 대체되어 버린다 — 반드시 끝 슬래시를 붙여야
+          # 한다. 이 값은 distro-worker(R2)의 /files/ 경로를 그대로 가리키며,
+          # merge-server.js의 BASE_URL 환경변수와 정확히 같아야 한다(urlToLocalPath가
+          # 이 접두사를 떼어내는 방식으로 로컬 파일 경로를 역산하기 때문).
+          echo "BASE_URL=${{ vars.WORKER_BASE_URL }}/files/servers/${{ inputs.serverId }}/forge/" >> .env
 
       - name: Generate server (Forge/NeoForge)
         working-directory: neonebula
@@ -98,15 +101,12 @@ jobs:
         working-directory: neonebula
         run: node dist/index.js generate distro
 
-      - name: Merge into ddumon + push assets
+      - name: Merge into distro-worker + upload assets
         run: node merge-server.js
         env:
-          GH_TOKEN: ${{ secrets.DISTRO_PAT }}
-          OWNER: ${{ vars.OWNER }}
-          DISTRO_REPO: ${{ vars.DISTRO_REPO }}
-          ASSET_REPO: ${{ inputs.assetRepo }}
-          BRANCH: ${{ vars.DISTRO_BRANCH || 'main' }}
-          BASE_URL: ${{ vars.ASSET_BASE_URL }}/${{ inputs.assetRepo }}
+          WORKER_BASE_URL: ${{ vars.WORKER_BASE_URL }}
+          UPLOAD_SECRET: ${{ secrets.WORKER_UPLOAD_SECRET }}
+          BASE_URL: ${{ vars.WORKER_BASE_URL }}/files/servers/${{ inputs.serverId }}/forge/
           SERVER_ID: ${{ inputs.serverId }}
           MC_VERSION: ${{ inputs.mcVersion }}
           ROOT_DIR: ${{ runner.temp }}/root

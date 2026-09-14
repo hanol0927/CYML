@@ -227,9 +227,8 @@ async function startForgeLoaderGeneration() {
     const mcVersion = $('serverMcVersion').value.trim()
     const loaderType = $('forgeLoaderType').value
     const loaderVersion = $('forgeLoaderVersion').value.trim()
-    const assetRepo = $('forgeCiAssetRepo').value.trim()
-    if (!serverId || !mcVersion || !loaderVersion || !assetRepo) {
-        alert('서버 id, GitHub 자산 저장소, 마인크래프트 버전, 로더 버전을 모두 입력하세요.')
+    if (!serverId || !mcVersion || !loaderVersion) {
+        alert('서버 id, 마인크래프트 버전, 로더 버전을 모두 입력하세요.')
         return
     }
 
@@ -242,7 +241,7 @@ async function startForgeLoaderGeneration() {
         const sinceMs = Date.now() - 5000 // 브라우저/서버 시계 오차 대비 약간 여유
         loaderGenLog(`워크플로우 실행 요청 중.. (${ciRepo}/${ciWorkflowFile})`)
         await GitHubAPI.dispatchWorkflow(token, ciOwner, ciRepo, ciWorkflowFile, CI_BRANCH, {
-            serverId, mcVersion, loaderType, loaderVersion, assetRepo
+            serverId, mcVersion, loaderType, loaderVersion
         })
 
         loaderGenLog('실행 확인 중..')
@@ -288,7 +287,7 @@ function resetFormForNewServer() {
     state.editingServerId = null
     state.existingModules = []
     state.existingOnceFiles = []
-    ;['serverId', 'serverName', 'serverDescription', 'serverAddress', 'serverMcVersion', 'forgeCiAssetRepo'].forEach(id => { $(id).value = '' })
+    ;['serverId', 'serverName', 'serverDescription', 'serverAddress', 'serverMcVersion'].forEach(id => { $(id).value = '' })
     $('serverId').disabled = false
     $('serverAutoconnect').checked = false
     $('serverMainServer').checked = false
@@ -324,9 +323,6 @@ function loadServerIntoForm(serverId) {
     $('serverId').disabled = true
     $('serverName').value = serv.name || ''
     $('serverDescription').value = serv.description || ''
-    // Forge/NeoForge 자동 생성(GitHub Actions) 전용 필드라 서버를 바꿀 때마다 비워서
-    // 다른 서버의 자산 저장소 이름이 실수로 남아있지 않게 한다 — 그 기능을 쓸 때만 입력.
-    $('forgeCiAssetRepo').value = ''
     $('serverAddress').value = serv.address || ''
     $('serverMcVersion').value = serv.minecraftVersion || ''
     $('serverAutoconnect').checked = !!serv.autoconnect
