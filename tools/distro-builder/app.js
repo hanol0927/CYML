@@ -1105,16 +1105,71 @@ async function deploy() {
     }
 }
 
+/**
+ * "선택한 서버 삭제" 버튼 핸들러. distribution.json의 servers[] 배열에서 해당
+ * 서버 항목만 제거하고 다시 업로드한다. R2에 이미 올라간 해당 서버의 파일들
+ * (servers/<id>/... 하위 jar/설정 등)은 지우지 않는다 — worker에 삭제 API가
+ * 없고, distribution.json에서만 빠지면 런처가 더 이상 참조하지 않으므로 굳이
+ * 지울 필요가 없다(용량이 아깝다면 R2 대시보드에서 수동으로 정리).
+ */
+async function deleteSelectedServer() {
+    const { workerBaseUrl, uploadSecret } = currentSettings()
+    if (!workerBaseUrl) {
+        alert('먼저 Worker 기본 URL을 입력하고 저장하세요.')
+        return
+    }
+    if (!uploadSecret) {
+        alert('먼저 업로드 시크릿을 입력하고 저장하세요.')
+        return
+    }
+    const serverId = $('existingServerSelect').value
+    if (!serverId) {
+        alert('삭제할 서버를 먼저 선택하세요.')
+        return
+    }
+    const ok = confirm(`"${serverId}" 서버를 distribution.json에서 완전히 삭제할까요? 이 작업은 되돌릴 수 없습니다.`)
+    if (!ok) return
+
+    $('deleteServerBtn').disabled = true
+    $('serverLoadStatus').textContent = '삭제하는 중..'
+    try {
+        const { distribution, etag } = await fetchDistribution()
+        distribution.servers = distribution.servers || []
+        const idx = distribution.servers.findIndex(s => s.id === serverId)
+        if (idx === -1) {
+            throw new Error('그 사이 distribution.json에서 이미 삭제된 것 같습니다.')
+        }
+        distribution.servers.splice(idx, 1)
+        distribution.version = bumpVersion(distribution.version)
+
+        await WorkerAPI.putDistribution(workerBaseUrl, uploadSecret, distribution, etag)
+
+        $('serverLoadStatus').textContent = `"${serverId}" 서버를 삭제했습니다.`
+        resetFormForNewServer()
+        await refreshServerPicker()
+    } catch (err) {
+        console.error(err)
+        $('serverLoadStatus').textContent = `삭제 실패: ${err.message}`
+        if (err.status === 412) {
+            $('serverLoadStatus').textContent += ' (distribution.json이 그 사이 변경됨 — 새로고침 후 다시 시도하세요)'
+        }
+    } finally {
+        $('deleteServerBtn').disabled = !$('existingServerSelect').value
+    }
+}
+
 // ---- Wire up ----
 
 document.addEventListener('DOMContentLoaded', () => {
     initSettingsUI()
 
     $('existingServerSelect').addEventListener('change', e => {
+        $('deleteServerBtn').disabled = !e.target.value
         if (e.target.value) loadServerIntoForm(e.target.value)
         else resetFormForNewServer()
     })
     $('loadServerBtn').addEventListener('click', refreshServerPicker)
+    $('deleteServerBtn').addEventListener('click', deleteSelectedServer)
 
     $('serverMcVersion').addEventListener('input', updateJavaPreview)
     $('javaOptionsManual').addEventListener('change', updateJavaPreview)
