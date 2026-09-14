@@ -242,8 +242,9 @@
         </div>
 
         <div id="forgePasteBlock" style="display:none;">
-            <label for="importedLoaderJson">NeoNebula로 로컬에서 <code>generate server</code>를 한 번 실행한 뒤, 결과 서버 JSON을 그대로 붙여넣으세요</label>
-            <textarea id="importedLoaderJson" placeholder='{"modules": [...]} 또는 [...] (로더 모듈 배열)'></textarea>
+            <label for="importedLoaderJson">Forge 인스톨러가 만든 원본 <code>version.json</code>을 그대로 붙여넣거나(기존 서버의 라이브러리는 그대로 두고 실행 인자만 교체됨), NeoNebula로 로컬에서 <code>generate server</code>를 실행한 결과 서버 JSON(모듈 배열)을 붙여넣으세요</label>
+            <textarea id="importedLoaderJson" placeholder='원본 version.json 그대로 (id/libraries/mainClass 포함) — 또는 {"modules": [...]} / [...] (Helios 모듈 배열)'></textarea>
+            <p class="hint">기존 서버 편집 중 "로더 교체" 체크박스를 켠 상태에서만 동작합니다. 원본 version.json을 붙여넣으면 기존 ForgeHosted 모듈의 라이브러리(jar)는 그대로 재사용하고 VersionManifest(실행 인자)만 새로 올립니다.</p>
         </div>
     </div>
 </section>

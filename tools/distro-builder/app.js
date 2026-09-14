@@ -799,6 +799,67 @@ async function buildFabricModules(mcVersion, loaderVersion, serverFolder, assetB
     return { modules: [fabricLoaderModule], assetFiles }
 }
 
+// ---- Forge/NeoForge 버전 정보(version.json) 붙여넣기 ----
+
+// distro-ci(NeoNebula)나 실제 Forge 인스톨러가 만든 원본 Mojang/Forge 스키마
+// version.json인지 판별한다. Helios 모듈 배열(이미 type/artifact가 있는 것)과는
+// 스키마가 완전히 달라서 구분이 필요하다.
+function looksLikeRawForgeVersionJson(parsed) {
+    return !Array.isArray(parsed)
+        && parsed.type == null
+        && parsed.artifact == null
+        && typeof parsed.id === 'string'
+        && Array.isArray(parsed.libraries)
+        && typeof parsed.mainClass === 'string'
+}
+
+/**
+ * 실제 Forge 인스톨러(또는 NeoNebula)가 만든 원본 version.json을 붙여넣었을 때 쓴다.
+ * 기존 ForgeHosted 모듈의 Library 서브모듈(jar 파일들 — processbuilder.js의
+ * classpathArg가 여기서만 읽는다)은 이미 정상이므로 그대로 재사용하고,
+ * VersionManifest 서브모듈(arguments.jvm 등 JVM 실행 인자 — processbuilder.js의
+ * _constructJVMArguments113이 여기서만 읽는다)만 새로 올린 JSON으로 교체한다.
+ * OptiFine처럼 module-path/add-opens 같은 정확한 실행 인자에 민감한 모드 때문에
+ * distro-ci가 재구성한 version.json 대신 원본을 그대로 써야 할 때 쓴다.
+ */
+function buildForgeModulesFromPastedVersionJson(rawText, parsed, serverFolder, assetBaseUrl) {
+    const existingParent = state.existingModules
+        .map(e => e.module)
+        .find(m => m.type === 'ForgeHosted' || m.type === 'Forge')
+    if (existingParent == null) {
+        throw new Error(
+            '기존 서버에 ForgeHosted/Forge 모듈이 없습니다. 이 붙여넣기는 이미 ' +
+            'distro-ci 등으로 로더 라이브러리(jar)가 만들어져 있는 기존 서버의 ' +
+            'version.json만 교체할 때만 쓸 수 있습니다. 새 서버는 "자동 생성" 또는 ' +
+            '완전한 모듈 JSON(배열) 붙여넣기를 쓰세요.'
+        )
+    }
+
+    const bytes = new TextEncoder().encode(rawText)
+    const encoded = hashAndEncodeBytes(bytes)
+    const versionJsonPath = `${serverFolder}/forge/${parsed.id}.json`
+    const assetFiles = [{ path: versionJsonPath, bytes: encoded.bytes }]
+
+    const versionManifestSubModule = {
+        id: parsed.id,
+        name: 'Minecraft Forge (version.json)',
+        type: 'VersionManifest',
+        artifact: { size: encoded.size, MD5: encoded.md5, url: `${assetBaseUrl}/${versionJsonPath}` }
+    }
+
+    const keptSubModules = (existingParent.subModules || [])
+        .filter(sm => sm.type !== 'VersionManifest')
+
+    const newParent = {
+        ...existingParent,
+        subModules: [versionManifestSubModule, ...keptSubModules]
+    }
+
+    log(`기존 ForgeHosted 모듈("${existingParent.name || existingParent.id}")의 라이브러리 ${keptSubModules.length}개는 그대로 두고, version.json만 교체합니다.`)
+
+    return { modules: [newParent], assetFiles }
+}
+
 // ---- Deploy pipeline ----
 
 function bumpVersion(version) {
@@ -869,10 +930,20 @@ async function deploy() {
                 const raw = $('importedLoaderJson').value.trim()
                 if (raw) {
                     const parsed = JSON.parse(raw)
-                    loaderModules = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.modules) ? parsed.modules : [parsed])
-                    for (const m of loaderModules) {
-                        if (m.type == null || m.artifact == null) {
-                            throw new Error('붙여넣은 JSON에 type/artifact가 없는 항목이 있습니다.')
+                    if (looksLikeRawForgeVersionJson(parsed)) {
+                        // Forge 인스톨러(또는 NeoNebula)가 만든 원본 version.json
+                        // (Mojang 스키마) — 기존 라이브러리 모듈을 재사용하고
+                        // VersionManifest 서브모듈만 교체한다.
+                        const built = buildForgeModulesFromPastedVersionJson(raw, parsed, serverFolder, assetBaseUrl)
+                        loaderModules = built.modules
+                        assetFiles.push(...built.assetFiles)
+                    } else {
+                        // 이미 Helios 모듈 스키마(type/artifact)로 되어있는 JSON.
+                        loaderModules = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.modules) ? parsed.modules : [parsed])
+                        for (const m of loaderModules) {
+                            if (m.type == null || m.artifact == null) {
+                                throw new Error('붙여넣은 JSON에 type/artifact가 없는 항목이 있습니다.')
+                            }
                         }
                     }
                 }
