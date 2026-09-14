@@ -802,11 +802,13 @@ async function buildFabricModules(mcVersion, loaderVersion, serverFolder, assetB
 // ---- Forge/NeoForge 버전 정보(version.json) 붙여넣기 ----
 
 // distro-ci(NeoNebula)나 실제 Forge 인스톨러가 만든 원본 Mojang/Forge 스키마
-// version.json인지 판별한다. Helios 모듈 배열(이미 type/artifact가 있는 것)과는
-// 스키마가 완전히 달라서 구분이 필요하다.
+// version.json인지 판별한다. 주의: Mojang 스키마도 최상위에 "type" 필드가 있다
+// (release/snapshot 같은 릴리스 채널 값) — Helios 모듈의 "type"(ForgeHosted 등)과
+// 이름만 같고 뜻이 다르므로 이 필드로는 구분하면 안 된다. Helios 모듈에는 항상
+// 있는 최상위 "artifact" 필드의 유무 + Mojang 스키마 고유 필드(libraries/mainClass)
+// 조합으로만 판별한다.
 function looksLikeRawForgeVersionJson(parsed) {
     return !Array.isArray(parsed)
-        && parsed.type == null
         && parsed.artifact == null
         && typeof parsed.id === 'string'
         && Array.isArray(parsed.libraries)
