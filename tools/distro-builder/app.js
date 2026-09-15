@@ -540,27 +540,51 @@ async function collectFilesFromEntry(entry, out) {
     } else if (entry.isDirectory) {
         const entries = await readAllDirectoryEntries(entry.createReader())
         for (const child of entries) {
-            await collectFilesFromEntry(child, out)
+            // 폴더 안 파일 하나가 읽기 실패해도(잠긴 파일, OneDrive 온라인 전용 파일 등)
+            // 나머지 파일은 정상적으로 계속 수집되도록 개별적으로 예외를 잡는다.
+            try {
+                await collectFilesFromEntry(child, out)
+            } catch (err) {
+                console.warn(`"${child.fullPath || child.name}" 항목을 읽지 못해 건너뜁니다.`, err)
+            }
         }
     }
 }
 
+function plainFilesFromDataTransfer(dataTransfer) {
+    return Array.from(dataTransfer.files).map(file => ({ file, relativePath: file.name }))
+}
+
 async function collectFilesFromDataTransfer(dataTransfer) {
     const items = dataTransfer.items
-    if (items == null || items.length === 0 || typeof items[0].webkitGetAsEntry !== 'function') {
-        return Array.from(dataTransfer.files).map(file => ({ file, relativePath: file.name }))
+    if (items == null || items.length === 0) {
+        return plainFilesFromDataTransfer(dataTransfer)
     }
-    const entries = Array.from(items)
-        .map(item => item.webkitGetAsEntry && item.webkitGetAsEntry())
-        .filter(entry => entry != null)
+    const entries = []
+    for (const item of items) {
+        // webkitGetAsEntry()는 특정 드래그 항목(잠긴 파일, 일부 클라우드 동기화
+        // 플레이스홀더 등)에서 예외를 던지는 경우가 있다. map()으로 한 번에 처리하면
+        // 항목 하나의 예외가 전체 드롭을 조용히 무효화시키므로 항목별로 감싼다.
+        try {
+            const entry = typeof item.webkitGetAsEntry === 'function' ? item.webkitGetAsEntry() : null
+            if (entry != null) entries.push(entry)
+        } catch (err) {
+            console.warn('드래그한 항목 하나를 인식하지 못해 건너뜁니다.', err)
+        }
+    }
     if (entries.length === 0) {
-        return Array.from(dataTransfer.files).map(file => ({ file, relativePath: file.name }))
+        return plainFilesFromDataTransfer(dataTransfer)
     }
     const out = []
     for (const entry of entries) {
-        await collectFilesFromEntry(entry, out)
+        try {
+            await collectFilesFromEntry(entry, out)
+        } catch (err) {
+            console.warn(`"${entry.fullPath || entry.name}" 항목을 읽지 못해 건너뜁니다.`, err)
+        }
     }
-    return out
+    // 폴더 탐색 결과가 전부 비어버렸다면(전 항목 실패 등) 최소한 평범한 파일 목록으로라도 폴백한다.
+    return out.length > 0 ? out : plainFilesFromDataTransfer(dataTransfer)
 }
 
 function entriesFromFolderInput(fileList) {
@@ -583,7 +607,15 @@ function setupFolderAwareDropzone(zoneId, inputId, folderInputId, folderBtnId, o
     zone.addEventListener('drop', async e => {
         e.preventDefault()
         zone.classList.remove('dragover')
-        onEntries(await collectFilesFromDataTransfer(e.dataTransfer))
+        const dataTransfer = e.dataTransfer
+        try {
+            onEntries(await collectFilesFromDataTransfer(dataTransfer))
+        } catch (err) {
+            // 예상 못한 오류로 폴더 탐색 자체가 실패해도 드롭이 완전히 무반응으로
+            // 보이지 않도록, 최소한 평범한 파일 목록으로라도 폴백한다.
+            console.warn('드래그된 파일을 처리하는 중 오류가 발생해 일반 파일 목록으로 대체합니다.', err)
+            onEntries(plainFilesFromDataTransfer(dataTransfer))
+        }
     })
     input.addEventListener('change', () => {
         onEntries(entriesFromPlainInput(input.files))
