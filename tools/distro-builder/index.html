@@ -98,6 +98,26 @@
     #backgroundPreview { max-width: 200px; max-height: 100px; display: none; margin-top: 8px; border-radius: 4px; }
     .warning { color: #e0b45a; font-size: 12px; }
     a { color: var(--accent); }
+    .keyBox {
+        background: #101114;
+        border: 1px solid var(--accent);
+        border-radius: 6px;
+        padding: 10px;
+        font-family: monospace;
+        font-size: 13px;
+        word-break: break-all;
+        margin: 8px 0;
+    }
+    .keyRow {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+    }
+    .keyRow .keyMeta { flex: 1; }
 </style>
 </head>
 <body>
@@ -148,6 +168,27 @@
     </div>
     <label for="ciRepo">워크플로우 저장소</label>
     <input type="text" id="ciRepo">
+</section>
+
+<section class="panel">
+    <h2>1-2. 화이트리스트 키 관리 (다른 사람에게 서버별 화이트리스트 편집 권한 위임)</h2>
+    <p class="hint">
+        여기서 만든 키를 건네주면, 받은 사람은 <a href="whitelist.html" target="_blank">whitelist.html</a>에서
+        업로드 시크릿 없이 그 키만으로 선택된 서버의 화이트리스트만 편집할 수 있습니다 — 모드/설정/다른 서버 등
+        나머지는 전혀 건드릴 수 없습니다. 서버 목록이 비어 있으면 아래 "2. 서버 선택"의
+        "distribution.json 새로고침"을 먼저 눌러주세요.
+    </p>
+    <label for="wlKeyLabel">키 이름 (누구에게 줬는지 구분용, 선택)</label>
+    <input type="text" id="wlKeyLabel" placeholder="예: 사촌1 운영진">
+    <label>권한을 줄 서버 (여러 개 선택 가능)</label>
+    <div id="wlKeyServerList" class="hint">서버 목록 없음 — 먼저 distribution.json을 불러오세요.</div>
+    <p style="margin-top:10px;">
+        <button id="wlKeyCreateBtn">키 생성</button>
+    </p>
+    <div id="wlKeyNewResult"></div>
+    <h2 style="margin-top:18px;">발급된 키 목록</h2>
+    <p><button id="wlKeyListRefreshBtn" class="secondary">키 목록 새로고침</button></p>
+    <div id="wlKeyList" class="hint">아직 불러오지 않음</div>
 </section>
 
 <section class="panel">

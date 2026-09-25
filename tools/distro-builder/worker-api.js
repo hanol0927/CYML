@@ -135,5 +135,60 @@
         }
     }
 
-    global.WorkerAPI = { getDistribution, putDistribution, uploadFile, uploadFilesSequential, MULTIPART_THRESHOLD_BYTES }
+    // ---- 화이트리스트 위임 키 관리 (관리자용, UPLOAD_SECRET 필요) ----
+
+    async function createWhitelistKey(workerBaseUrl, secret, label, serverIds) {
+        const res = await fetch(`${workerBaseUrl}/admin/whitelist-keys`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${secret}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ label, serverIds })
+        })
+        if (!res.ok) throw new Error(`키 생성 실패: ${res.status} ${await res.text().catch(() => '')}`)
+        return res.json()
+    }
+
+    async function listWhitelistKeys(workerBaseUrl, secret) {
+        const res = await fetch(`${workerBaseUrl}/admin/whitelist-keys`, {
+            headers: { 'Authorization': `Bearer ${secret}` }
+        })
+        if (!res.ok) throw new Error(`키 목록 조회 실패: ${res.status} ${await res.text().catch(() => '')}`)
+        return res.json()
+    }
+
+    async function deleteWhitelistKey(workerBaseUrl, secret, id) {
+        const res = await fetch(`${workerBaseUrl}/admin/whitelist-keys/${encodeURIComponent(id)}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${secret}` }
+        })
+        if (!res.ok) throw new Error(`키 삭제 실패: ${res.status} ${await res.text().catch(() => '')}`)
+        return res.json()
+    }
+
+    // ---- 화이트리스트 위임 키 사용 (whitelist.html 전용, UPLOAD_SECRET 불필요) ----
+
+    async function getWhitelistAuth(workerBaseUrl, whitelistKey) {
+        const res = await fetch(`${workerBaseUrl}/whitelist-auth`, {
+            headers: { 'Authorization': `Bearer ${whitelistKey}` }
+        })
+        if (res.status === 401) throw new Error('키가 올바르지 않습니다.')
+        if (!res.ok) throw new Error(`인증 확인 실패: ${res.status} ${await res.text().catch(() => '')}`)
+        return res.json()
+    }
+
+    async function putServerWhitelist(workerBaseUrl, whitelistKey, serverId, whitelist) {
+        const res = await fetch(`${workerBaseUrl}/whitelist/${encodeURIComponent(serverId)}`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${whitelistKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ whitelist })
+        })
+        if (res.status === 403) throw new Error('이 키는 해당 서버에 대한 권한이 없습니다.')
+        if (!res.ok) throw new Error(`화이트리스트 저장 실패: ${res.status} ${await res.text().catch(() => '')}`)
+        return res.json()
+    }
+
+    global.WorkerAPI = {
+        getDistribution, putDistribution, uploadFile, uploadFilesSequential, MULTIPART_THRESHOLD_BYTES,
+        createWhitelistKey, listWhitelistKeys, deleteWhitelistKey,
+        getWhitelistAuth, putServerWhitelist
+    }
 })(window)

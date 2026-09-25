@@ -191,9 +191,115 @@ async function refreshServerPicker() {
             select.value = previousValue
         }
         $('serverLoadStatus').textContent = `distribution.json 불러옴 (서버 ${distribution.servers.length}개)`
+        renderWlKeyServerCheckboxes()
     } catch (err) {
         console.error(err)
         $('serverLoadStatus').textContent = `불러오기 실패: ${err.message}`
+    }
+}
+
+// ---- 화이트리스트 키 관리 ----
+
+function renderWlKeyServerCheckboxes() {
+    const container = $('wlKeyServerList')
+    const servers = (state.distribution && state.distribution.servers) || []
+    if (servers.length === 0) {
+        container.className = 'hint'
+        container.textContent = '서버 목록 없음 — 먼저 distribution.json을 불러오세요.'
+        return
+    }
+    container.className = ''
+    container.innerHTML = ''
+    for (const serv of servers) {
+        const row = document.createElement('div')
+        row.className = 'checkboxRow'
+        const cb = document.createElement('input')
+        cb.type = 'checkbox'
+        cb.value = serv.id
+        cb.id = `wlKeyServer_${serv.id}`
+        const label = document.createElement('label')
+        label.htmlFor = cb.id
+        label.textContent = `${serv.name} (${serv.id})`
+        row.appendChild(cb)
+        row.appendChild(label)
+        container.appendChild(row)
+    }
+}
+
+async function createWlKey() {
+    const { workerBaseUrl, uploadSecret } = currentSettings()
+    if (!workerBaseUrl || !uploadSecret) {
+        alert('먼저 Worker 기본 URL과 업로드 시크릿을 입력하고 저장하세요.')
+        return
+    }
+    const serverIds = Array.from($('wlKeyServerList').querySelectorAll('input[type=checkbox]:checked')).map(cb => cb.value)
+    if (serverIds.length === 0) {
+        alert('권한을 줄 서버를 하나 이상 선택하세요.')
+        return
+    }
+    const label = $('wlKeyLabel').value.trim()
+    $('wlKeyCreateBtn').disabled = true
+    try {
+        const result = await WorkerAPI.createWhitelistKey(workerBaseUrl, uploadSecret, label, serverIds)
+        $('wlKeyNewResult').innerHTML =
+            '<p class="warning">이 키는 지금만 표시됩니다 — 다시 조회할 수 없으니 지금 복사해서 전달하세요.</p>' +
+            `<div class="keyBox">${result.key}</div>` +
+            `<p class="hint">권한 서버: ${result.serverIds.join(', ')}</p>`
+        $('wlKeyLabel').value = ''
+        $('wlKeyServerList').querySelectorAll('input[type=checkbox]').forEach(cb => { cb.checked = false })
+        await refreshWlKeyList()
+    } catch (err) {
+        console.error(err)
+        alert(`키 생성 실패: ${err.message}`)
+    } finally {
+        $('wlKeyCreateBtn').disabled = false
+    }
+}
+
+async function refreshWlKeyList() {
+    const { workerBaseUrl, uploadSecret } = currentSettings()
+    if (!workerBaseUrl || !uploadSecret) {
+        alert('먼저 Worker 기본 URL과 업로드 시크릿을 입력하고 저장하세요.')
+        return
+    }
+    const container = $('wlKeyList')
+    container.className = 'hint'
+    container.textContent = '불러오는 중..'
+    try {
+        const { keys } = await WorkerAPI.listWhitelistKeys(workerBaseUrl, uploadSecret)
+        if (keys.length === 0) {
+            container.textContent = '발급된 키가 없습니다.'
+            return
+        }
+        container.className = ''
+        container.innerHTML = ''
+        for (const k of keys) {
+            const row = document.createElement('div')
+            row.className = 'keyRow'
+            const meta = document.createElement('div')
+            meta.className = 'keyMeta'
+            meta.textContent = `${k.label || '(이름 없음)'} — ${k.serverIds.join(', ')} · ${new Date(k.createdAt).toLocaleString()}`
+            const delBtn = document.createElement('button')
+            delBtn.className = 'removeBtn'
+            delBtn.textContent = '삭제'
+            delBtn.addEventListener('click', async () => {
+                if (!confirm(`"${k.label || k.id}" 키를 삭제할까요? 이 키를 가진 사람은 더 이상 화이트리스트를 편집할 수 없게 됩니다.`)) return
+                delBtn.disabled = true
+                try {
+                    await WorkerAPI.deleteWhitelistKey(workerBaseUrl, uploadSecret, k.id)
+                    await refreshWlKeyList()
+                } catch (err) {
+                    alert(`삭제 실패: ${err.message}`)
+                    delBtn.disabled = false
+                }
+            })
+            row.appendChild(meta)
+            row.appendChild(delBtn)
+            container.appendChild(row)
+        }
+    } catch (err) {
+        console.error(err)
+        container.textContent = `불러오기 실패: ${err.message}`
     }
 }
 
@@ -1224,6 +1330,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $('deployBtn').addEventListener('click', deploy)
     $('generateLoaderBtn').addEventListener('click', startForgeLoaderGeneration)
+
+    $('wlKeyCreateBtn').addEventListener('click', createWlKey)
+    $('wlKeyListRefreshBtn').addEventListener('click', refreshWlKeyList)
 
     resetFormForNewServer()
     if (currentSettings().workerBaseUrl) {

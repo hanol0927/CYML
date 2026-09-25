@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>화이트리스트 편집</title>
+<style>
+    :root {
+        color-scheme: light dark;
+        --bg: #1e1f24;
+        --panel: #2a2c33;
+        --border: #3d3f47;
+        --text: #e6e6e6;
+        --muted: #9a9ca3;
+        --accent: #5b8def;
+        --danger: #e05a5a;
+    }
+    * { box-sizing: border-box; }
+    body {
+        font-family: -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        margin: 0;
+        padding: 24px;
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    h1 { font-size: 20px; margin-bottom: 4px; }
+    h2 { font-size: 15px; margin: 0 0 12px; color: var(--accent); }
+    p.hint, .hint { color: var(--muted); font-size: 13px; margin: 4px 0; }
+    section.panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 16px 20px;
+        margin-bottom: 16px;
+    }
+    label { display: block; font-size: 13px; margin: 10px 0 4px; }
+    input[type=text], input[type=password], textarea {
+        width: 100%;
+        padding: 7px 9px;
+        border-radius: 5px;
+        border: 1px solid var(--border);
+        background: #14151a;
+        color: var(--text);
+        font-size: 13px;
+    }
+    textarea { min-height: 90px; font-family: monospace; }
+    .checkboxRow { display: flex; align-items: center; gap: 6px; margin: 10px 0; }
+    .checkboxRow label { margin: 0; }
+    .checkboxRow input { width: auto; }
+    button {
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+</style>
+</head>
+<body>
+
+<h1>화이트리스트 편집</h1>
+<p class="hint">
+    관리자에게 받은 화이트리스트 키로 로그인하면, 그 키에 권한이 부여된 서버의 화이트리스트만
+    편집할 수 있습니다. 다른 서버나 모드/설정 등 나머지 기능에는 접근할 수 없습니다.
+</p>
+
+<section class="panel">
+    <h2>연결</h2>
+    <label for="workerBaseUrl">Worker 기본 URL</label>
+    <input type="text" id="workerBaseUrl">
+    <label for="whitelistKey">화이트리스트 키</label>
+    <input type="password" id="whitelistKey" placeholder="wlk_...">
+    <div class="checkboxRow">
+        <input type="checkbox" id="keyPersist">
+        <label for="keyPersist">브라우저를 닫아도 키 기억하기 (localStorage). 체크 해제 시 탭을 닫으면 사라짐.</label>
+    </div>
+    <p style="margin-top:10px;">
+        <button id="connectBtn">연결</button>
+        <span id="connectStatus" class="hint"></span>
+    </p>
+</section>
+
+<div id="serverCards"></div>
+
+<script src="worker-api.js"></script>
+<script src="whitelist-app.js"></script>
+</body>
+</html>

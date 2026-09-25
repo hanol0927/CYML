@@ -27,6 +27,19 @@ GitHub의 Git Data API(base64-in-JSON)는 ~25-30MB가 넘는 파일 업로드가
   (`/assets/<path>`가 아니라 `/files/<path>`인 이유: Cloudflare workers.dev 엣지가
   `/assets`를 예약 경로로 취급해서 Worker 코드에 도달하기 전에 1042 오류로 막습니다 —
   실제 배포 후 확인된 동작입니다.)
+  - 화이트리스트 위임 키 — `UPLOAD_SECRET` 없이 서버별 화이트리스트만 편집할 수 있는
+    별도 권한 체계. `distro-builder/index.html`의 "1-2. 화이트리스트 키 관리"에서
+    `UPLOAD_SECRET`으로 발급하고, 받은 사람은 `distro-builder/whitelist.html`에서 그
+    키로만 로그인한다. 키는 원문이 아니라 SHA-256 해시로 R2(`whitelist-keys.json`)에
+    저장되고, 생성 응답에서 딱 한 번만 원문이 노출된다:
+    - `POST /admin/whitelist-keys` (`UPLOAD_SECRET` 필요) — 본문 `{"label":"...", "serverIds":["..."]}`
+      → `{ ok, id, key, label, serverIds }` (`key`는 이때만 보임)
+    - `GET /admin/whitelist-keys` (`UPLOAD_SECRET` 필요) — 발급된 키 메타데이터 목록(해시 제외)
+    - `DELETE /admin/whitelist-keys/<id>` (`UPLOAD_SECRET` 필요) — 키 폐기
+    - `GET /whitelist-auth` (`Authorization: Bearer <위임 키>` 필요) — `{ ok, label, serverIds }`
+    - `PUT /whitelist/<serverId>` (`Authorization: Bearer <위임 키>` 필요, 그 키에 해당
+      `serverId` 권한이 있어야 함) — 본문 `{"whitelist":["닉네임1", ...]}`로 그 서버의
+      `whitelist` 필드만 교체. `distribution.json`의 다른 필드는 건드리지 않는다.
 - `migrate.js` — 기존 GitHub(`ddumon` + 서버별 자산 저장소)의 `distribution.json`과 참조
   파일들을 이 Worker의 R2 버킷으로 1회 복사하는 스크립트. GitHub 쪽은 읽기만 하고 절대
   건드리지 않는다.
@@ -75,6 +88,10 @@ GitHub 원본은 읽기 전용으로만 접근하고 절대 수정/삭제하지 
 
 - 인증은 단순 공유 비밀키(`UPLOAD_SECRET`) 방식이다. 이 값이 노출되면 누구나 자산을
   덮어쓸 수 있으니 GitHub PAT과 마찬가지로 신중히 다룬다.
+- 화이트리스트 위임 키는 `UPLOAD_SECRET`보다 훨씬 좁은 권한(발급 시 지정한 서버들의
+  화이트리스트 편집만)만 가지므로, 화이트리스트만 맡길 사람에게는 `UPLOAD_SECRET` 대신
+  이 키를 발급해서 건네는 걸 권장한다. 키가 유출돼도 그 키에 부여된 서버의 화이트리스트만
+  바꿀 수 있고, `distro-builder/index.html`에서 즉시 폐기(삭제)할 수 있다.
 - 삭제 API는 없다 — `distribution.json`에서 참조를 빼는 것만으로 충분하고(GitHub 시절과
   동일한 동작), R2에 남는 고아 오브젝트 정리는 이번 범위 밖의 선택적 후속 작업이다.
 - 80MB 넘는 파일은 `worker-api.js`가 자동으로 40MB 조각으로 나눠 멀티파트 업로드로
