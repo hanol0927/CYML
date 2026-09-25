@@ -637,16 +637,23 @@ function readEntryFile(entry) {
     return new Promise((resolve, reject) => entry.file(resolve, reject))
 }
 
-// 개별 파일/폴더 읽기 실패(잠긴 파일, OneDrive "온라인 전용" 플레이스홀더 등)를
-// 콘솔 경고로만 남기면 사용자 눈에는 그냥 "드래그해도 아무 반응 없음"으로만 보인다
-// (실제로 겪은 제보). skipped에 실패한 이름을 모아서 드롭존 옆에 눈에 띄게 표시한다.
+// 개별 파일/폴더 읽기 실패를 콘솔 경고로만 남기면 사용자 눈에는 그냥 "드래그해도
+// 아무 반응 없음"으로만 보인다 (실제로 겪은 제보 — 원인은 잠긴 파일/클라우드 동기화
+// 플레이스홀더일 수도 있지만, 실측으로는 파일명에 §(마인크래프트 색상 코드) 같은 특수
+// 문자가 있을 때 Chrome이 Windows에서 폴더 전체를 읽다가 실패하는 경우도 확인됨 —
+// 파일 하나가 아니라 그 파일이 든 폴더 전체가 통째로 실패한다). skipped에 실패한
+// 이름 + 브라우저가 준 오류 내용을 같이 모아서 드롭존 옆에 눈에 띄게 표시한다.
+function describeDropError(err) {
+    return err && (err.message || err.name) ? (err.message || err.name) : String(err)
+}
+
 async function collectFilesFromEntry(entry, out, skipped) {
     if (entry.isFile) {
         try {
             const file = await readEntryFile(entry)
             out.push({ file, relativePath: entry.fullPath.replace(/^\//, '') })
         } catch (err) {
-            skipped.push(entry.fullPath || entry.name)
+            skipped.push(`${entry.fullPath || entry.name} (${describeDropError(err)})`)
             console.warn(`"${entry.fullPath || entry.name}" 파일을 읽지 못해 건너뜁니다.`, err)
         }
     } else if (entry.isDirectory) {
@@ -654,7 +661,7 @@ async function collectFilesFromEntry(entry, out, skipped) {
         try {
             entries = await readAllDirectoryEntries(entry.createReader())
         } catch (err) {
-            skipped.push(entry.fullPath || entry.name)
+            skipped.push(`${entry.fullPath || entry.name} (${describeDropError(err)})`)
             console.warn(`"${entry.fullPath || entry.name}" 폴더를 읽지 못해 건너뜁니다.`, err)
             return
         }
@@ -696,7 +703,7 @@ async function collectFilesFromDataTransfer(dataTransfer) {
         try {
             await collectFilesFromEntry(entry, out, skipped)
         } catch (err) {
-            skipped.push(entry.fullPath || entry.name)
+            skipped.push(`${entry.fullPath || entry.name} (${describeDropError(err)})`)
             console.warn(`"${entry.fullPath || entry.name}" 항목을 읽지 못해 건너뜁니다.`, err)
         }
     }
@@ -817,8 +824,8 @@ function showDropSkippedWarning(warningElId, skipped) {
         return
     }
     el.textContent =
-        `${skipped.length}개 항목을 읽지 못해 건너뛰었습니다: ${skipped.join(', ')} ` +
-        '(잠긴 파일이거나 OneDrive 등 클라우드 동기화의 "온라인 전용" 플레이스홀더 파일일 수 있습니다 — 파일을 완전히 내려받은 뒤 다시 시도하세요.)'
+        `${skipped.length}개 항목을 읽지 못해 건너뛰었습니다: ${skipped.join('; ')} ` +
+        '(잠긴 파일, 클라우드 동기화 플레이스홀더, 또는 파일명에 §(색상 코드) 같은 특수문자가 있으면 Chrome이 그 폴더 전체를 읽지 못하는 경우가 있습니다. 이럴 땐 드래그 대신 아래 "폴더 선택" 버튼을 써보세요.)'
 }
 
 function addConfigEntries(entries, section) {
