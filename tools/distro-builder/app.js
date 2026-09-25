@@ -638,23 +638,40 @@ function readEntryFile(entry) {
 }
 
 // 개별 파일/폴더 읽기 실패를 콘솔 경고로만 남기면 사용자 눈에는 그냥 "드래그해도
-// 아무 반응 없음"으로만 보인다 (실제로 겪은 제보 — 원인은 잠긴 파일/클라우드 동기화
-// 플레이스홀더일 수도 있지만, 실측으로는 파일명에 §(마인크래프트 색상 코드) 같은 특수
-// 문자가 있을 때 Chrome이 Windows에서 폴더 전체를 읽다가 실패하는 경우도 확인됨 —
-// 파일 하나가 아니라 그 파일이 든 폴더 전체가 통째로 실패한다). skipped에 실패한
-// 이름 + 브라우저가 준 오류 내용을 같이 모아서 드롭존 옆에 눈에 띄게 표시한다.
+// 아무 반응 없음"으로만 보인다 (실제로 겪은 제보). 확인된 원인:
+//   1) index.html을 file://로 직접 열면(더블클릭 등) Chrome이 FileSystemEntry API
+//      (entry.file()/readEntries())를 막아서 모든 드래그앤드롭 읽기가 실패한다 —
+//      같은 파일을 https(GitHub Pages)나 http://localhost로 열면 정상 동작 확인됨.
+//      README가 권장하는 대로 반드시 정적 서버로 호스팅해서 열어야 한다.
+//   2) 파일명에 §(마인크래프트 색상 코드) 같은 특수문자가 있으면 그 파일이 든 폴더
+//      전체를 읽다가 실패하는 경우도 실측 확인됨 (잠긴 파일/클라우드 동기화
+//      플레이스홀더도 같은 증상을 낼 수 있음).
+// skipped에 실패한 이름 + 브라우저가 준 오류 내용을 같이 모아서 드롭존 옆에 눈에
+// 띄게 표시하고, 폴더 없이 파일 하나만 최상위로 드롭한 경우는 plainByName으로 복구한다.
 function describeDropError(err) {
     return err && (err.message || err.name) ? (err.message || err.name) : String(err)
 }
 
-async function collectFilesFromEntry(entry, out, skipped) {
+// plainByName: 최상위(폴더 안이 아닌) 드롭 항목 이름 -> 평범한 File 매핑.
+// file:// 페이지처럼 FileSystemEntry API(entry.file()/readEntries()) 자체가 막혀 있는
+// 환경(실사용자 제보로 확인 — https로 호스팅하면 정상 동작)에서도, 폴더 없이 파일
+// 하나만 최상위로 드롭한 경우는 dataTransfer.files의 평범한 File로 복구할 수 있다.
+// 폴더 재귀 탐색 결과(중첩된 파일)는 이 방식으로 복구 불가 — plainByName에 없으므로
+// 그대로 실패 처리된다.
+async function collectFilesFromEntry(entry, out, skipped, plainByName) {
     if (entry.isFile) {
         try {
             const file = await readEntryFile(entry)
             out.push({ file, relativePath: entry.fullPath.replace(/^\//, '') })
         } catch (err) {
-            skipped.push(`${entry.fullPath || entry.name} (${describeDropError(err)})`)
-            console.warn(`"${entry.fullPath || entry.name}" 파일을 읽지 못해 건너뜁니다.`, err)
+            const isTopLevel = entry.fullPath === `/${entry.name}`
+            const fallbackFile = isTopLevel && plainByName ? plainByName.get(entry.name) : null
+            if (fallbackFile) {
+                out.push({ file: fallbackFile, relativePath: entry.name })
+            } else {
+                skipped.push(`${entry.fullPath || entry.name} (${describeDropError(err)})`)
+                console.warn(`"${entry.fullPath || entry.name}" 파일을 읽지 못해 건너뜁니다.`, err)
+            }
         }
     } else if (entry.isDirectory) {
         let entries
@@ -666,7 +683,7 @@ async function collectFilesFromEntry(entry, out, skipped) {
             return
         }
         for (const child of entries) {
-            await collectFilesFromEntry(child, out, skipped)
+            await collectFilesFromEntry(child, out, skipped, plainByName)
         }
     }
 }
@@ -697,11 +714,12 @@ async function collectFilesFromDataTransfer(dataTransfer) {
     if (fsEntries.length === 0) {
         return { entries: plainFilesFromDataTransfer(dataTransfer), skipped: [] }
     }
+    const plainByName = new Map(Array.from(dataTransfer.files).map(f => [f.name, f]))
     const out = []
     const skipped = []
     for (const entry of fsEntries) {
         try {
-            await collectFilesFromEntry(entry, out, skipped)
+            await collectFilesFromEntry(entry, out, skipped, plainByName)
         } catch (err) {
             skipped.push(`${entry.fullPath || entry.name} (${describeDropError(err)})`)
             console.warn(`"${entry.fullPath || entry.name}" 항목을 읽지 못해 건너뜁니다.`, err)
