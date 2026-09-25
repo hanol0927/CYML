@@ -31,15 +31,18 @@ async function connect() {
 
     setStoredSecret(KEY_KEY, key, $('keyPersist').checked)
 
-    $('connectStatus').textContent = '확인하는 중..'
+    const status = $('connectStatus')
+    status.className = 'hint'
+    status.textContent = '확인하는 중..'
     $('serverCards').innerHTML = ''
+    $('connectBtn').disabled = true
     try {
         const auth = await WorkerAPI.getWhitelistAuth(workerBaseUrl, key)
         const { distribution } = await WorkerAPI.getDistribution(workerBaseUrl)
         const servers = (distribution.servers || []).filter(s => auth.serverIds.includes(s.id))
 
-        $('connectStatus').textContent =
-            `연결됨 (${auth.label || '이름 없는 키'}) — 편집 가능한 서버 ${servers.length}개`
+        status.className = 'ok'
+        status.textContent = `연결됨 (${auth.label || '이름 없는 키'}) — 편집 가능한 서버 ${servers.length}개`
 
         if (servers.length === 0) {
             $('serverCards').innerHTML = '<p class="hint">이 키에 권한이 부여된 서버가 없습니다. 발급한 관리자에게 문의하세요.</p>'
@@ -51,7 +54,10 @@ async function connect() {
         }
     } catch (err) {
         console.error(err)
-        $('connectStatus').textContent = `연결 실패: ${err.message}`
+        status.className = 'error'
+        status.textContent = `연결 실패: ${err.message}`
+    } finally {
+        $('connectBtn').disabled = false
     }
 }
 
