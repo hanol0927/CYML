@@ -397,7 +397,6 @@ function resetFormForNewServer() {
     $('serverId').disabled = false
     $('serverAutoconnect').checked = false
     $('serverMainServer').checked = false
-    $('whitelistTextarea').value = ''
     $('backgroundCurrentUrl').value = ''
     $('backgroundPreview').style.display = 'none'
     state.backgroundFile = null
@@ -433,7 +432,6 @@ function loadServerIntoForm(serverId) {
     $('serverMcVersion').value = serv.minecraftVersion || ''
     $('serverAutoconnect').checked = !!serv.autoconnect
     $('serverMainServer').checked = !!serv.mainServer
-    $('whitelistTextarea').value = (serv.whitelist || []).join('\n')
     state.backgroundFile = null
     $('backgroundCurrentUrl').value = serv.background || ''
     if (serv.background) {
@@ -639,20 +637,29 @@ function readEntryFile(entry) {
     return new Promise((resolve, reject) => entry.file(resolve, reject))
 }
 
-async function collectFilesFromEntry(entry, out) {
+// 개별 파일/폴더 읽기 실패(잠긴 파일, OneDrive "온라인 전용" 플레이스홀더 등)를
+// 콘솔 경고로만 남기면 사용자 눈에는 그냥 "드래그해도 아무 반응 없음"으로만 보인다
+// (실제로 겪은 제보). skipped에 실패한 이름을 모아서 드롭존 옆에 눈에 띄게 표시한다.
+async function collectFilesFromEntry(entry, out, skipped) {
     if (entry.isFile) {
-        const file = await readEntryFile(entry)
-        out.push({ file, relativePath: entry.fullPath.replace(/^\//, '') })
+        try {
+            const file = await readEntryFile(entry)
+            out.push({ file, relativePath: entry.fullPath.replace(/^\//, '') })
+        } catch (err) {
+            skipped.push(entry.fullPath || entry.name)
+            console.warn(`"${entry.fullPath || entry.name}" 파일을 읽지 못해 건너뜁니다.`, err)
+        }
     } else if (entry.isDirectory) {
-        const entries = await readAllDirectoryEntries(entry.createReader())
+        let entries
+        try {
+            entries = await readAllDirectoryEntries(entry.createReader())
+        } catch (err) {
+            skipped.push(entry.fullPath || entry.name)
+            console.warn(`"${entry.fullPath || entry.name}" 폴더를 읽지 못해 건너뜁니다.`, err)
+            return
+        }
         for (const child of entries) {
-            // 폴더 안 파일 하나가 읽기 실패해도(잠긴 파일, OneDrive 온라인 전용 파일 등)
-            // 나머지 파일은 정상적으로 계속 수집되도록 개별적으로 예외를 잡는다.
-            try {
-                await collectFilesFromEntry(child, out)
-            } catch (err) {
-                console.warn(`"${child.fullPath || child.name}" 항목을 읽지 못해 건너뜁니다.`, err)
-            }
+            await collectFilesFromEntry(child, out, skipped)
         }
     }
 }
@@ -661,36 +668,44 @@ function plainFilesFromDataTransfer(dataTransfer) {
     return Array.from(dataTransfer.files).map(file => ({ file, relativePath: file.name }))
 }
 
+// { entries, skipped } 형태로 반환한다 — skipped는 읽기 실패한 파일/폴더 이름 목록
+// (호출자가 드롭존 옆에 표시해서 "반응 없음"처럼 보이지 않게 한다).
 async function collectFilesFromDataTransfer(dataTransfer) {
     const items = dataTransfer.items
     if (items == null || items.length === 0) {
-        return plainFilesFromDataTransfer(dataTransfer)
+        return { entries: plainFilesFromDataTransfer(dataTransfer), skipped: [] }
     }
-    const entries = []
+    const fsEntries = []
     for (const item of items) {
         // webkitGetAsEntry()는 특정 드래그 항목(잠긴 파일, 일부 클라우드 동기화
         // 플레이스홀더 등)에서 예외를 던지는 경우가 있다. map()으로 한 번에 처리하면
         // 항목 하나의 예외가 전체 드롭을 조용히 무효화시키므로 항목별로 감싼다.
         try {
             const entry = typeof item.webkitGetAsEntry === 'function' ? item.webkitGetAsEntry() : null
-            if (entry != null) entries.push(entry)
+            if (entry != null) fsEntries.push(entry)
         } catch (err) {
             console.warn('드래그한 항목 하나를 인식하지 못해 건너뜁니다.', err)
         }
     }
-    if (entries.length === 0) {
-        return plainFilesFromDataTransfer(dataTransfer)
+    if (fsEntries.length === 0) {
+        return { entries: plainFilesFromDataTransfer(dataTransfer), skipped: [] }
     }
     const out = []
-    for (const entry of entries) {
+    const skipped = []
+    for (const entry of fsEntries) {
         try {
-            await collectFilesFromEntry(entry, out)
+            await collectFilesFromEntry(entry, out, skipped)
         } catch (err) {
+            skipped.push(entry.fullPath || entry.name)
             console.warn(`"${entry.fullPath || entry.name}" 항목을 읽지 못해 건너뜁니다.`, err)
         }
     }
-    // 폴더 탐색 결과가 전부 비어버렸다면(전 항목 실패 등) 최소한 평범한 파일 목록으로라도 폴백한다.
-    return out.length > 0 ? out : plainFilesFromDataTransfer(dataTransfer)
+    if (out.length === 0 && skipped.length === 0) {
+        // 엔트리 인식 자체는 됐지만 결과적으로 아무것도 못 얻은 경우(예: 빈 폴더) —
+        // 최소한 평범한 파일 목록으로라도 폴백한다.
+        return { entries: plainFilesFromDataTransfer(dataTransfer), skipped: [] }
+    }
+    return { entries: out, skipped }
 }
 
 function entriesFromFolderInput(fileList) {
@@ -702,7 +717,7 @@ function entriesFromPlainInput(fileList) {
     return Array.from(fileList).map(file => ({ file, relativePath: file.name }))
 }
 
-function setupFolderAwareDropzone(zoneId, inputId, folderInputId, folderBtnId, onEntries) {
+function setupFolderAwareDropzone(zoneId, inputId, folderInputId, folderBtnId, onEntries, onSkipped) {
     const zone = $(zoneId)
     const input = $(inputId)
     const folderInput = $(folderInputId)
@@ -714,14 +729,17 @@ function setupFolderAwareDropzone(zoneId, inputId, folderInputId, folderBtnId, o
         e.preventDefault()
         zone.classList.remove('dragover')
         const dataTransfer = e.dataTransfer
+        let result
         try {
-            onEntries(await collectFilesFromDataTransfer(dataTransfer))
+            result = await collectFilesFromDataTransfer(dataTransfer)
         } catch (err) {
             // 예상 못한 오류로 폴더 탐색 자체가 실패해도 드롭이 완전히 무반응으로
             // 보이지 않도록, 최소한 평범한 파일 목록으로라도 폴백한다.
             console.warn('드래그된 파일을 처리하는 중 오류가 발생해 일반 파일 목록으로 대체합니다.', err)
-            onEntries(plainFilesFromDataTransfer(dataTransfer))
+            result = { entries: plainFilesFromDataTransfer(dataTransfer), skipped: [] }
         }
+        onEntries(result.entries)
+        if (onSkipped) onSkipped(result.skipped)
     })
     input.addEventListener('change', () => {
         onEntries(entriesFromPlainInput(input.files))
@@ -790,6 +808,17 @@ function renderNewMods() {
     $('modsWarning').textContent = state.newMods.some(m => m.file.size > LARGE_FILE_NOTICE_BYTES)
         ? '2GB가 넘는 파일이 있습니다. 자동으로 여러 조각으로 나눠 업로드하지만(멀티파트) 네트워크 상황에 따라 시간이 오래 걸릴 수 있습니다.'
         : ''
+}
+
+function showDropSkippedWarning(warningElId, skipped) {
+    const el = $(warningElId)
+    if (!skipped || skipped.length === 0) {
+        el.textContent = ''
+        return
+    }
+    el.textContent =
+        `${skipped.length}개 항목을 읽지 못해 건너뛰었습니다: ${skipped.join(', ')} ` +
+        '(잠긴 파일이거나 OneDrive 등 클라우드 동기화의 "온라인 전용" 플레이스홀더 파일일 수 있습니다 — 파일을 완전히 내려받은 뒤 다시 시도하세요.)'
 }
 
 function addConfigEntries(entries, section) {
@@ -1162,9 +1191,6 @@ async function deploy() {
         const { distribution, etag } = await fetchDistribution()
         distribution.servers = distribution.servers || []
 
-        const whitelist = $('whitelistTextarea').value
-            .split('\n').map(s => s.trim()).filter(s => s.length > 0)
-
         const manualJava = $('javaOptionsManual').checked
         const javaOptions = manualJava
             ? { supported: $('javaSupported').value.trim(), suggestedMajor: parseInt($('javaSuggestedMajor').value, 10) }
@@ -1204,7 +1230,9 @@ async function deploy() {
             autoconnect: $('serverAutoconnect').checked,
             mainServer: $('serverMainServer').checked || undefined,
             modules,
-            whitelist: whitelist.length > 0 ? whitelist : undefined,
+            // whitelist는 여기서 절대 건드리지 않는다 — whitelist.html의 위임 키로만 편집되며,
+            // existingServer에서 그대로 spread되어 유지된다. 여기서 값을 설정하면(빈 배열이든
+            // undefined든) 위임 키로 설정해둔 화이트리스트가 배포할 때마다 덮어써진다.
             background: backgroundUrl,
             onceFiles: mergedOnceFiles.length > 0 ? mergedOnceFiles : undefined
         })
@@ -1322,9 +1350,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setupDropzone('modsDropzone', 'modsFileInput', addModFiles)
     setupFolderAwareDropzone('configsDropzone', 'configsFileInput', 'configsFolderInput', 'configsFolderBtn',
-        entries => addConfigEntries(entries, 'config'))
+        entries => addConfigEntries(entries, 'config'),
+        skipped => showDropSkippedWarning('configsDropWarning', skipped))
     setupFolderAwareDropzone('rootFilesDropzone', 'rootFilesFileInput', 'rootFilesFolderInput', 'rootFilesFolderBtn',
-        entries => addConfigEntries(entries, 'root'))
+        entries => addConfigEntries(entries, 'root'),
+        skipped => showDropSkippedWarning('rootFilesDropWarning', skipped))
     setupDropzone('backgroundDropzone', 'backgroundFileInput', addBackgroundFile)
     setupDropzone('iconDropzone', 'iconFileInput', addIconFile)
 

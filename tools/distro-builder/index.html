@@ -124,9 +124,11 @@
 
 <h1>distribution.json 관리 도구</h1>
 <p class="hint">
-    서버 정보 / 모드 / 설정파일 / 배경화면 / 화이트리스트를 입력하고 배포하면
+    서버 정보 / 모드 / 설정파일 / 배경화면을 입력하고 배포하면
     Cloudflare Worker(R2)에 자동으로 업로드됩니다. 처음 쓴다면 <a href="README.md">README</a>를 먼저 읽어주세요.
     이 도구는 정적 페이지이며 별도 백엔드가 없습니다 — 업로드 시크릿은 이 브라우저에만 저장됩니다.
+    화이트리스트는 여기서 직접 편집하지 않습니다 — "1-2. 화이트리스트 키 관리"에서 발급한 키로
+    <a href="whitelist.html">whitelist.html</a>에서만 편집합니다(여기서 같이 편집하게 하면 서로 덮어쓸 수 있어서 분리함).
 </p>
 
 <section class="panel">
@@ -313,13 +315,7 @@
 </section>
 
 <section class="panel">
-    <h2>5. 화이트리스트 (런처 UI에서만 적용, 마인크래프트 서버 접속 자체는 막지 않음)</h2>
-    <p class="hint">한 줄에 닉네임 하나씩. 비워두면 전체 허용.</p>
-    <textarea id="whitelistTextarea" placeholder="닉네임1&#10;닉네임2"></textarea>
-</section>
-
-<section class="panel">
-    <h2>6. 배경화면</h2>
+    <h2>5. 배경화면</h2>
     <p class="hint">이 서버가 선택됐을 때 런처 배경으로 쓸 이미지. 재배포 없이 다음 재시작/재접속 시 반영됩니다.</p>
     <input type="text" id="backgroundCurrentUrl" placeholder="현재 배경 URL (없으면 비어있음)" readonly>
     <div id="backgroundDropzone" class="dropzone" style="margin-top:8px;">클릭하거나 이미지 파일을 여기로 드래그하세요</div>
@@ -328,7 +324,7 @@
 </section>
 
 <section class="panel">
-    <h2>7. 모드 파일</h2>
+    <h2>6. 모드 파일</h2>
     <div id="modsDropzone" class="dropzone">클릭하거나 mod jar 파일을 여기로 드래그하세요</div>
     <input type="file" id="modsFileInput" multiple accept=".jar" style="display:none;">
     <p id="modsWarning" class="warning"></p>
@@ -336,10 +332,11 @@
 </section>
 
 <section class="panel">
-    <h2>8. 설정 파일 (config)</h2>
+    <h2>7. 설정 파일 (config)</h2>
     <div id="configsDropzone" class="dropzone">클릭하거나 설정 파일/폴더를 여기로 드래그하세요</div>
     <input type="file" id="configsFileInput" multiple style="display:none;">
     <input type="file" id="configsFolderInput" webkitdirectory multiple style="display:none;">
+    <p id="configsDropWarning" class="warning"></p>
     <p><button type="button" id="configsFolderBtn" class="secondary">폴더 선택</button></p>
     <p class="hint">저장 경로는 config/ 아래 상대 경로 기준이며, 각 파일마다 직접 수정할 수 있습니다. 폴더째 올리면(드래그하거나 "폴더 선택") 폴더 안의 하위 폴더/파일 구조가 그대로 경로에 반영됩니다 — 예: test 폴더 안에 test1~test4 파일이 있으면 config/test/test1 ~ config/test/test4로 자동으로 잡힙니다. 폴더 안에 폴더가 있어도 그대로 재귀적으로 반영됩니다.<br>
     "매번 강제 적용"을 체크 안 하면(기본값) 플레이어 폴더에 파일이 이미 있을 때 절대 덮어쓰지 않습니다 — options.txt, iris.properties처럼 플레이어가 직접 바꾸는 설정에 적합합니다. 체크하면 매 실행마다 이 파일로 강제로 되돌립니다.</p>
@@ -347,23 +344,24 @@
 </section>
 
 <section class="panel">
-    <h2>8-1. 루트 파일 (config/ 없이, instances/&lt;서버id&gt; 바로 아래)</h2>
+    <h2>7-1. 루트 파일 (config/ 없이, instances/&lt;서버id&gt; 바로 아래)</h2>
     <p class="hint">config/ 접두사 없이 instances/&lt;서버id&gt; 바로 아래에 그대로 저장할 파일입니다. 위 설정 파일 칸과 마찬가지로 폴더째 올리면 폴더 구조가 그대로 경로에 반영되고, 각 파일 경로는 직접 수정할 수 있습니다.</p>
     <div id="rootFilesDropzone" class="dropzone">클릭하거나 파일/폴더를 여기로 드래그하세요</div>
     <input type="file" id="rootFilesFileInput" multiple style="display:none;">
     <input type="file" id="rootFilesFolderInput" webkitdirectory multiple style="display:none;">
+    <p id="rootFilesDropWarning" class="warning"></p>
     <p><button type="button" id="rootFilesFolderBtn" class="secondary">폴더 선택</button></p>
     <div id="rootFilesList"></div>
 </section>
 
 <section class="panel">
-    <h2>9. 기존 모듈 (수정 중인 서버에만 표시)</h2>
+    <h2>8. 기존 모듈 (수정 중인 서버에만 표시)</h2>
     <p class="hint">직접 추가했던 모드/설정 파일을 체크해서 지울 수 있습니다. "최초 1회 적용" 방식으로 올린 설정 파일(onceFiles)도 여기서 지울 수 있습니다. 로더/라이브러리 핵심 모듈은 실수로 지우지 못하도록 이 목록에서 삭제가 막혀 있습니다. 체크 후 배포하면 distribution.json 참조만 지워지고, R2에 남은 실제 파일은 지워지지 않습니다.</p>
     <div id="existingModulesList"><p class="hint">새 서버입니다.</p></div>
 </section>
 
 <section class="panel">
-    <h2>10. 배포</h2>
+    <h2>9. 배포</h2>
     <button id="deployBtn">Worker에 배포</button>
     <div id="deployLog" style="margin-top:12px;"></div>
 </section>
