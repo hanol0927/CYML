@@ -1,9 +1,10 @@
 'use strict'
 /* global WorkerAPI */
 
-const DEFAULT_WORKER_BASE_URL = 'https://cyml-distro-worker.chaenna02.workers.dev'
+// 이 페이지를 받는 사람에게는 Worker URL을 UI에 노출하지 않는다 — 화면엔 키 입력칸만
+// 보이고, 실제 호출은 이 상수를 그대로 쓴다. (개발자도구 네트워크 탭까지는 숨길 수 없음.)
+const WORKER_BASE_URL = 'https://cyml-distro-worker.chaenna02.workers.dev'
 
-const WORKER_URL_KEY = 'whitelistApp.workerBaseUrl'
 const KEY_KEY = 'whitelistApp.key'
 
 const $ = id => document.getElementById(id)
@@ -20,19 +21,14 @@ function setStoredSecret(key, value, persist) {
     }
 }
 
-function currentWorkerBaseUrl() {
-    return $('workerBaseUrl').value.trim().replace(/\/$/, '') || DEFAULT_WORKER_BASE_URL
-}
-
 async function connect() {
-    const workerBaseUrl = currentWorkerBaseUrl()
+    const workerBaseUrl = WORKER_BASE_URL
     const key = $('whitelistKey').value.trim()
     if (!key) {
         alert('화이트리스트 키를 입력하세요.')
         return
     }
 
-    localStorage.setItem(WORKER_URL_KEY, workerBaseUrl)
     setStoredSecret(KEY_KEY, key, $('keyPersist').checked)
 
     $('connectStatus').textContent = '확인하는 중..'
@@ -107,7 +103,6 @@ function buildServerCard(workerBaseUrl, key, serv) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    $('workerBaseUrl').value = localStorage.getItem(WORKER_URL_KEY) || DEFAULT_WORKER_BASE_URL
     $('whitelistKey').value = getStoredSecret(KEY_KEY)
     $('keyPersist').checked = !!localStorage.getItem(KEY_KEY)
 
