@@ -160,70 +160,24 @@ function syncModConfigurations(data){
         const id = serv.rawServer.id
         const mdls = serv.modules
         const cfg = ConfigManager.getModConfiguration(id)
+        const modsOld = cfg != null ? cfg.mods : {}
 
-        if(cfg != null){
+        const mods = {}
 
-            const modsOld = cfg.mods
-            const mods = {}
+        for(let mdl of mdls){
+            const type = mdl.rawModule.type
 
-            for(let mdl of mdls){
-                const type = mdl.rawModule.type
-
-                if(type === Type.ForgeMod || type === Type.LiteMod || type === Type.LiteLoader || type === Type.FabricMod){
-                    if(!mdl.getRequired().value){
-                        const mdlID = mdl.getVersionlessMavenIdentifier()
-                        if(modsOld[mdlID] == null){
-                            mods[mdlID] = scanOptionalSubModules(mdl.subModules, mdl)
-                        } else {
-                            mods[mdlID] = mergeModConfiguration(modsOld[mdlID], scanOptionalSubModules(mdl.subModules, mdl), false)
-                        }
-                    } else {
-                        if(mdl.subModules.length > 0){
-                            const mdlID = mdl.getVersionlessMavenIdentifier()
-                            const v = scanOptionalSubModules(mdl.subModules, mdl)
-                            if(typeof v === 'object'){
-                                if(modsOld[mdlID] == null){
-                                    mods[mdlID] = v
-                                } else {
-                                    mods[mdlID] = mergeModConfiguration(modsOld[mdlID], v, true)
-                                }
-                            }
-                        }
-                    }
-                }
+            if(type === Type.ForgeMod || type === Type.LiteMod || type === Type.LiteLoader || type === Type.FabricMod){
+                const mdlID = mdl.getVersionlessMavenIdentifier()
+                const fresh = scanModules(mdl.subModules, mdl)
+                mods[mdlID] = modsOld[mdlID] == null ? fresh : mergeModConfiguration(modsOld[mdlID], fresh)
             }
-
-            syncedCfgs.push({
-                id,
-                mods
-            })
-
-        } else {
-
-            const mods = {}
-
-            for(let mdl of mdls){
-                const type = mdl.rawModule.type
-                if(type === Type.ForgeMod || type === Type.LiteMod || type === Type.LiteLoader || type === Type.FabricMod){
-                    if(!mdl.getRequired().value){
-                        mods[mdl.getVersionlessMavenIdentifier()] = scanOptionalSubModules(mdl.subModules, mdl)
-                    } else {
-                        if(mdl.subModules.length > 0){
-                            const v = scanOptionalSubModules(mdl.subModules, mdl)
-                            if(typeof v === 'object'){
-                                mods[mdl.getVersionlessMavenIdentifier()] = v
-                            }
-                        }
-                    }
-                }
-            }
-
-            syncedCfgs.push({
-                id,
-                mods
-            })
-
         }
+
+        syncedCfgs.push({
+            id,
+            mods
+        })
     }
 
     ConfigManager.setModConfigurations(syncedCfgs)
@@ -246,42 +200,31 @@ function ensureJavaSettings(data) {
 }
 
 /**
- * Recursively scan for optional sub modules. If none are found,
- * this function returns a boolean. If optional sub modules do exist,
- * a recursive configuration object is returned.
- * 
+ * Recursively scan modules to build a mod configuration entry. Every
+ * Forge/Fabric/LiteMod/LiteLoader module gets a configuration entry,
+ * regardless of the distro's required flag, so that the user's choice
+ * to enable/disable it (even a "required" mod) can be persisted. If no
+ * sub modules are found, this function returns a boolean. Otherwise, a
+ * recursive configuration object is returned.
+ *
  * @returns {boolean | Object} The resolved mod configuration.
  */
-function scanOptionalSubModules(mdls, origin){
+function scanModules(mdls, origin){
     if(mdls != null){
         const mods = {}
 
         for(let mdl of mdls){
             const type = mdl.rawModule.type
-            // Optional types.
             if(type === Type.ForgeMod || type === Type.LiteMod || type === Type.LiteLoader || type === Type.FabricMod){
-                // It is optional.
-                if(!mdl.getRequired().value){
-                    mods[mdl.getVersionlessMavenIdentifier()] = scanOptionalSubModules(mdl.subModules, mdl)
-                } else {
-                    if(mdl.hasSubModules()){
-                        const v = scanOptionalSubModules(mdl.subModules, mdl)
-                        if(typeof v === 'object'){
-                            mods[mdl.getVersionlessMavenIdentifier()] = v
-                        }
-                    }
-                }
+                mods[mdl.getVersionlessMavenIdentifier()] = scanModules(mdl.subModules, mdl)
             }
         }
 
         if(Object.keys(mods).length > 0){
-            const ret = {
+            return {
+                value: origin.getRequired().def,
                 mods
             }
-            if(!origin.getRequired().value){
-                ret.value = origin.getRequired().def
-            }
-            return ret
         }
     }
     return origin.getRequired().def
@@ -289,28 +232,26 @@ function scanOptionalSubModules(mdls, origin){
 
 /**
  * Recursively merge an old configuration into a new configuration.
- * 
+ * The old enabled/disabled choice is always preserved, including for
+ * mods the distro marks as required, so the user's override survives
+ * a distro resync.
+ *
  * @param {boolean | Object} o The old configuration value.
  * @param {boolean | Object} n The new configuration value.
- * @param {boolean} nReq If the new value is a required mod.
- * 
+ *
  * @returns {boolean | Object} The merged configuration.
  */
-function mergeModConfiguration(o, n, nReq = false){
+function mergeModConfiguration(o, n){
     if(typeof o === 'boolean'){
         if(typeof n === 'boolean') return o
         else if(typeof n === 'object'){
-            if(!nReq){
-                n.value = o
-            }
+            n.value = o
             return n
         }
     } else if(typeof o === 'object'){
         if(typeof n === 'boolean') return typeof o.value !== 'undefined' ? o.value : true
         else if(typeof n === 'object'){
-            if(!nReq){
-                n.value = typeof o.value !== 'undefined' ? o.value : true
-            }
+            n.value = typeof o.value !== 'undefined' ? o.value : true
 
             const newMods = Object.keys(n.mods)
             for(let i=0; i<newMods.length; i++){

@@ -1767,12 +1767,6 @@ input:checked + .toggleSwitchSlider:before {
     font-size: 10px;
 }
 
-/* Disabled toggleswitch for required mods. */
-.toggleSwitch[reqmod] {
-    filter: grayscale(49%) brightness(60%);
-    pointer-events: none;
-}
-
 /* Set the status color of an enabled mod. */
 .settingsBaseMod[enabled] > .settingsModContent > .settingsModMainWrapper > .settingsModStatus {
     background-color: rgb(165, 195, 37);
