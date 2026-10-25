@@ -74,6 +74,24 @@ Global settings for [Discord Rich Presence](https://discordapp.com/developers/do
 
 A URL to a RSS feed. Used for loading news.
 
+### `DistroIndex.news: NewsEntry[]`
+
+**OPTIONAL**
+
+A list of manually-posted news entries, global to the whole index (not tied to any single
+server). Intended to be managed through `tools/distro-builder/index.html`'s news panel rather
+than edited by hand. If both `rss` and `news` are provided, the launcher merges both lists and
+sorts them by date, newest first.
+
+**Properties**
+
+* `NewsEntry.id: string` - Unique id for the entry (used to delete it later).
+* `NewsEntry.title: string` - Title shown on the UI.
+* `NewsEntry.content: string` - Body text. Plain text with line breaks; not parsed as HTML.
+* `NewsEntry.author: string` - **OPTIONAL** Author name shown on the UI.
+* `NewsEntry.link: string/url` - **OPTIONAL** URL used for the "view more"/comments link.
+* `NewsEntry.date: string/ISO-8601` - Timestamp used for sorting and "is this new" comparisons.
+
 ---
 
 ## Server Object

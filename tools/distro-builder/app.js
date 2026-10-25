@@ -192,6 +192,8 @@ async function refreshServerPicker() {
         }
         $('serverLoadStatus').textContent = `distribution.json 불러옴 (서버 ${distribution.servers.length}개)`
         renderWlKeyServerCheckboxes()
+        renderNewsList()
+        renderServerOrderList()
     } catch (err) {
         console.error(err)
         $('serverLoadStatus').textContent = `불러오기 실패: ${err.message}`
@@ -300,6 +302,208 @@ async function refreshWlKeyList() {
     } catch (err) {
         console.error(err)
         container.textContent = `불러오기 실패: ${err.message}`
+    }
+}
+
+// ---- 뉴스 관리 (전체 공통, distribution.json 최상위 news[]) ----
+
+function renderNewsList() {
+    const container = $('newsList')
+    const items = (state.distribution && Array.isArray(state.distribution.news)) ? state.distribution.news : []
+    if (items.length === 0) {
+        container.className = 'hint'
+        container.textContent = '등록된 뉴스가 없습니다.'
+        return
+    }
+    container.className = ''
+    container.innerHTML = ''
+    const sorted = [...items].sort((a, b) => new Date(b.date) - new Date(a.date))
+    for (const n of sorted) {
+        const row = document.createElement('div')
+        row.className = 'keyRow'
+        const meta = document.createElement('div')
+        meta.className = 'keyMeta'
+        meta.textContent = `${n.title} — ${n.author || '(작성자 없음)'} · ${new Date(n.date).toLocaleString()}`
+        const delBtn = document.createElement('button')
+        delBtn.className = 'removeBtn'
+        delBtn.textContent = '삭제'
+        delBtn.addEventListener('click', () => deleteNewsItem(n.id, delBtn))
+        row.appendChild(meta)
+        row.appendChild(delBtn)
+        container.appendChild(row)
+    }
+}
+
+async function createNewsItem() {
+    const { workerBaseUrl, uploadSecret } = currentSettings()
+    if (!workerBaseUrl || !uploadSecret) {
+        alert('먼저 Worker 기본 URL과 업로드 시크릿을 입력하고 저장하세요.')
+        return
+    }
+    const title = $('newsTitle').value.trim()
+    const content = $('newsContentInput').value.trim()
+    if (!title || !content) {
+        alert('제목과 본문을 입력하세요.')
+        return
+    }
+    const author = $('newsAuthor').value.trim()
+    const link = $('newsLink').value.trim()
+
+    $('newsCreateBtn').disabled = true
+    $('newsCreateStatus').textContent = '등록하는 중..'
+    try {
+        // 배포(deploy)와 마찬가지로, 올리기 직전에 다시 불러와서 그 사이 다른 곳에서
+        // 바뀐 내용(ETag)과 충돌하지 않게 한다.
+        const { distribution, etag } = await fetchDistribution()
+        distribution.news = Array.isArray(distribution.news) ? distribution.news : []
+        distribution.news.push({
+            id: `news_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+            title,
+            author: author || undefined,
+            link: link || undefined,
+            content,
+            date: new Date().toISOString()
+        })
+        distribution.version = bumpVersion(distribution.version)
+        await WorkerAPI.putDistribution(workerBaseUrl, uploadSecret, distribution, etag)
+
+        state.distribution = distribution
+        $('newsTitle').value = ''
+        $('newsAuthor').value = ''
+        $('newsLink').value = ''
+        $('newsContentInput').value = ''
+        $('newsCreateStatus').textContent = '등록 완료'
+        renderNewsList()
+    } catch (err) {
+        console.error(err)
+        $('newsCreateStatus').textContent = `등록 실패: ${err.message}`
+        if (err.status === 412) {
+            $('newsCreateStatus').textContent += ' (distribution.json이 그 사이 변경됨 — 다시 시도하세요)'
+        }
+    } finally {
+        $('newsCreateBtn').disabled = false
+    }
+}
+
+async function deleteNewsItem(id, btn) {
+    const { workerBaseUrl, uploadSecret } = currentSettings()
+    if (!workerBaseUrl || !uploadSecret) {
+        alert('먼저 Worker 기본 URL과 업로드 시크릿을 입력하고 저장하세요.')
+        return
+    }
+    if (!confirm('이 뉴스를 삭제할까요? 되돌릴 수 없습니다.')) return
+    btn.disabled = true
+    try {
+        const { distribution, etag } = await fetchDistribution()
+        distribution.news = (distribution.news || []).filter(n => n.id !== id)
+        distribution.version = bumpVersion(distribution.version)
+        await WorkerAPI.putDistribution(workerBaseUrl, uploadSecret, distribution, etag)
+        state.distribution = distribution
+        renderNewsList()
+    } catch (err) {
+        console.error(err)
+        alert(`삭제 실패: ${err.message}${err.status === 412 ? ' (distribution.json이 그 사이 변경됨 — 새로고침 후 다시 시도하세요)' : ''}`)
+        btn.disabled = false
+    }
+}
+
+// ---- 서버 목록 순서 (distribution.json의 servers[] 배열 순서 = 런처 표시 순서) ----
+
+function renderServerOrderList() {
+    const container = $('serverOrderList')
+    const servers = (state.distribution && state.distribution.servers) || []
+    if (servers.length === 0) {
+        container.className = 'hint'
+        container.textContent = '서버 목록 없음 — 먼저 distribution.json을 불러오세요.'
+        return
+    }
+    container.className = ''
+    container.innerHTML = ''
+    servers.forEach((serv, idx) => {
+        const row = document.createElement('div')
+        row.className = 'keyRow'
+        const meta = document.createElement('div')
+        meta.className = 'keyMeta'
+        meta.textContent = `${idx + 1}. ${serv.name} (${serv.id})`
+        const btnWrap = document.createElement('div')
+        const upBtn = document.createElement('button')
+        upBtn.className = 'secondary'
+        upBtn.textContent = '▲'
+        upBtn.disabled = idx === 0
+        upBtn.addEventListener('click', () => moveServerOrder(idx, -1))
+        const downBtn = document.createElement('button')
+        downBtn.className = 'secondary'
+        downBtn.textContent = '▼'
+        downBtn.style.marginLeft = '4px'
+        downBtn.disabled = idx === servers.length - 1
+        downBtn.addEventListener('click', () => moveServerOrder(idx, 1))
+        btnWrap.appendChild(upBtn)
+        btnWrap.appendChild(downBtn)
+        row.appendChild(meta)
+        row.appendChild(btnWrap)
+        container.appendChild(row)
+    })
+}
+
+function moveServerOrder(idx, dir) {
+    const servers = state.distribution.servers
+    const target = idx + dir
+    if (target < 0 || target >= servers.length) return
+    ;[servers[idx], servers[target]] = [servers[target], servers[idx]]
+    renderServerOrderList()
+    $('serverOrderStatus').textContent = '순서가 바뀌었습니다 — "순서 저장"을 눌러야 실제로 반영됩니다.'
+}
+
+/**
+ * 지금 화면에 보이는 순서(서버 id 기준)를 그대로 다시 불러온 최신 distribution.json에
+ * 적용해서 저장한다. 그 사이 다른 곳에서 서버가 추가/삭제됐다면: 삭제된 건 자연히
+ * 빠지고, 새로 추가된 건 화면에 없던 서버이므로 맨 뒤에 그대로 유지한다.
+ */
+async function saveServerOrder() {
+    const { workerBaseUrl, uploadSecret } = currentSettings()
+    if (!workerBaseUrl || !uploadSecret) {
+        alert('먼저 Worker 기본 URL과 업로드 시크릿을 입력하고 저장하세요.')
+        return
+    }
+    if (state.distribution == null || !Array.isArray(state.distribution.servers) || state.distribution.servers.length === 0) {
+        alert('먼저 distribution.json을 불러오세요.')
+        return
+    }
+    const desiredOrder = state.distribution.servers.map(s => s.id)
+
+    $('serverOrderSaveBtn').disabled = true
+    $('serverOrderStatus').textContent = '저장하는 중..'
+    try {
+        const { distribution, etag } = await fetchDistribution()
+        distribution.servers = distribution.servers || []
+        const byId = new Map(distribution.servers.map(s => [s.id, s]))
+        const reordered = []
+        for (const id of desiredOrder) {
+            const s = byId.get(id)
+            if (s) {
+                reordered.push(s)
+                byId.delete(id)
+            }
+        }
+        // 화면에 없던(그 사이 새로 추가된) 서버는 원래 순서 그대로 뒤에 붙인다.
+        for (const s of distribution.servers) {
+            if (byId.has(s.id)) reordered.push(s)
+        }
+        distribution.servers = reordered
+        distribution.version = bumpVersion(distribution.version)
+        await WorkerAPI.putDistribution(workerBaseUrl, uploadSecret, distribution, etag)
+
+        state.distribution = distribution
+        $('serverOrderStatus').textContent = '순서를 저장했습니다.'
+        renderServerOrderList()
+    } catch (err) {
+        console.error(err)
+        $('serverOrderStatus').textContent = `저장 실패: ${err.message}`
+        if (err.status === 412) {
+            $('serverOrderStatus').textContent += ' (distribution.json이 그 사이 변경됨 — 새로고침 후 다시 시도하세요)'
+        }
+    } finally {
+        $('serverOrderSaveBtn').disabled = false
     }
 }
 
@@ -1388,6 +1592,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $('wlKeyCreateBtn').addEventListener('click', createWlKey)
     $('wlKeyListRefreshBtn').addEventListener('click', refreshWlKeyList)
+
+    $('newsCreateBtn').addEventListener('click', createNewsItem)
+    $('newsListRefreshBtn').addEventListener('click', refreshServerPicker)
+
+    $('serverOrderSaveBtn').addEventListener('click', saveServerOrder)
 
     resetFormForNewServer()
     if (currentSettings().workerBaseUrl) {

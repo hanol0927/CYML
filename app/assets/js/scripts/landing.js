@@ -1254,7 +1254,15 @@ document.getElementById('serverListRefresh').onclick = e => {
     const btn = e.currentTarget
     btn.setAttribute('spinning', '')
     Object.keys(landingServerPing).forEach(k => { landingServerPing[k] = undefined })
-    renderLandingServerList().then(() => refreshLandingServerPings()).finally(() => {
+    // distribution.json을 원격에서 다시 받아온다 — 화이트리스트/서버 설정/아이콘/배경화면이
+    // distro-builder에서 바뀐 뒤 런처를 재시작하지 않아도 반영되도록 한다.
+    DistroAPI.refreshDistributionOrFallback().then(distro => {
+        onDistroRefresh(distro)
+        return refreshLandingServerPings()
+    }).catch(err => {
+        loggerLanding.warn('distribution.json 새로고침 실패, 기존 목록을 다시 그립니다.', err)
+        return renderLandingServerList().then(() => refreshLandingServerPings())
+    }).finally(() => {
         setTimeout(() => btn.removeAttribute('spinning'), 600)
     })
 }
@@ -1689,9 +1697,11 @@ function displayArticle(articleObject, index){
     newsArticleTitle.innerHTML = articleObject.title
     newsArticleTitle.href = articleObject.link
     newsArticleAuthor.innerHTML = 'by ' + articleObject.author
+    newsArticleAuthor.parentElement.style.display = articleObject.author ? '' : 'none'
     newsArticleDate.innerHTML = articleObject.date
     newsArticleComments.innerHTML = articleObject.comments
     newsArticleComments.href = articleObject.commentsLink
+    newsArticleComments.style.display = articleObject.comments ? '' : 'none'
     newsArticleContentScrollable.innerHTML = '<div id="newsArticleContentWrapper"><div class="newsArticleSpacerTop"></div>' + articleObject.content + '<div class="newsArticleSpacerBot"></div></div>'
     Array.from(newsArticleContentScrollable.getElementsByClassName('bbCodeSpoilerButton')).forEach(v => {
         v.onclick = () => {
@@ -1791,20 +1801,43 @@ function renderNewsPreview(state){
 }
 
 /**
+ * distribution.json 최상위 news[] 필드(서버에 종속되지 않는 전체 공통 뉴스, distro-builder의
+ * "1-3. 뉴스 관리"에서 등록/삭제)를 articleObject 배열로 변환한다. RSS 기사와 같은 모양으로
+ * 맞춰서 아래쪽 정렬/표시/신규 여부 판단 로직을 그대로 재사용할 수 있게 한다.
+ *
+ * @param {Array|undefined} newsEntries distribution.json의 news 배열.
+ * @returns {Array} articleObject 배열 (없으면 빈 배열).
+ */
+function loadCustomNews(newsEntries){
+    if(!Array.isArray(newsEntries) || newsEntries.length === 0) return []
+    return newsEntries.map(entry => {
+        const rawDate = entry.date || new Date().toISOString()
+        const date = new Date(rawDate).toLocaleDateString('ko-KR', {month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric'})
+        const link = entry.link || '#'
+        const content = escapeHTML(entry.content || '').replace(/\n/g, '<br>')
+        return {
+            link,
+            title: escapeHTML(entry.title || ''),
+            date,
+            rawDate,
+            author: escapeHTML(entry.author || ''),
+            content,
+            comments: '',
+            commentsLink: link
+        }
+    })
+}
+
+/**
  * Load news information from the RSS feed specified in the
  * distribution index.
+ *
+ * @param {string} newsFeed RSS 피드 URL.
+ * @returns {Promise.<Array|null>} articleObject 배열, 실패 시 null.
  */
-async function loadNews(){
+function loadRssNews(newsFeed){
+    return new Promise((resolve) => {
 
-    const distroData = await DistroAPI.getDistribution()
-    if(!distroData.rawDistribution.rss) {
-        loggerLanding.debug('No RSS feed provided.')
-        return null
-    }
-
-    const promise = new Promise((resolve, reject) => {
-
-        const newsFeed = distroData.rawDistribution.rss
         const newsHost = new URL(newsFeed).origin + '/'
         $.ajax({
             url: newsFeed,
@@ -1850,17 +1883,38 @@ async function loadNews(){
                         }
                     )
                 }
-                resolve({
-                    articles
-                })
+                resolve(articles)
             },
             timeout: 2500
-        }).catch(err => {
-            resolve({
-                articles: null
-            })
+        }).catch(() => {
+            resolve(null)
         })
     })
+}
 
-    return await promise
+/**
+ * 뉴스 정보를 불러온다. distribution.json의 news[](서버에 종속되지 않는 전체 공통,
+ * distro-builder에서 등록/삭제) + rss(기존 RSS 피드) 둘 다 있으면 합쳐서 최신순으로 보여준다.
+ */
+async function loadNews(){
+
+    const distroData = await DistroAPI.getDistribution()
+    const customArticles = loadCustomNews(distroData.rawDistribution.news)
+
+    const newsFeed = distroData.rawDistribution.rss
+    if(!newsFeed){
+        loggerLanding.debug('No RSS feed provided.')
+        return customArticles.length > 0 ? { articles: customArticles } : { articles: null }
+    }
+
+    const rssArticles = await loadRssNews(newsFeed)
+
+    if(rssArticles == null && customArticles.length === 0){
+        return { articles: null }
+    }
+
+    const articles = [...customArticles, ...(rssArticles || [])]
+        .sort((a, b) => new Date(b.rawDate) - new Date(a.rawDate))
+
+    return { articles }
 }
