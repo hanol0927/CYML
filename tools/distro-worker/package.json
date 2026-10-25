@@ -1,0 +1,14 @@
+{
+  "name": "cyml-distro-worker",
+  "private": true,
+  "version": "1.0.0",
+  "description": "distribution.json 및 서버 자산 파일을 서빙/업로드하는 Cloudflare Worker (R2 백엔드). GitHub API의 25~30MB 업로드 한도를 대체한다.",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "migrate": "node migrate.js"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

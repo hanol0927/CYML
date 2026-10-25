@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>distribution.json 관리 도구</title>
+<style>
+    :root {
+        color-scheme: light dark;
+        --bg: #1e1f24;
+        --panel: #2a2c33;
+        --border: #3d3f47;
+        --text: #e6e6e6;
+        --muted: #9a9ca3;
+        --accent: #5b8def;
+        --danger: #e05a5a;
+    }
+    * { box-sizing: border-box; }
+    body {
+        font-family: -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        margin: 0;
+        padding: 24px;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    h1 { font-size: 20px; margin-bottom: 4px; }
+    h2 { font-size: 15px; margin: 0 0 12px; color: var(--accent); }
+    p.hint, .hint { color: var(--muted); font-size: 13px; margin: 4px 0; }
+    section.panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 16px 20px;
+        margin-bottom: 16px;
+    }
+    label { display: block; font-size: 13px; margin: 10px 0 4px; }
+    input[type=text], input[type=password], input[type=number], textarea, select {
+        width: 100%;
+        padding: 7px 9px;
+        border-radius: 5px;
+        border: 1px solid var(--border);
+        background: #14151a;
+        color: var(--text);
+        font-size: 13px;
+    }
+    textarea { min-height: 70px; font-family: monospace; }
+    .row { display: flex; gap: 12px; }
+    .row > div { flex: 1; }
+    .checkboxRow { display: flex; align-items: center; gap: 6px; margin: 10px 0; }
+    .checkboxRow label { margin: 0; }
+    .checkboxRow input { width: auto; }
+    button {
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button.secondary { background: #454750; }
+    button.removeBtn { background: var(--danger); padding: 4px 8px; font-size: 12px; }
+    .dropzone {
+        border: 2px dashed var(--border);
+        border-radius: 6px;
+        padding: 20px;
+        text-align: center;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 13px;
+    }
+    .dropzone.dragover { border-color: var(--accent); color: var(--text); }
+    .fileRow, .moduleRow {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+    }
+    .fileRow .fileName, .moduleRow .moduleName { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .fileRow .fileSize { color: var(--muted); width: 70px; }
+    .fileRow select, .fileRow input[type=text] { width: 140px; }
+    .moduleRow .moduleType { color: var(--muted); width: 90px; }
+    #deployLog {
+        background: #101114;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 10px;
+        font-family: monospace;
+        font-size: 12px;
+        max-height: 220px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+    }
+    #backgroundPreview { max-width: 200px; max-height: 100px; display: none; margin-top: 8px; border-radius: 4px; }
+    .warning { color: #e0b45a; font-size: 12px; }
+    a { color: var(--accent); }
+    .keyBox {
+        background: #101114;
+        border: 1px solid var(--accent);
+        border-radius: 6px;
+        padding: 10px;
+        font-family: monospace;
+        font-size: 13px;
+        word-break: break-all;
+        margin: 8px 0;
+    }
+    .keyRow {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+    }
+    .keyRow .keyMeta { flex: 1; }
+</style>
+</head>
+<body>
+
+<h1>distribution.json 관리 도구</h1>
+<p class="hint">
+    서버 정보 / 모드 / 설정파일 / 배경화면을 입력하고 배포하면
+    Cloudflare Worker(R2)에 자동으로 업로드됩니다. 처음 쓴다면 <a href="README.md">README</a>를 먼저 읽어주세요.
+    이 도구는 정적 페이지이며 별도 백엔드가 없습니다 — 업로드 시크릿은 이 브라우저에만 저장됩니다.
+    화이트리스트는 여기서 직접 편집하지 않습니다 — "1-2. 화이트리스트 키 관리"에서 발급한 키로
+    <a href="whitelist.html">whitelist.html</a>에서만 편집합니다(여기서 같이 편집하게 하면 서로 덮어쓸 수 있어서 분리함).
+</p>
+
+<section class="panel">
+    <h2>1. Cloudflare Worker 연결 설정</h2>
+    <label for="workerBaseUrl">Worker 기본 URL (예: https://cyml-distro-worker.&lt;계정 서브도메인&gt;.workers.dev)</label>
+    <input type="text" id="workerBaseUrl" placeholder="https://cyml-distro-worker.<subdomain>.workers.dev">
+    <label for="uploadSecret">업로드 시크릿 (wrangler secret put UPLOAD_SECRET에서 설정한 값)</label>
+    <input type="password" id="uploadSecret">
+    <div class="checkboxRow">
+        <input type="checkbox" id="uploadSecretPersist">
+        <label for="uploadSecretPersist">브라우저를 닫아도 시크릿 기억하기 (localStorage). 체크 해제 시 탭을 닫으면 사라짐.</label>
+    </div>
+    <p style="margin-top:10px;">
+        <button id="saveSettingsBtn">설정 저장</button>
+        <span id="settingsStatus" class="hint"></span>
+    </p>
+</section>
+
+<section class="panel">
+    <h2>1-1. Forge·NeoForge 자동 생성 (GitHub Actions, 선택)</h2>
+    <p class="hint">파일/distribution.json 저장은 더 이상 GitHub를 쓰지 않지만, Forge/NeoForge 로더
+    자동 생성만은 JVM이 필요해서 그대로 GitHub Actions를 씁니다. 이 기능을 안 쓰면(수동 붙여넣기나
+    Fabric만 쓴다면) 아래를 비워둬도 됩니다.</p>
+    <label for="ghToken">GitHub Personal Access Token (해당 워크플로우 저장소에 대한 Actions: Read and write 권한)</label>
+    <input type="password" id="ghToken" placeholder="github_pat_...">
+    <div class="checkboxRow">
+        <input type="checkbox" id="ghTokenPersist">
+        <label for="ghTokenPersist">브라우저를 닫아도 토큰 기억하기 (localStorage). 체크 해제 시 탭을 닫으면 사라짐.</label>
+    </div>
+    <div class="row">
+        <div>
+            <label for="ciOwner">GitHub 계정/조직</label>
+            <input type="text" id="ciOwner">
+        </div>
+        <div>
+            <label for="ciWorkflowFile">워크플로우 파일명</label>
+            <input type="text" id="ciWorkflowFile">
+        </div>
+    </div>
+    <label for="ciRepo">워크플로우 저장소</label>
+    <input type="text" id="ciRepo">
+</section>
+
+<section class="panel">
+    <h2>1-2. 화이트리스트 키 관리 (다른 사람에게 서버별 화이트리스트 편집 권한 위임)</h2>
+    <p class="hint">
+        여기서 만든 키를 건네주면, 받은 사람은 <a href="whitelist.html" target="_blank">whitelist.html</a>에서
+        업로드 시크릿 없이 그 키만으로 선택된 서버의 화이트리스트만 편집할 수 있습니다 — 모드/설정/다른 서버 등
+        나머지는 전혀 건드릴 수 없습니다. 서버 목록이 비어 있으면 아래 "2. 서버 선택"의
+        "distribution.json 새로고침"을 먼저 눌러주세요.
+    </p>
+    <label for="wlKeyLabel">키 이름 (누구에게 줬는지 구분용, 선택)</label>
+    <input type="text" id="wlKeyLabel" placeholder="예: 사촌1 운영진">
+    <label>권한을 줄 서버 (여러 개 선택 가능)</label>
+    <div id="wlKeyServerList" class="hint">서버 목록 없음 — 먼저 distribution.json을 불러오세요.</div>
+    <p style="margin-top:10px;">
+        <button id="wlKeyCreateBtn">키 생성</button>
+    </p>
+    <div id="wlKeyNewResult"></div>
+    <h2 style="margin-top:18px;">발급된 키 목록</h2>
+    <p><button id="wlKeyListRefreshBtn" class="secondary">키 목록 새로고침</button></p>
+    <div id="wlKeyList" class="hint">아직 불러오지 않음</div>
+</section>
+
+<section class="panel">
+    <h2>2. 서버 선택</h2>
+    <div class="row">
+        <div>
+            <select id="existingServerSelect">
+                <option value="">-- 새 서버 만들기 --</option>
+            </select>
+        </div>
+        <div style="flex: 0 0 auto;">
+            <button id="loadServerBtn" class="secondary">distribution.json 새로고침</button>
+        </div>
+        <div style="flex: 0 0 auto;">
+            <button id="deleteServerBtn" class="secondary" disabled>선택한 서버 삭제</button>
+        </div>
+    </div>
+    <p id="serverLoadStatus" class="hint"></p>
+</section>
+
+<section class="panel">
+    <h2>3. 서버 정보</h2>
+    <div class="row">
+        <div>
+            <label for="serverId">서버 id (고유 식별자, 예: Ssachon-1.21.1)</label>
+            <input type="text" id="serverId">
+        </div>
+        <div>
+            <label for="serverName">서버 이름 (화면에 표시)</label>
+            <input type="text" id="serverName">
+        </div>
+    </div>
+    <label for="serverDescription">설명</label>
+    <input type="text" id="serverDescription">
+    <label for="serverAddress">서버 주소 (host:port)</label>
+    <input type="text" id="serverAddress">
+    <label for="iconCurrentUrl">아이콘</label>
+    <input type="text" id="iconCurrentUrl" placeholder="현재 아이콘 URL (없으면 비어있음)" readonly>
+    <div id="iconDropzone" class="dropzone" style="margin-top:8px;">클릭하거나 이미지 파일을 여기로 드래그하세요</div>
+    <input type="file" id="iconFileInput" accept="image/*" style="display:none;">
+    <img id="iconPreview" alt="preview" style="max-width:96px;max-height:96px;display:none;margin-top:8px;border-radius:6px;">
+    <label for="serverMcVersion">마인크래프트 버전</label>
+    <input type="text" id="serverMcVersion" placeholder="예: 1.21.1 또는 26.1.2">
+    <div class="checkboxRow">
+        <input type="checkbox" id="serverAutoconnect">
+        <label for="serverAutoconnect">자동 접속 허용</label>
+    </div>
+    <div class="checkboxRow">
+        <input type="checkbox" id="serverMainServer">
+        <label for="serverMainServer">기본 선택 서버로 지정 (전체 중 하나만 체크)</label>
+    </div>
+</section>
+
+<section class="panel" id="loaderTypeSection">
+    <h2>3-1. 로더</h2>
+    <div class="checkboxRow" id="loaderReplaceRow" style="display:none;">
+        <input type="checkbox" id="loaderReplaceCheck">
+        <label for="loaderReplaceCheck">⚠️ 이 서버의 로더/라이브러리 모듈을 새로 교체합니다 (버전 업데이트, 잘못된 경로 수정 등). 체크하지 않으면 기존 로더 모듈을 그대로 유지합니다.</label>
+    </div>
+
+    <div id="loaderTypeFields">
+        <label for="loaderType">로더 종류</label>
+        <select id="loaderType">
+            <option value="fabric">Fabric</option>
+            <option value="forge-auto">Forge·NeoForge (자동 생성)</option>
+            <option value="forge-paste">Forge·NeoForge (JSON 직접 붙여넣기 — 백업용)</option>
+        </select>
+
+        <div id="fabricLoaderBlock">
+            <label for="fabricLoaderVersion">Fabric 로더 버전</label>
+            <select id="fabricLoaderVersion"></select>
+            <p class="hint">마인크래프트 버전을 입력하면 자동으로 채워집니다.</p>
+        </div>
+
+        <div id="forgeAutoBlock" style="display:none;">
+            <p class="hint">GitHub Actions에서 NeoNebula를 실행해 로더를 생성합니다. 생성된 로더 파일은 distro-worker(R2)에 자동으로 업로드됩니다 — 별도 자산 저장소 입력은 필요 없습니다. 처음 쓰는 경우 README의 워크플로우 저장소 설정을 먼저 해주세요. <strong>이 저장소 환경에서 실제로 검증하지 못한 실험적 기능입니다</strong> — 실패하면 아래 "JSON 직접 붙여넣기"로 우회하세요.</p>
+            <div class="row">
+                <div>
+                    <label for="forgeLoaderType">종류</label>
+                    <select id="forgeLoaderType">
+                        <option value="neoforge">NeoForge</option>
+                        <option value="forge">Forge</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="forgeLoaderVersion">로더 버전</label>
+                    <input type="text" id="forgeLoaderVersion" placeholder="예: 21.1.219">
+                </div>
+            </div>
+            <p style="margin-top:10px;">
+                <button type="button" id="generateLoaderBtn" class="secondary">GitHub Actions로 생성 시작</button>
+                <span id="loaderGenStatus" class="hint"></span>
+            </p>
+            <div id="loaderGenLog" style="margin-top:8px;"></div>
+        </div>
+
+        <div id="forgePasteBlock" style="display:none;">
+            <label for="importedLoaderJson">Forge 인스톨러가 만든 원본 <code>version.json</code>을 그대로 붙여넣거나(기존 서버의 라이브러리는 그대로 두고 실행 인자만 교체됨), NeoNebula로 로컬에서 <code>generate server</code>를 실행한 결과 서버 JSON(모듈 배열)을 붙여넣으세요</label>
+            <textarea id="importedLoaderJson" placeholder='원본 version.json 그대로 (id/libraries/mainClass 포함) — 또는 {"modules": [...]} / [...] (Helios 모듈 배열)'></textarea>
+            <p class="hint">기존 서버 편집 중 "로더 교체" 체크박스를 켠 상태에서만 동작합니다. 원본 version.json을 붙여넣으면 기존 ForgeHosted 모듈의 라이브러리(jar)는 그대로 재사용하고 VersionManifest(실행 인자)만 새로 올립니다.</p>
+        </div>
+    </div>
+</section>
+
+<section class="panel">
+    <h2>4. Java 요구 버전</h2>
+    <p class="hint">마인크래프트 버전으로 자동 계산됩니다 (런처 쪽 기본 매핑과 동일한 규칙). 필요할 때만 수동으로 덮어쓰세요.</p>
+    <div class="checkboxRow">
+        <input type="checkbox" id="javaOptionsManual">
+        <label for="javaOptionsManual">수동으로 지정</label>
+    </div>
+    <div class="row">
+        <div>
+            <label for="javaSupported">supported (semver 범위)</label>
+            <input type="text" id="javaSupported" disabled>
+        </div>
+        <div>
+            <label for="javaSuggestedMajor">suggestedMajor</label>
+            <input type="number" id="javaSuggestedMajor" disabled>
+        </div>
+    </div>
+</section>
+
+<section class="panel">
+    <h2>5. 배경화면</h2>
+    <p class="hint">이 서버가 선택됐을 때 런처 배경으로 쓸 이미지. 재배포 없이 다음 재시작/재접속 시 반영됩니다.</p>
+    <input type="text" id="backgroundCurrentUrl" placeholder="현재 배경 URL (없으면 비어있음)" readonly>
+    <div id="backgroundDropzone" class="dropzone" style="margin-top:8px;">클릭하거나 이미지 파일을 여기로 드래그하세요</div>
+    <input type="file" id="backgroundFileInput" accept="image/*" style="display:none;">
+    <img id="backgroundPreview" alt="preview">
+</section>
+
+<section class="panel">
+    <h2>6. 모드 파일</h2>
+    <div id="modsDropzone" class="dropzone">클릭하거나 mod jar 파일을 여기로 드래그하세요</div>
+    <input type="file" id="modsFileInput" multiple accept=".jar" style="display:none;">
+    <p id="modsWarning" class="warning"></p>
+    <div id="modsList"></div>
+</section>
+
+<section class="panel">
+    <h2>7. 설정 파일 (config)</h2>
+    <div id="configsDropzone" class="dropzone">클릭하거나 설정 파일/폴더를 여기로 드래그하세요</div>
+    <input type="file" id="configsFileInput" multiple style="display:none;">
+    <input type="file" id="configsFolderInput" webkitdirectory multiple style="display:none;">
+    <p id="configsDropWarning" class="warning"></p>
+    <p><button type="button" id="configsFolderBtn" class="secondary">폴더 선택</button></p>
+    <p class="hint">저장 경로는 config/ 아래 상대 경로 기준이며, 각 파일마다 직접 수정할 수 있습니다. 폴더째 올리면(드래그하거나 "폴더 선택") 폴더 안의 하위 폴더/파일 구조가 그대로 경로에 반영됩니다 — 예: test 폴더 안에 test1~test4 파일이 있으면 config/test/test1 ~ config/test/test4로 자동으로 잡힙니다. 폴더 안에 폴더가 있어도 그대로 재귀적으로 반영됩니다.<br>
+    "매번 강제 적용"을 체크 안 하면(기본값) 플레이어 폴더에 파일이 이미 있을 때 절대 덮어쓰지 않습니다 — options.txt, iris.properties처럼 플레이어가 직접 바꾸는 설정에 적합합니다. 체크하면 매 실행마다 이 파일로 강제로 되돌립니다.</p>
+    <div id="configsList"></div>
+</section>
+
+<section class="panel">
+    <h2>7-1. 루트 파일 (config/ 없이, instances/&lt;서버id&gt; 바로 아래)</h2>
+    <p class="hint">config/ 접두사 없이 instances/&lt;서버id&gt; 바로 아래에 그대로 저장할 파일입니다. 위 설정 파일 칸과 마찬가지로 폴더째 올리면 폴더 구조가 그대로 경로에 반영되고, 각 파일 경로는 직접 수정할 수 있습니다.</p>
+    <div id="rootFilesDropzone" class="dropzone">클릭하거나 파일/폴더를 여기로 드래그하세요</div>
+    <input type="file" id="rootFilesFileInput" multiple style="display:none;">
+    <input type="file" id="rootFilesFolderInput" webkitdirectory multiple style="display:none;">
+    <p id="rootFilesDropWarning" class="warning"></p>
+    <p><button type="button" id="rootFilesFolderBtn" class="secondary">폴더 선택</button></p>
+    <div id="rootFilesList"></div>
+</section>
+
+<section class="panel">
+    <h2>8. 기존 모듈 (수정 중인 서버에만 표시)</h2>
+    <p class="hint">직접 추가했던 모드/설정 파일을 체크해서 지울 수 있습니다. "최초 1회 적용" 방식으로 올린 설정 파일(onceFiles)도 여기서 지울 수 있습니다. 로더/라이브러리 핵심 모듈은 실수로 지우지 못하도록 이 목록에서 삭제가 막혀 있습니다. 체크 후 배포하면 distribution.json 참조만 지워지고, R2에 남은 실제 파일은 지워지지 않습니다.</p>
+    <div id="existingModulesList"><p class="hint">새 서버입니다.</p></div>
+</section>
+
+<section class="panel">
+    <h2>9. 배포</h2>
+    <button id="deployBtn">Worker에 배포</button>
+    <div id="deployLog" style="margin-top:12px;"></div>
+</section>
+
+<script src="md5.js"></script>
+<script src="github-api.js"></script>
+<script src="worker-api.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

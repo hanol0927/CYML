@@ -1,0 +1,88 @@
+# Custom Language File for Launcher Customizer
+# (en_US → ko_KR → _custom 순서로 병합되므로 여기 값이 최종 우선 적용됩니다.)
+
+[ejs.app]
+title = "CYML"
+
+[ejs.landing]
+mediaHomeURL = "#"
+mediaLinkURL = "#"
+mediaMapURL = "#"
+mediaGitHubURL = "#"
+mediaXURL = "#"
+mediaInstagramURL = "#"
+mediaYouTubeURL = "#"
+mediaDiscordURL = "#"
+# 새 UI용 버튼 문구
+launchButton = "게임 시작"
+launchButtonPlaceholder = "선택된 서버 없음"
+
+[ejs.settings]
+sourceGithubLink = "#"
+supportLink = "#"
+
+[ejs.welcome]
+welcomeHeader = "CYML"
+welcomeDescription = ""
+welcomeDescCTA = ""
+
+# ---------------------------------------------------------------
+# UI 리뉴얼(landing / frame)에서 새로 쓰는 문구
+# ---------------------------------------------------------------
+[ejs.landingUi]
+frameTagline = "새로운 모험은 언제나, 여기서 시작됩니다."
+brandSub = "LAUNCHER"
+navHome = "홈"
+navNews = "뉴스"
+navServers = "서버"
+navFolder = "폴더"
+navSettings = "설정"
+eyebrow = "SELECTED SERVER"
+heroLoading = "서버 정보를 불러오는 중"
+serverSelectLabel = "서버 선택"
+profileTitle = "프로필"
+manageAccount = "계정 관리"
+accountEdition = "Minecraft: Java Edition"
+quickSettingsTitle = "빠른 설정"
+qsMemory = "메모리 할당"
+qsResolution = "게임 해상도"
+qsJava = "Java 실행 파일"
+qsMods = "모드 · 쉐이더"
+newsTitle = "뉴스"
+more = "더보기"
+serverListTitle = "서버 목록"
+newsBack = "홈으로"
+newsViewTitle = "소식"
+mojangLabel = "MOJANG"
+
+[js.landingUi]
+online = "온라인"
+offline = "오프라인"
+pinging = "확인 중"
+select = "선택"
+selected = "선택됨"
+locked = "잠김"
+mainServer = "메인"
+whitelist = "화이트리스트"
+fullscreen = "전체 화면"
+javaAuto = "자동 탐색"
+javaSet = "직접 지정"
+manage = "관리"
+noServerTitle = "서버를 선택하세요"
+noServerDesc = "아래 서버 목록에서 플레이할 서버를 골라주세요."
+newsLoading = "소식을 불러오는 중..."
+newsFailed = "소식을 불러오지 못했어요"
+newsNone = "아직 등록된 소식이 없어요"
+newsRetry = "다시 시도"
+newsLatest = "최신 소식"
+launchingBlocked = "게임을 준비하는 중에는 서버를 바꿀 수 없어요."
+accountMicrosoft = "Microsoft 정식 계정"
+accountMojang = "Mojang 계정"
+accountNone = "로그인이 필요해요"
+players = "플레이어"
+noServers = "등록된 서버가 없어요"
+folderNoServer = "먼저 서버를 선택해 주세요."
+folderOpenFailed = "폴더를 열지 못했어요. 경로를 확인해 주세요."
+updateDownloading = "새 버전 v{version} 다운로드 중 · {percent}%"
+updateRestarting = "업데이트를 설치합니다. {sec}초 후 런처가 다시 시작돼요."
+updateWaitGame = "업데이트가 준비됐어요. 게임을 종료하면 자동으로 설치됩니다."

@@ -1,0 +1,297 @@
+<div id="landingContainer" style="display: none;">
+
+    <!-- ===================================================== -->
+    <!-- Sidebar : 로고 / 내비게이션 / 외부 링크 / 버전         -->
+    <!-- ===================================================== -->
+    <aside id="landingSidebar">
+        <div id="brand">
+            <div id="image_seal_container">
+                <svg id="image_seal" viewBox="0 0 64 64" aria-hidden="true"><use href="#i-logo"/></svg>
+                <div id="updateAvailableTooltip"><%- lang('landing.updateAvailableTooltip') %></div>
+            </div>
+            <div id="brandText">
+                <span id="brandName"><%= lang('app.title') %></span>
+                <span id="brandSub"><%- lang('landingUi.brandSub') %></span>
+            </div>
+        </div>
+
+        <nav id="landingNav">
+            <button class="navItem" id="navHomeButton" active>
+                <svg class="navIcon" viewBox="0 0 24 24"><use href="#i-home"/></svg>
+                <span class="navLabel"><%- lang('landingUi.navHome') %></span>
+            </button>
+            <button class="navItem" id="navServerButton">
+                <svg class="navIcon" viewBox="0 0 24 24"><use href="#i-server"/></svg>
+                <span class="navLabel"><%- lang('landingUi.navServers') %></span>
+            </button>
+            <button class="navItem" id="navFolderButton">
+                <svg class="navIcon" viewBox="0 0 24 24"><use href="#i-folder"/></svg>
+                <span class="navLabel"><%- lang('landingUi.navFolder') %></span>
+            </button>
+            <button class="navItem" id="settingsMediaButton">
+                <svg class="navIcon" viewBox="0 0 24 24"><use href="#i-gear"/></svg>
+                <span class="navLabel"><%- lang('landingUi.navSettings') %></span>
+            </button>
+        </nav>
+
+        <div id="sidebarFooter">
+            <div id="externalMedia">
+                <div class="mediaContainer">
+                    <a href="<%- lang('landing.mediaHomeURL') %>" class="mediaURL" id="homeURL" title="Home">
+                        <svg class="mediaSVG" viewBox="0 0 24 24"><use href="#i-globe"/></svg>
+                    </a>
+                </div>
+                <div class="mediaContainer">
+                    <a href="<%- lang('landing.mediaMapURL') %>" class="mediaURL" id="mapURL" title="Map">
+                        <svg class="mediaSVG" viewBox="0 0 24 24"><use href="#i-pin"/></svg>
+                    </a>
+                </div>
+                <div class="mediaContainer">
+                    <a href="<%- lang('landing.mediaGitHubURL') %>" class="mediaURL" id="githubURL" title="GitHub">
+                        <svg class="mediaSVG mediaSVGFill" viewBox="0 0 98 98"><use href="#i-github"/></svg>
+                    </a>
+                </div>
+                <div class="mediaContainer">
+                    <a href="<%- lang('landing.mediaDiscordURL') %>" class="mediaURL" id="discordURL" title="Discord">
+                        <svg class="mediaSVG mediaSVGFill" viewBox="0 0 70.68 68.715"><use href="#i-discord"/></svg>
+                    </a>
+                </div>
+            </div>
+            <span id="launcherVersion">v0.0.0</span>
+        </div>
+    </aside>
+
+    <!-- ===================================================== -->
+    <!-- Stage : 홈 대시보드 + 뉴스 뷰                           -->
+    <!-- ===================================================== -->
+    <main id="landingStage">
+
+        <div id="upper">
+            <!-- Hero : 선택된 서버 + 게임 시작 -->
+            <section id="heroCard" class="glassCard">
+                <div id="heroBg"></div>
+                <div id="heroShade"></div>
+                <div id="heroContent">
+                    <div id="heroTop">
+                        <span class="eyebrow"><i class="eyebrowBar"></i><%- lang('landingUi.eyebrow') %></span>
+                        <div id="heroStatus">
+                            <div id="server_status_wrapper" class="statusPill">
+                                <svg class="pillIcon" viewBox="0 0 24 24"><use href="#i-users"/></svg>
+                                <span class="bot_label" id="landingPlayerLabel"><%- lang('landing.serverStatus') %></span>
+                                <span id="player_count"><%- lang('landing.serverStatusPlaceholder') %></span>
+                            </div>
+                            <div id="mojangStatusWrapper" class="statusPill">
+                                <svg class="pillIcon" viewBox="0 0 24 24"><use href="#i-pulse"/></svg>
+                                <span class="bot_label"><%- lang('landingUi.mojangLabel') %></span>
+                                <span id="mojang_status_icon">&#8226;</span>
+                                <div id="mojangStatusTooltip">
+                                    <div id="mojangStatusTooltipTitle"><%- lang('landing.mojangStatusTooltipTitle') %></div>
+                                    <div id="mojangStatusEssentialContainer">
+                                        <!-- Essential Mojang services are populated here. -->
+                                    </div>
+                                    <div id="mojangStatusNEContainer">
+                                        <div class="mojangStatusNEBar"></div>
+                                        <div id="mojangStatusNETitle"><%- lang('landing.mojangStatusNETitle') %></div>
+                                        <div class="mojangStatusNEBar"></div>
+                                    </div>
+                                    <div id="mojangStatusNonEssentialContainer">
+                                        <!-- Non Essential Mojang services are populated here. -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h1 id="heroTitle"><%- lang('landingUi.heroLoading') %></h1>
+                    <p id="heroDesc"></p>
+                    <div id="heroTags"></div>
+
+                    <div id="heroActions">
+                        <div id="launch_content">
+                            <button id="launch_button">
+                                <svg class="launchIcon" viewBox="0 0 24 24"><use href="#i-play"/></svg>
+                                <span id="launch_button_text"><%- lang('landing.launchButton') %></span>
+                                <svg class="launchChevron" viewBox="0 0 24 24"><use href="#i-chev-right"/></svg>
+                            </button>
+                            <div class="bot_divider"></div>
+                            <button id="server_selection_button" class="bot_label">
+                                <span class="ssIconBox">
+                                    <svg viewBox="0 0 24 24"><use href="#i-server"/></svg>
+                                </span>
+                                <span class="ssText">
+                                    <span class="ssLabel"><%- lang('landingUi.serverSelectLabel') %></span>
+                                    <span id="server_selection_value"><%- lang('landing.launchButtonPlaceholder') %></span>
+                                </span>
+                                <svg class="ssChevron" viewBox="0 0 24 24"><use href="#i-chev-down"/></svg>
+                            </button>
+                        </div>
+                        <div id="launch_details">
+                            <div id="launch_details_left">
+                                <span id="launch_progress_label">0%</span>
+                                <div class="bot_divider"></div>
+                            </div>
+                            <div id="launch_details_right">
+                                <progress id="launch_progress" value="22" max="100"></progress>
+                                <span id="launch_details_text" class="bot_label"><%- lang('landing.launchDetails') %></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div id="lower">
+                <!-- 뉴스 미리보기 (RSS) -->
+                <section id="newsPreviewCard" class="glassCard">
+                    <div class="panelHeader">
+                        <svg class="panelIcon" viewBox="0 0 24 24"><use href="#i-news"/></svg>
+                        <span><%- lang('landingUi.newsTitle') %></span>
+                        <!-- 기존 newsButton(뉴스 뷰 열기/닫기)을 사이드바에서 뉴스 카드의 '더보기'로 옮김 -->
+                        <button class="panelMore" id="newsButton">
+                            <div id="newsButtonAlert" style="display: none;"></div>
+                            <span id="newsButtonText"><%- lang('landingUi.more') %></span>
+                            <svg viewBox="0 0 24 24"><use href="#i-chev-right"/></svg>
+                        </button>
+                    </div>
+                    <div id="newsPreviewBody">
+                        <!-- landing.js renderNewsPreview()가 채움 -->
+                    </div>
+                </section>
+
+                <section id="quickSettingsCard" class="glassCard">
+                    <div class="panelHeader">
+                        <svg class="panelIcon" viewBox="0 0 24 24"><use href="#i-gear"/></svg>
+                        <span><%- lang('landingUi.quickSettingsTitle') %></span>
+                    </div>
+                    <div id="quickSettingsList">
+                        <button class="qsRow" data-tab="settingsTabJava">
+                            <svg class="qsIcon" viewBox="0 0 24 24"><use href="#i-memory"/></svg>
+                            <span class="qsLabel"><%- lang('landingUi.qsMemory') %></span>
+                            <span class="qsValue" id="qsMemory">—</span>
+                            <svg class="qsChevron" viewBox="0 0 24 24"><use href="#i-chev-right"/></svg>
+                        </button>
+                        <button class="qsRow" data-tab="settingsTabMinecraft">
+                            <svg class="qsIcon" viewBox="0 0 24 24"><use href="#i-monitor"/></svg>
+                            <span class="qsLabel"><%- lang('landingUi.qsResolution') %></span>
+                            <span class="qsValue" id="qsResolution">—</span>
+                            <svg class="qsChevron" viewBox="0 0 24 24"><use href="#i-chev-right"/></svg>
+                        </button>
+                        <button class="qsRow" data-tab="settingsTabJava">
+                            <svg class="qsIcon" viewBox="0 0 24 24"><use href="#i-java"/></svg>
+                            <span class="qsLabel"><%- lang('landingUi.qsJava') %></span>
+                            <span class="qsValue" id="qsJava">—</span>
+                            <svg class="qsChevron" viewBox="0 0 24 24"><use href="#i-chev-right"/></svg>
+                        </button>
+                        <button class="qsRow" data-tab="settingsTabMods">
+                            <svg class="qsIcon" viewBox="0 0 24 24"><use href="#i-puzzle"/></svg>
+                            <span class="qsLabel"><%- lang('landingUi.qsMods') %></span>
+                            <span class="qsValue" id="qsMods">—</span>
+                            <svg class="qsChevron" viewBox="0 0 24 24"><use href="#i-chev-right"/></svg>
+                        </button>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Right : 프로필 + 서버 목록 -->
+        <aside id="right">
+            <section id="profileCard" class="glassCard">
+                <div class="panelHeader">
+                    <svg class="panelIcon" viewBox="0 0 24 24"><use href="#i-user"/></svg>
+                    <span><%- lang('landingUi.profileTitle') %></span>
+                    <button class="panelMore" id="avatarOverlay">
+                        <%- lang('landingUi.manageAccount') %>
+                        <svg viewBox="0 0 24 24"><use href="#i-chev-right"/></svg>
+                    </button>
+                </div>
+                <div id="user_content">
+                    <div id="avatarContainer"></div>
+                    <div id="userInfo">
+                        <span id="user_text"><%- lang('landing.usernamePlaceholder') %></span>
+                        <span id="userStatus"><i class="statusDot"></i><span id="userStatusText">—</span></span>
+                        <span id="userAccountLine">
+                            <svg class="accountTypeIcon" viewBox="0 0 23 23"><use href="#i-microsoft"/></svg>
+                            <span id="userAccountType">—</span>
+                            <svg class="accountTypeCheck" viewBox="0 0 24 24"><use href="#i-check-circle"/></svg>
+                        </span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 서버 목록 (distribution.json) -->
+            <section id="serverListCard" class="glassCard">
+                <div class="panelHeader">
+                    <svg class="panelIcon" viewBox="0 0 24 24"><use href="#i-server"/></svg>
+                    <span><%- lang('landingUi.serverListTitle') %></span>
+                    <span class="panelCount" id="serverListCount">0</span>
+                    <button class="panelMore" id="serverListRefresh" title="새로고침">
+                        <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+                    </button>
+                </div>
+                <div id="landingServerList">
+                    <!-- landing.js renderLandingServerList()가 채움 -->
+                </div>
+            </section>
+        </aside>
+
+        <!-- ===================================================== -->
+        <!-- News View (기존 기능 유지 : RSS 기사 열람/좌우 이동)     -->
+        <!-- ===================================================== -->
+        <div id="newsContainer">
+            <div id="newsHeader">
+                <button id="newsBackButton">
+                    <svg viewBox="0 0 24 24"><use href="#i-arrow-left"/></svg>
+                    <span><%- lang('landingUi.newsBack') %></span>
+                </button>
+                <span id="newsHeaderTitle"><%- lang('landingUi.newsViewTitle') %></span>
+            </div>
+            <div id="newsContent" article="-1" style="display: none;">
+                <div id="newsStatusContainer">
+                    <div id="newsStatusContent">
+                        <div id="newsTitleContainer">
+                            <a id="newsArticleTitle" href="#">Lorem Ipsum</a>
+                        </div>
+                        <div id="newsMetaContainer">
+                            <div id="newsArticleDateWrapper">
+                                <span id="newsArticleDate">Mar 15, 44 BC, 9:14 AM</span>
+                            </div>
+                            <div id="newsArticleAuthorWrapper">
+                                <span id="newsArticleAuthor">by Cicero</span>
+                            </div>
+                            <a href="#" id="newsArticleComments">0 Comments</a>
+                        </div>
+                    </div>
+                    <div id="newsNavigationContainer">
+                        <button id="newsNavigateLeft">
+                            <svg id="newsNavigationLeftSVG" viewBox="0 0 24 24"><use href="#i-chev-left"/></svg>
+                        </button>
+                        <span id="newsNavigationStatus"><%- lang('landing.newsNavigationStatus', { currentPage: 1, totalPages: 1 }) %></span>
+                        <button id="newsNavigateRight">
+                            <svg id="newsNavigationRightSVG" viewBox="0 0 24 24"><use href="#i-chev-right"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div id="newsArticleContainer">
+                    <div id="newsArticleContent">
+                        <div id="newsArticleContentScrollable">
+                            <!-- Article Content -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="newsErrorContainer">
+                <div id="newsErrorLoading">
+                    <span id="nELoadSpan" class="newsErrorContent"><%- lang('landing.newsErrorLoadSpan') %></span>
+                </div>
+                <div id="newsErrorFailed" style="display: none;">
+                    <span id="nEFailedSpan" class="newsErrorContent"><%- lang('landing.newsErrorFailedSpan') %></span>
+                    <button id="newsErrorRetry"><%- lang('landing.newsErrorRetryButton') %></button>
+                </div>
+                <div id="newsErrorNone" style="display: none;">
+                    <span id="nENoneSpan" class="newsErrorContent"><%- lang('landing.newsErrorNoneSpan') %></span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="./assets/js/scripts/landing.js"></script>
+</div>

@@ -1,0 +1,57 @@
+appId: 'CYML'
+productName: 'CYML'
+artifactName: '${productName}-setup-${version}.${ext}'
+
+copyright: 'Copyright © 2025 Han_Ol'
+
+asar: true
+compression: 'maximum'
+
+files:
+  - '!{dist,.gitignore,.vscode,docs,dev-app-update.yml,.nvmrc,.eslintrc.json}'
+
+extraResources:
+  - 'libraries'
+
+# Windows Configuration
+win: 
+  target: 
+    - target: 'nsis'
+      arch: 'x64'
+
+# Windows Installer Configuration
+nsis:
+  oneClick: false
+  perMachine: false
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
+
+# macOS Configuration
+mac:
+  target:
+    - target: 'dmg'
+      arch:
+        - 'x64'
+        - 'arm64'
+  artifactName: 'CYML-setup-${version}-${arch}.${ext}'
+  category: 'public.app-category.games'
+
+# Linux Configuration
+linux: 
+  target: 'AppImage'
+  maintainer: 'Han_Ol'
+  vendor: 'Han_Ol'
+  synopsis: 'Modded Minecraft Launcher'
+  description: 'Custom Minecraft Launcher based on Helios'
+  category: 'Game'
+
+
+directories:
+  buildResources: 'build'
+  output: 'dist'
+
+publish:
+  provider: github
+  owner: hanol0927
+  repo: CYML
+  releaseType: release

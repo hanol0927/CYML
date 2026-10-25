@@ -1,0 +1,118 @@
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" http-equiv="Content-Security-Policy" content="script-src 'self' 'sha256-In6B8teKZQll5heMl9bS7CESTbGvuAt3VVV86BUQBDk='"/>
+    <title><%= lang('app.title') %></title>
+    <script src="./assets/js/scripts/uicore.js"></script>
+    <script src="./assets/js/scripts/uibinder.js"></script>
+    <link type="text/css" rel="stylesheet" href="./assets/css/launcher.css">
+    <style>
+        body {
+            /*background: url('assets/images/backgrounds/<%=bkid%>.jpg') no-repeat center center fixed;*/
+            background-image: url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD//gA+Q1JFQVRPUjogZ2QtanBlZyB2MS4wICh1c2luZyBJSkcgSlBFRyB2ODApLCBkZWZhdWx0IHF1YWxpdHkK/9sAQwAIBgYHBgUIBwcHCQkICgwUDQwLCwwZEhMPFB0aHx4dGhwcICQuJyAiLCMcHCg3KSwwMTQ0NB8nOT04MjwuMzQy/9sAQwEJCQkMCwwYDQ0YMiEcITIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIy/8AAEQgAPwBwAwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A8VooopDCiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP/9k=');
+            background-size: cover;
+            background-position: center center;
+            -webkit-user-select: none;
+        }
+        #main {
+            display: none;
+            top: var(--frame-h);
+            height: calc(100% - var(--frame-h));
+            width: 100%;
+            position: absolute;
+            z-index: 10;
+        }
+        /* 오버레이가 뜰 때 전체 화면 blur 필터는 매 프레임 다시 그려야 해서 렉의 원인 → 사용하지 않음 */
+        #main[overlay] {
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body bkid="<%=bkid%>">
+    <!--
+        ============================================================
+        Vector Icon Sprite
+        - 모든 아이콘은 이미지 파일 대신 이 SVG 심볼을 <use href="#i-이름">으로 사용합니다.
+        - stroke 계열 아이콘은 currentColor를 따르므로 CSS color만 바꾸면 색이 바뀝니다.
+        ============================================================
+    -->
+    <svg id="iconSprite" xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+        <defs>
+            <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 10.6 12 3.6l8.5 7"/><path d="M5.5 9.2V19a1.5 1.5 0 0 0 1.5 1.5h3.2v-5.2a1 1 0 0 1 1-1h1.6a1 1 0 0 1 1 1v5.2H17a1.5 1.5 0 0 0 1.5-1.5V9.2"/></symbol>
+            <symbol id="i-news" viewBox="0 0 24 24"><rect x="3.5" y="4" width="13" height="16.5" rx="2"/><path d="M16.5 8.5h2.5a1.5 1.5 0 0 1 1.5 1.5v8a2.5 2.5 0 0 1-2.5 2.5H6"/><path d="M7 8.5h6M7 12.3h6M7 16h3.8"/></symbol>
+            <symbol id="i-server" viewBox="0 0 24 24"><ellipse cx="12" cy="5.8" rx="7.5" ry="2.8"/><path d="M4.5 5.8v6.1c0 1.55 3.36 2.8 7.5 2.8s7.5-1.25 7.5-2.8V5.8"/><path d="M4.5 11.9v6.3c0 1.55 3.36 2.8 7.5 2.8s7.5-1.25 7.5-2.8v-6.3"/></symbol>
+            <symbol id="i-gear" viewBox="0 0 24 24"><path d="M10.40 4.57 L10.82 2.07 L13.18 2.07 L13.60 4.57 L16.12 5.62 L18.19 4.15 L19.85 5.81 L18.38 7.88 L19.43 10.40 L21.93 10.82 L21.93 13.18 L19.43 13.60 L18.38 16.12 L19.85 18.19 L18.19 19.85 L16.12 18.38 L13.60 19.43 L13.18 21.93 L10.82 21.93 L10.40 19.43 L7.88 18.38 L5.81 19.85 L4.15 18.19 L5.62 16.12 L4.57 13.60 L2.07 13.18 L2.07 10.82 L4.57 10.40 L5.62 7.88 L4.15 5.81 L5.81 4.15 L7.88 5.62Z"/><circle cx="12" cy="12" r="3.1"/></symbol>
+            <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.2" r="4"/><path d="M4.2 20.5c.6-3.9 3.8-6.2 7.8-6.2s7.2 2.3 7.8 6.2"/></symbol>
+            <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8.3" r="3.5"/><path d="M2.8 20c.4-3.5 3-5.8 6.2-5.8s5.8 2.3 6.2 5.8"/><path d="M15.6 4.9a3.5 3.5 0 0 1 0 6.8M17.6 14.5c2 .7 3.3 2.6 3.6 5.5"/></symbol>
+            <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.4v13.2a1.1 1.1 0 0 0 1.68.93l10.5-6.6a1.1 1.1 0 0 0 0-1.86L9.68 4.47A1.1 1.1 0 0 0 8 5.4z" fill="currentColor" stroke="none"/></symbol>
+            <symbol id="i-chev-right" viewBox="0 0 24 24"><path d="m9.5 6 6 6-6 6"/></symbol>
+            <symbol id="i-chev-left" viewBox="0 0 24 24"><path d="m14.5 6-6 6 6 6"/></symbol>
+            <symbol id="i-chev-down" viewBox="0 0 24 24"><path d="m6 9.5 6 6 6-6"/></symbol>
+            <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19.5 12h-15M10.5 6l-6 6 6 6"/></symbol>
+            <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
+            <symbol id="i-minimize" viewBox="0 0 24 24"><path d="M6 12.5h12"/></symbol>
+            <symbol id="i-maximize" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.6"/></symbol>
+            <symbol id="i-memory" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9.5 2.8v3.2M14.5 2.8v3.2M9.5 18v3.2M14.5 18v3.2M2.8 9.5H6M2.8 14.5H6M18 9.5h3.2M18 14.5h3.2"/></symbol>
+            <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4.2" width="18" height="12.3" rx="2"/><path d="M8.5 20.2h7M12 16.5v3.7"/></symbol>
+            <symbol id="i-java" viewBox="0 0 24 24"><path d="M5 9.5h11v4.7a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 10.5h1.3a2.4 2.4 0 0 1 0 4.8H16"/><path d="M8.2 2.8c-.9 1 .9 2 0 3.2M11 2.8c-.9 1 .9 2 0 3.2M13.8 2.8c-.9 1 .9 2 0 3.2"/><path d="M4 21.5h13"/></symbol>
+            <symbol id="i-puzzle" viewBox="0 0 24 24"><path d="M10 4a2 2 0 1 1 4 0v1.2h3.8a1 1 0 0 1 1 1V10h-1.3a2 2 0 1 0 0 4h1.3v3.8a1 1 0 0 1-1 1H14v-1.3a2 2 0 1 0-4 0v1.3H6.2a1 1 0 0 1-1-1V14h1.3a2 2 0 1 0 0-4H5.2V6.2a1 1 0 0 1 1-1H10z"/></symbol>
+            <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3.5 7.2a2 2 0 0 1 2-2h3.7l2.1 2.4h7.2a2 2 0 0 1 2 2v8.2a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></symbol>
+            <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.4l2.55 5.3 5.8.8-4.2 4 1.02 5.8L12 16.5l-5.17 2.8 1.02-5.8-4.2-4 5.8-.8z"/></symbol>
+            <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.8" width="14" height="10" rx="2.2"/><path d="M8.2 10.8V8a3.8 3.8 0 0 1 7.6 0v2.8"/></symbol>
+            <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.2 12.4 2.6 2.6 5-5.3"/></symbol>
+            <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M19.5 10.5A7.8 7.8 0 0 0 5.6 7.4L4.5 8.8"/><path d="M4.5 4.2v4.6h4.6"/><path d="M4.5 13.5a7.8 7.8 0 0 0 13.9 3.1l1.1-1.4"/><path d="M19.5 19.8v-4.6h-4.6"/></symbol>
+            <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6.8-6-6.8-11.2a6.8 6.8 0 0 1 13.6 0C18.8 15 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.5"/></symbol>
+            <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.4 2.5 3.7 5.5 3.7 9s-1.3 6.5-3.7 9c-2.4-2.5-3.7-5.5-3.7-9S9.6 5.5 12 3z"/></symbol>
+            <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M2.5 12h4l2.5-6 4 12 2.6-6h5.9"/></symbol>
+            <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2.8 5 13.2h6l-1 8 8-10.4h-6z"/></symbol>
+            <symbol id="i-discord" viewBox="35.34 34.3575 70.68 68.715"><path fill="currentColor" stroke="none" d="M81.23,78.48a6.14,6.14,0,1,1,6.14-6.14,6.14,6.14,0,0,1-6.14,6.14M60,78.48a6.14,6.14,0,1,1,6.14-6.14A6.14,6.14,0,0,1,60,78.48M104.41,73c-.92-7.7-8.24-22.9-8.24-22.9A43,43,0,0,0,88,45.59a17.88,17.88,0,0,0-8.38-1.27l-.13,1.06a23.52,23.52,0,0,1,5.8,1.95,87.59,87.59,0,0,1,8.17,4.87s-10.32-5.63-22.27-5.63a51.32,51.32,0,0,0-23.2,5.63,87.84,87.84,0,0,1,8.17-4.87,23.57,23.57,0,0,1,5.8-1.95l-.13-1.06a17.88,17.88,0,0,0-8.38,1.27,42.84,42.84,0,0,0-8.21,4.56S37.87,65.35,37,73s-.37,11.54-.37,11.54,4.22,5.68,9.9,7.14,7.7,1.47,7.7,1.47l3.75-4.68a21.22,21.22,0,0,1-4.65-2A24.47,24.47,0,0,1,47.93,82S61.16,88.4,70.68,88.4c10,0,22.75-6.44,22.75-6.44a24.56,24.56,0,0,1-5.35,4.56,21.22,21.22,0,0,1-4.65,2l3.75,4.68s2,0,7.7-1.47,9.89-7.14,9.89-7.14.55-3.85-.37-11.54"/></symbol>
+            <symbol id="i-github" viewBox="0 0 98 98"><path fill="currentColor" stroke="none" d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z"/></symbol>
+            <symbol id="i-microsoft" viewBox="0 0 23 23"><path fill="#f35325" stroke="none" d="M1 1h10v10H1z"/><path fill="#81bc06" stroke="none" d="M12 1h10v10H12z"/><path fill="#05a6f0" stroke="none" d="M1 12h10v10H1z"/><path fill="#ffba08" stroke="none" d="M12 12h10v10H12z"/></symbol>
+            <!-- 브랜드 큐브 로고 (색은 CSS의 --ah/--as 액센트 변수를 따름) -->
+            <symbol id="i-logo" viewBox="0 0 64 64">
+                <path class="logoTop"   d="M32 5 57 18.6 32 32.2 7 18.6z"/>
+                <path class="logoLeft"  d="M7 18.6 32 32.2V59L7 45.4z"/>
+                <path class="logoRight" d="M57 18.6V45.4L32 59V32.2z"/>
+                <path class="logoLine"  d="M19.5 25.4v13.4M44.5 25.4v13.4M32 32.2v26.8M7 18.6 32 32.2 57 18.6"/>
+                <path class="logoShine" d="M32 9.4 49.8 18.6 32 27.8 14.2 18.6z"/>
+            </symbol>
+        </defs>
+    </svg>
+
+    <!-- 서버 배경 레이어: 슬롯 2개를 opacity로 교차 전환 (GPU 합성만 사용) -->
+    <div id="bgLayer"><div class="bgSlot"></div><div class="bgSlot"></div></div>
+
+    <!-- 서버 배경 위에 깔리는 비네팅/액센트 글로우 레이어 (정적, 애니메이션 없음 → 성능 영향 최소) -->
+    <div id="ambientLayer"></div>
+
+    <!-- 런처 자동 업데이트 진행 배너 (uicore.js가 제어) -->
+    <div id="updateBanner" aria-live="polite">
+        <svg class="updateBannerIcon" viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+        <div class="updateBannerBody">
+            <span id="updateBannerText"></span>
+            <div class="updateBannerTrack"><div id="updateBannerBar"></div></div>
+        </div>
+    </div>
+
+    <%- include('frame') %>
+    <div id="main">
+        <%- include('welcome') %>
+        <%- include('login') %>
+        <%- include('waiting') %>
+        <%- include('loginOptions') %>
+        <%- include('settings') %>
+        <%- include('landing') %>
+    </div>
+    <%- include('overlay') %>
+    <div id="loadingContainer">
+        <div id="loadingContent">
+            <div id="loadSpinnerContainer">
+                <svg id="loadRing" viewBox="0 0 120 120" aria-hidden="true">
+                    <circle class="loadRingTrack" cx="60" cy="60" r="54"/>
+                    <circle class="loadRingArc" cx="60" cy="60" r="54"/>
+                </svg>
+                <img id="loadSpinnerImage" class="rotating" src="assets/images/Icon.png">
+            </div>
+        </div>
+    </div>
+</body>
+</html>

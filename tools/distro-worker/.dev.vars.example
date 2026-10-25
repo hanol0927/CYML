@@ -1,0 +1,3 @@
+# 로컬 `wrangler dev` 테스트용. 이 파일을 .dev.vars로 복사하고 실제 값을 채운 뒤 사용하세요.
+# .dev.vars는 .gitignore에 포함되어 커밋되지 않습니다.
+UPLOAD_SECRET=changeme
