@@ -1836,7 +1836,17 @@ function loadCustomNews(newsEntries){
 function loadRssNews(newsFeed){
     return new Promise((resolve) => {
 
-        const newsHost = new URL(newsFeed).origin + '/'
+        let newsHost
+        try {
+            newsHost = new URL(newsFeed).origin + '/'
+        } catch(err) {
+            // distribution.json의 rss가 비어있지 않지만 올바른 URL이 아닌 경우(예: 템플릿 placeholder가
+            // 그대로 남은 경우). 여기서 막지 않으면 이 Promise가 처리되지 않은 채 reject되어
+            // loadNews()/initNews()가 끝까지 진행되지 못하고 "뉴스 확인 중.."에 영원히 멈춘다.
+            loggerLanding.warn(`distribution.json의 rss 값이 올바른 URL이 아닙니다: ${newsFeed}`)
+            resolve(null)
+            return
+        }
         $.ajax({
             url: newsFeed,
             success: (data) => {
