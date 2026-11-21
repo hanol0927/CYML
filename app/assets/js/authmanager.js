@@ -14,6 +14,7 @@ const { LoggerUtil }         = require('helios-core')
 const { RestResponseStatus } = require('helios-core/common')
 const { MojangRestAPI, MojangErrorCode } = require('helios-core/mojang')
 const { MicrosoftAuth, MicrosoftErrorCode } = require('helios-core/microsoft')
+const { HTTPError }          = require('got')
 const { AZURE_CLIENT_ID }    = require('./ipcconstants')
 const Lang = require('./langloader')
 
@@ -128,6 +129,31 @@ function mojangErrorDisplayable(errorCode) {
     }
 }
 
+/**
+ * OAuth 토큰 엔드포인트가 refresh token을 거부했는지(invalid_grant) 확인한다.
+ * 이 경우에만 Microsoft 재로그인이 실제로 필요하다 - 네트워크 끊김, 타임아웃,
+ * Xbox Live/Minecraft 서비스 일시 장애 등은 모두 다른 종류의 실패이며,
+ * refresh token 자체는 여전히 유효하므로 계정을 지우고 재로그인을 강제하면 안 된다.
+ *
+ * @param {Object} microsoftResponse getAccessToken()이 반환한 응답 객체.
+ * @returns {boolean}
+ */
+function isInvalidGrantError(microsoftResponse) {
+    const err = microsoftResponse?.error
+    if(err instanceof HTTPError && err.response?.statusCode === 400) {
+        let body = err.response.body
+        if(typeof body === 'string') {
+            try {
+                body = JSON.parse(body)
+            } catch(e) {
+                return false
+            }
+        }
+        return body?.error === 'invalid_grant'
+    }
+    return false
+}
+
 // Functions
 
 /**
@@ -188,29 +214,41 @@ async function fullMicrosoftAuthFlow(entryCode, authMode) {
         if(authMode !== AUTH_MODE.MC_REFRESH) {
             const accessTokenResponse = await MicrosoftAuth.getAccessToken(entryCode, authMode === AUTH_MODE.MS_REFRESH, AZURE_CLIENT_ID)
             if(accessTokenResponse.responseStatus === RestResponseStatus.ERROR) {
-                return Promise.reject(microsoftErrorDisplayable(accessTokenResponse.microsoftErrorCode))
+                const displayable = microsoftErrorDisplayable(accessTokenResponse.microsoftErrorCode)
+                // refresh token이 명시적으로 거부된(invalid_grant) 경우만 재로그인이 실제로 필요하다.
+                // 그 외(네트워크 오류, 타임아웃 등)는 일시적인 실패로 취급한다.
+                displayable.permanent = isInvalidGrantError(accessTokenResponse)
+                return Promise.reject(displayable)
             }
             accessToken = accessTokenResponse.data
             accessTokenRaw = accessToken.access_token
         } else {
             accessTokenRaw = entryCode
         }
-        
+
         const xblResponse = await MicrosoftAuth.getXBLToken(accessTokenRaw)
         if(xblResponse.responseStatus === RestResponseStatus.ERROR) {
-            return Promise.reject(microsoftErrorDisplayable(xblResponse.microsoftErrorCode))
+            const displayable = microsoftErrorDisplayable(xblResponse.microsoftErrorCode)
+            displayable.permanent = xblResponse.microsoftErrorCode !== MicrosoftErrorCode.UNKNOWN
+            return Promise.reject(displayable)
         }
         const xstsResonse = await MicrosoftAuth.getXSTSToken(xblResponse.data)
         if(xstsResonse.responseStatus === RestResponseStatus.ERROR) {
-            return Promise.reject(microsoftErrorDisplayable(xstsResonse.microsoftErrorCode))
+            const displayable = microsoftErrorDisplayable(xstsResonse.microsoftErrorCode)
+            displayable.permanent = xstsResonse.microsoftErrorCode !== MicrosoftErrorCode.UNKNOWN
+            return Promise.reject(displayable)
         }
         const mcTokenResponse = await MicrosoftAuth.getMCAccessToken(xstsResonse.data)
         if(mcTokenResponse.responseStatus === RestResponseStatus.ERROR) {
-            return Promise.reject(microsoftErrorDisplayable(mcTokenResponse.microsoftErrorCode))
+            const displayable = microsoftErrorDisplayable(mcTokenResponse.microsoftErrorCode)
+            displayable.permanent = mcTokenResponse.microsoftErrorCode !== MicrosoftErrorCode.UNKNOWN
+            return Promise.reject(displayable)
         }
         const mcProfileResponse = await MicrosoftAuth.getMCProfile(mcTokenResponse.data.access_token)
         if(mcProfileResponse.responseStatus === RestResponseStatus.ERROR) {
-            return Promise.reject(microsoftErrorDisplayable(mcProfileResponse.microsoftErrorCode))
+            const displayable = microsoftErrorDisplayable(mcProfileResponse.microsoftErrorCode)
+            displayable.permanent = mcProfileResponse.microsoftErrorCode !== MicrosoftErrorCode.UNKNOWN
+            return Promise.reject(displayable)
         }
         return {
             accessToken,
@@ -222,7 +260,9 @@ async function fullMicrosoftAuthFlow(entryCode, authMode) {
         }
     } catch(err) {
         log.error(err)
-        return Promise.reject(microsoftErrorDisplayable(MicrosoftErrorCode.UNKNOWN))
+        const displayable = microsoftErrorDisplayable(MicrosoftErrorCode.UNKNOWN)
+        displayable.permanent = false
+        return Promise.reject(displayable)
     }
 }
 
@@ -383,7 +423,13 @@ async function validateSelectedMicrosoftAccount(){
             ConfigManager.save()
             return true
         } catch(err) {
-            return false
+            if(err?.permanent) {
+                return false
+            }
+            // 일시적인 오류(네트워크 끊김, 서비스 장애 등)로 refresh token 자체는 아직 유효할 가능성이
+            // 높다. 계정을 지우고 재로그인을 강제하는 대신 기존 세션을 유지하고 다음 기회에 다시 시도한다.
+            log.warn('Microsoft 토큰 갱신에 실패했지만 일시적인 오류로 보입니다. 기존 로그인 세션을 유지합니다.', err)
+            return true
         }
     } else {
         // Only MC expired, use existing MS token.
@@ -402,7 +448,11 @@ async function validateSelectedMicrosoftAccount(){
             return true
         }
         catch(err) {
-            return false
+            if(err?.permanent) {
+                return false
+            }
+            log.warn('Minecraft 토큰 갱신에 실패했지만 일시적인 오류로 보입니다. 기존 로그인 세션을 유지합니다.', err)
+            return true
         }
     }
 }

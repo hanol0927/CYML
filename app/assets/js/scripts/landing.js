@@ -1150,7 +1150,8 @@ async function renderLandingServerList(){
 
     const selected = ConfigManager.getSelectedServer()
     const authUser = ConfigManager.getSelectedAccount()
-    const servers = distro.servers || []
+    // 화이트리스트에 없는 서버는 목록 자체에서 보이지 않게 숨긴다 (단순 잠금 표시가 아님).
+    const servers = (distro.servers || []).filter(serv => isAccountWhitelisted(serv, authUser))
     document.getElementById('serverListCount').innerHTML = servers.length
 
     if(servers.length === 0){
@@ -1160,12 +1161,9 @@ async function renderLandingServerList(){
 
     listEl.innerHTML = servers.map(serv => {
         const raw = serv.rawServer
-        const eligible = isAccountWhitelisted(serv, authUser)
         const isSel = raw.id === selected
-        const btnLabel = !eligible
-            ? `${iconSVG('i-lock', 'lsBtnIcon')}${Lang.queryJS('landingUi.locked')}`
-            : isSel ? `${iconSVG('i-check-circle', 'lsBtnIcon')}${Lang.queryJS('landingUi.selected')}` : Lang.queryJS('landingUi.select')
-        return `<div class="lsRow" servid="${escapeHTML(raw.id)}" ${isSel ? 'selected' : ''} ${eligible ? '' : 'disabled'} tabindex="0">
+        const btnLabel = isSel ? `${iconSVG('i-check-circle', 'lsBtnIcon')}${Lang.queryJS('landingUi.selected')}` : Lang.queryJS('landingUi.select')
+        return `<div class="lsRow" servid="${escapeHTML(raw.id)}" ${isSel ? 'selected' : ''} tabindex="0">
             <div class="lsThumb">
                 ${raw.icon ? `<img class="lsThumbImg" src="${escapeHTML(ImageCache.src(raw.icon, 'icon'))}" decoding="async" draggable="false"/>` : ''}
                 <svg class="lsThumbFallback" viewBox="0 0 64 64"><use href="#i-logo"/></svg>
@@ -1179,12 +1177,11 @@ async function renderLandingServerList(){
                 <div class="lsTags">
                     <span class="lsTag">${escapeHTML(raw.minecraftVersion)}</span>
                     ${raw.version ? `<span class="lsTag dim">v${escapeHTML(raw.version)}</span>` : ''}
-                    ${eligible ? '' : `<span class="lsTag danger">${Lang.queryJS('settings.serverListing.notWhitelisted')}</span>`}
                 </div>
             </div>
             <div class="lsSide">
                 <div class="lsPing">${pingCellHTML(raw.id)}</div>
-                <button class="lsSelectBtn" ${(!eligible || isSel) ? 'disabled' : ''}>${btnLabel}</button>
+                <button class="lsSelectBtn" ${isSel ? 'disabled' : ''}>${btnLabel}</button>
             </div>
         </div>`
     }).join('')
@@ -1258,6 +1255,7 @@ document.getElementById('serverListRefresh').onclick = e => {
     // distro-builder에서 바뀐 뒤 런처를 재시작하지 않아도 반영되도록 한다.
     DistroAPI.refreshDistributionOrFallback().then(distro => {
         onDistroRefresh(distro)
+        reloadNews()
         return refreshLandingServerPings()
     }).catch(err => {
         loggerLanding.warn('distribution.json 새로고침 실패, 기존 목록을 다시 그립니다.', err)

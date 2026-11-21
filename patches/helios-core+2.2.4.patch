@@ -1,0 +1,175 @@
+diff --git a/node_modules/helios-core/dist/common/util/FileUtils.js b/node_modules/helios-core/dist/common/util/FileUtils.js
+index 133f3c8..a5d63cb 100644
+--- a/node_modules/helios-core/dist/common/util/FileUtils.js
++++ b/node_modules/helios-core/dist/common/util/FileUtils.js
+@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.calculateHashByBuffer = calculateHashByBuffer;
+ exports.calculateHash = calculateHash;
+ exports.validateLocalFile = validateLocalFile;
++exports.mapLimit = mapLimit;
+ exports.getVersionJsonPath = getVersionJsonPath;
+ exports.getVersionJarPath = getVersionJarPath;
+ exports.getLibraryDir = getLibraryDir;
+@@ -45,6 +46,28 @@ async function validateLocalFile(path, algo, hash) {
+     }
+     return false;
+ }
++// Run `mapper` over `items` with at most `limit` in flight at once, preserving input order
++// in the result. Used to parallelize file hash validation (otherwise done one file at a time),
++// which is the main bottleneck in large modpack/asset integrity checks.
++async function mapLimit(items, limit, mapper) {
++    const results = new Array(items.length);
++    let next = 0;
++    async function worker() {
++        while (true) {
++            const i = next++;
++            if (i >= items.length) {
++                return;
++            }
++            results[i] = await mapper(items[i], i);
++        }
++    }
++    const workers = [];
++    for (let i = 0; i < Math.min(limit, items.length); i++) {
++        workers.push(worker());
++    }
++    await Promise.all(workers);
++    return results;
++}
+ function getVersionExtPath(commonDir, version, ext) {
+     return (0, path_1.join)(commonDir, 'versions', version, `${version}.${ext}`);
+ }
+diff --git a/node_modules/helios-core/dist/dl/distribution/DistributionIndexProcessor.js b/node_modules/helios-core/dist/dl/distribution/DistributionIndexProcessor.js
+index f09b6b4..ff1df39 100644
+--- a/node_modules/helios-core/dist/dl/distribution/DistributionIndexProcessor.js
++++ b/node_modules/helios-core/dist/dl/distribution/DistributionIndexProcessor.js
+@@ -45,21 +45,27 @@ class DistributionIndexProcessor extends IndexProcessor_1.IndexProcessor {
+         await this.loadModLoaderVersionJson();
+     }
+     async validateModules(modules, accumulator) {
+-        for (const module of modules) {
++        const subModuleLists = [];
++        const results = await (0, FileUtils_1.mapLimit)(modules, 32, async (module) => {
+             const hash = module.rawModule.artifact.MD5;
++            if (module.hasSubModules()) {
++                subModuleLists.push(module.subModules);
++            }
+             if (!await (0, FileUtils_1.validateLocalFile)(module.getPath(), Asset_1.HashAlgo.MD5, hash)) {
+-                accumulator.push({
++                return {
+                     id: module.rawModule.id,
+                     hash: hash,
+                     algo: Asset_1.HashAlgo.MD5,
+                     size: module.rawModule.artifact.size,
+                     url: module.rawModule.artifact.url,
+                     path: module.getPath()
+-                });
+-            }
+-            if (module.hasSubModules()) {
+-                await this.validateModules(module.subModules, accumulator);
++                };
+             }
++            return null;
++        });
++        results.filter(it => it != null).forEach(it => accumulator.push(it));
++        for (const subModules of subModuleLists) {
++            await this.validateModules(subModules, accumulator);
+         }
+     }
+     async loadModLoaderVersionJson() {
+diff --git a/node_modules/helios-core/dist/dl/mojang/MojangIndexProcessor.js b/node_modules/helios-core/dist/dl/mojang/MojangIndexProcessor.js
+index 37d1008..8111abf 100644
+--- a/node_modules/helios-core/dist/dl/mojang/MojangIndexProcessor.js
++++ b/node_modules/helios-core/dist/dl/mojang/MojangIndexProcessor.js
+@@ -164,56 +164,56 @@ class MojangIndexProcessor extends IndexProcessor_1.IndexProcessor {
+     }
+     async validateAssets(assetIndex) {
+         const objectDir = (0, path_1.join)(this.assetPath, 'objects');
+-        const notValid = [];
+-        for (const assetEntry of Object.entries(assetIndex.objects)) {
++        const entries = Object.entries(assetIndex.objects);
++        const results = await (0, FileUtils_1.mapLimit)(entries, 32, async (assetEntry) => {
+             const hash = assetEntry[1].hash;
+             const path = (0, path_1.join)(objectDir, hash.substring(0, 2), hash);
+             const url = `${MojangIndexProcessor.ASSET_RESOURCE_ENDPOINT}/${hash.substring(0, 2)}/${hash}`;
+             if (!await (0, FileUtils_1.validateLocalFile)(path, Asset_1.HashAlgo.SHA1, hash)) {
+-                notValid.push({
++                return {
+                     id: assetEntry[0],
+                     hash,
+                     algo: Asset_1.HashAlgo.SHA1,
+                     size: assetEntry[1].size,
+                     url,
+                     path
+-                });
++                };
+             }
+-        }
+-        return notValid;
++            return null;
++        });
++        return results.filter(it => it != null);
+     }
+     async validateLibraries(versionJson) {
+         const libDir = (0, FileUtils_1.getLibraryDir)(this.commonDir);
+-        const notValid = [];
+-        for (const libEntry of versionJson.libraries) {
+-            if ((0, MojangUtils_1.isLibraryCompatible)(libEntry.rules, libEntry.natives)) {
+-                let artifact;
+-                if (libEntry.natives == null) {
+-                    artifact = libEntry.downloads.artifact;
+-                }
+-                else {
+-                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+-                    // @ts-ignore
+-                    const classifier = libEntry.natives[(0, MojangUtils_1.getMojangOS)()].replace('${arch}', process.arch.replace('x', ''));
+-                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+-                    // @ts-ignore
+-                    artifact = libEntry.downloads.classifiers[classifier];
+-                }
+-                const path = (0, path_1.join)(libDir, artifact.path);
+-                const hash = artifact.sha1;
+-                if (!await (0, FileUtils_1.validateLocalFile)(path, Asset_1.HashAlgo.SHA1, hash)) {
+-                    notValid.push({
+-                        id: libEntry.name,
+-                        hash,
+-                        algo: Asset_1.HashAlgo.SHA1,
+-                        size: artifact.size,
+-                        url: artifact.url,
+-                        path
+-                    });
+-                }
++        const compatible = versionJson.libraries.filter(libEntry => (0, MojangUtils_1.isLibraryCompatible)(libEntry.rules, libEntry.natives));
++        const results = await (0, FileUtils_1.mapLimit)(compatible, 32, async (libEntry) => {
++            let artifact;
++            if (libEntry.natives == null) {
++                artifact = libEntry.downloads.artifact;
+             }
+-        }
+-        return notValid;
++            else {
++                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
++                // @ts-ignore
++                const classifier = libEntry.natives[(0, MojangUtils_1.getMojangOS)()].replace('${arch}', process.arch.replace('x', ''));
++                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
++                // @ts-ignore
++                artifact = libEntry.downloads.classifiers[classifier];
++            }
++            const path = (0, path_1.join)(libDir, artifact.path);
++            const hash = artifact.sha1;
++            if (!await (0, FileUtils_1.validateLocalFile)(path, Asset_1.HashAlgo.SHA1, hash)) {
++                return {
++                    id: libEntry.name,
++                    hash,
++                    algo: Asset_1.HashAlgo.SHA1,
++                    size: artifact.size,
++                    url: artifact.url,
++                    path
++                };
++            }
++            return null;
++        });
++        return results.filter(it => it != null);
+     }
+     async validateClient(versionJson) {
+         const version = versionJson.id;

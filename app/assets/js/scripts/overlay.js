@@ -273,13 +273,13 @@ async function populateServerListings(){
     const distro = await DistroAPI.getDistribution()
     const giaSel = ConfigManager.getSelectedServer()
     const authUser = ConfigManager.getSelectedAccount()
-    const servers = distro.servers
+    // 화이트리스트에 없는 서버는 목록 자체에서 보이지 않게 숨긴다 (단순 잠금 표시가 아님).
+    const servers = distro.servers.filter(serv => isAccountWhitelisted(serv, authUser))
     let htmlString = ''
     for(const serv of servers){
-        const eligible = isAccountWhitelisted(serv, authUser)
         // (리뉴얼) 아이콘은 디스크 캐시(ImageCache, landing.js에서 로드)를 우선 사용 → 즉시 표시
         const iconSrc = typeof ImageCache !== 'undefined' ? ImageCache.src(serv.rawServer.icon, 'icon') : serv.rawServer.icon
-        htmlString += `<button class="serverListing" servid="${serv.rawServer.id}" ${serv.rawServer.id === giaSel && eligible ? 'selected' : ''} ${eligible ? '' : 'disabled'}>
+        htmlString += `<button class="serverListing" servid="${serv.rawServer.id}" ${serv.rawServer.id === giaSel ? 'selected' : ''}>
             <img class="serverListingImg" src="${iconSrc}" decoding="async"/>
             <div class="serverListingDetails">
                 <span class="serverListingName">${serv.rawServer.name}</span>
@@ -297,12 +297,12 @@ async function populateServerListings(){
                         </svg>
                         <span class="serverListingStarTooltip">${Lang.queryJS('settings.serverListing.mainServer')}</span>
                     </div>` : ''}
-                    ${eligible ? '' : `<div class="serverListingLockedBadge">${Lang.queryJS('settings.serverListing.notWhitelisted')}</div>`}
                 </div>
             </div>
         </button>`
     }
     document.getElementById('serverSelectListScrollable').innerHTML = htmlString
+        || `<div class="emptyState">${Lang.queryJS('landingUi.noServers')}</div>`
 
 }
 

@@ -109,8 +109,9 @@ async function showMainUI(data){
         }, 250)
         
     }, 750)
-    // News feature is disabled -- keep the container untabbable regardless.
+    // 뉴스 패널은 기본적으로 닫힌 상태이므로 탭 포커스가 들어가지 않게 한다 (newsButton.onclick에서 열릴 때 해제).
     $('#newsContainer *').attr('tabindex', '-1')
+    initNews()
 }
 
 function showFatalStartupError(){

@@ -1,6 +1,6 @@
 {
   "name": "cymlauncher",
-  "version": "1.1.16",
+  "version": "1.1.17",
   "productName": "CYML",
   "description": "Custom Minecraft Launcher based on Helios",
   "author": "Han_Ol",
@@ -17,7 +17,8 @@
     "dist:win": "npm run dist -- -w",
     "dist:mac": "npm run dist -- -m",
     "dist:linux": "npm run dist -- -l",
-    "lint": "eslint --config .eslintrc.json ."
+    "lint": "eslint --config .eslintrc.json .",
+    "postinstall": "patch-package"
   },
   "engines": {
     "node": "20.x.x"
@@ -42,7 +43,8 @@
   "devDependencies": {
     "electron": "^39.0.0",
     "electron-builder": "^25.1.8",
-    "eslint": "^8.57.1"
+    "eslint": "^8.57.1",
+    "patch-package": "^8.0.1"
   },
   "repository": {
     "type": "git",
